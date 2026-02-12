@@ -1,0 +1,45 @@
+server
+	listen 0.0.0.0:8080
+	server_name monsite.com
+	root ./www/monsite
+	client_max_body_size 10M
+	error_pages 404 ./www/site1/errors/4k.html
+	error_pages 500 501 ./www/site1/errors/5c.html
+	locations
+		path
+		path /images
+			root ./data/media
+			methods GET
+			auto_index true
+		path /api
+			methods GET POST
+			client_max_body_size 1M
+			index default_page.html index.html
+		path /upload
+			methods POST
+			upload_store ./www/images
+		path /cgi-bin
+			cgi_enabled true
+			methods GET POST
+			root ./www/script/list
+			cgi_ext .py /usr/bin/python3
+			cgi_ext .sh /bin/bash
+			cgi_working_dir ./www/script/exec
+			cgi_upload_path ./www/script/tmp
+			cgi_timeout 10
+
+
+server
+	listen 127.0.0.1:9090
+	server_name test.local
+	root ./www/test
+
+server
+	listen 80
+	server_name site.com www.site.com sit.com www.sit.com
+	root /var/www/sites
+
+server
+	listen 80
+	server_name hello.com www.hello.com hello_world.com www.hello_world.com
+	root /var/www/hello

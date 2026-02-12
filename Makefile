@@ -11,6 +11,13 @@ EXECFLAGS =
 FILES	=									\
 				srcs/main.cpp				\
 
+SERVER	=									\
+				Config.cpp					\
+				Location.cpp				\
+				Server.cpp					
+
+FILES	+=	$(addprefix srcs/server/,$(SERVER))
+
 PARSING_CONFIG_FILE	=			
 
 FILES	+=	$(addprefix srcs/parsing_config_file/,$(PARSING_CONFIG_FILE))
@@ -33,7 +40,8 @@ includes
 # set the -I before the path
 # the path to the header lib dir
 ALL_I_DIR_HEADER	=				\
--I includes		\
+-I includes							\
+-I includes/server					\
 
 
 CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
@@ -41,7 +49,7 @@ CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
 # exec name for bonus
 
 #executable name for the main project
-MY_TARGET = webserv
+NAME = webserv
 
 G3 = OFF
 
@@ -69,10 +77,10 @@ ifeq ($(G3), ON)
 CXXFLAGS += -g3
 endif
 
-ifeq ($(NAME), FULL)
+ifeq ($(MY_NAME), FULL)
 FULL_NAME = 1
 else
-	ifneq ($(NAME),)
+	ifneq ($(MY_NAME),)
 		FULL_NAME = 0
 	endif
 endif
@@ -102,21 +110,21 @@ endif
 #	▙▌█▌▄▌▌▙▖▄▌
 
 .PHONY:all
-all: change_name_full clear_console reset_debug $(STATIC_LIB) $(EXTERN_LIB) start_build_aff ${MY_TARGET}
+all: change_name_full clear_console reset_debug $(STATIC_LIB) $(EXTERN_LIB) start_build_aff ${NAME}
 
 
-${MY_TARGET}: CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
-${MY_TARGET}:  $(STATIC_LIB) $(EXTERN_LIB) $(OBJS)
-	@echo -e "    ${_BOLD}${_GREEN}💿  ◀◀◀ ${_LIME}Creating Executable 📑🗂️   ${_YELLOW}$(MY_TARGET)${_END}"
-	@$(CXX) $(OBJS) $(STATIC_LIB) $(EXTERN_LIB) -o $(MY_TARGET) $(EXECFLAGS)
+${NAME}: CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
+${NAME}:  $(STATIC_LIB) $(EXTERN_LIB) $(OBJS)
+	@echo -e "    ${_BOLD}${_GREEN}💿  ◀◀◀ ${_LIME}Creating Executable 📑🗂️   ${_YELLOW}$(NAME)${_END}"
+	@$(CXX) $(OBJS) $(STATIC_LIB) $(EXTERN_LIB) -o $(NAME) $(EXECFLAGS)
 
 
 .obj/%.o: %.cpp
-	@mkdir -p $(call GET_ALL_FOLDER,$@)
+	@mkdir -p $(call GET_ALL_FOLDER,$@)6
 	@if [ "${FULL_NAME}" = "1" ]; then\
-		echo -e "	${_LIME}${_BOLD}${MY_TARGET}	${_END}${_GREEN}Compiling : ${_END}$(CXX) ${_BLUE} $(CXXFLAGS) ${_PURPLE} $<${_END}";\
+		echo -e "	${_LIME}${_BOLD}${NAME}	${_END}${_GREEN}Compiling : ${_END}$(CXX) ${_BLUE} $(CXXFLAGS) ${_PURPLE} $<${_END}";\
 	else \
-		echo -e "	${_LIME}${_BOLD}${MY_TARGET}	${_END}${_GREEN}Compiling : ${_END}$(CXX) ${_BLUE} $(CXXFLAGS) ${_PURPLE} $(call GET_FILE,$(call DELETE_EXT,$<))${_END}";\
+		echo -e "	${_LIME}${_BOLD}${NAME}	${_END}${_GREEN}Compiling : ${_END}$(CXX) ${_BLUE} $(CXXFLAGS) ${_PURPLE} $(call GET_FILE,$(call DELETE_EXT,$<))${_END}";\
 	fi;
 	@$(CXX) $(CURRENT_HEADERS) $(CXXFLAGS) -c $< -o $@
 
@@ -132,15 +140,15 @@ re: fclean all
 .PHONY:clean
 clean:
 	@rm -rf .obj
-	@echo -e "    ${_RED}${_BOLD}🗑️  ◀◀◀ Deleting files 🚮 ${_YELLOW}${MY_TARGET} objects${_END}\n"
+	@echo -e "    ${_RED}${_BOLD}🗑️  ◀◀◀ Deleting files 🚮 ${_YELLOW}${NAME} objects${_END}\n"
 
 .PHONY:fclean
 fclean: clean cln
 
 .PHONY:cln
 cln:
-	@rm -rf $(MY_TARGET)
-	@echo -e "    ${_RED}${_BOLD}🗑️  ◀◀◀ Deleting file  🚮 ${_YELLOW}$(MY_TARGET)${_END}\n"
+	@rm -rf $(NAME)
+	@echo -e "    ${_RED}${_BOLD}🗑️  ◀◀◀ Deleting file  🚮 ${_YELLOW}$(NAME)${_END}\n"
 
 #
 #
@@ -156,7 +164,7 @@ cln:
 
 .PHONY:start_build_aff
 start_build_aff:
-	@echo -e -n "\n${_BOLD}${_RED}Start Building  ⚙️  🛠️  ⚙️ 	${_GREEN}${_UNDER}$(MY_TARGET)${_END} :	"
+	@echo -e -n "\n${_BOLD}${_RED}Start Building  ⚙️  🛠️  ⚙️ 	${_GREEN}${_UNDER}$(NAME)${_END} :	"
 	@echo "( $(call TO_MAJ_OBJ,${FILES}) / $(call NB_FILE,${FILES}) to update )"
 
 .PHONY:clear_console
@@ -183,10 +191,10 @@ clear_console:
 
 .PHONY:change_name_full
 change_name_full:
-	@if [ "${NAME}" = "FULL" ]; then\
+	@if [ "${MY_NAME}" = "FULL" ]; then\
 		$(call MODIF_FULL_NAME_VALUE,1)\
 	else \
-		if [ "${NAME}" != "" ]; then\
+		if [ "${MY_NAME}" != "" ]; then\
 			$(call MODIF_FULL_NAME_VALUE,0)\
 		fi;\
 	fi
@@ -302,7 +310,7 @@ endef
 #	▙▌▌ ▌▌▌▐▖  ▌▌▌▙▖▄▌▄▌█▌▙▌▙▖
 #	▌                     ▄▌
 define MSG_LAUCH
-echo -e "${_GREEN}Lauching ${_PURPLE}${_BOLD}${MY_TARGET}${_END} ${_GREEN}with >>>${_END}"
+echo -e "${_GREEN}Lauching ${_PURPLE}${_BOLD}${NAME}${_END} ${_GREEN}with >>>${_END}"
 endef
 
 define	BAD_VALUE_GET
