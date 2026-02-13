@@ -13,7 +13,7 @@
 # include "httpRequest.hpp"
 
 # define DEFAULT_TYPE "application/octet-stream"
-# define PATH_FILE_ERR "file/error_code.txt"
+# define PATH_FILE_CODE "file/error_code.txt"
 # define PATH_FIlE_MIME "file/mime_types.txt"
 
 class httpResponse
@@ -40,23 +40,24 @@ class httpResponse
 		void exeGet(HttpRequest &req);
 		void fillHeaders(std::map<std::string, std::string> &headers);
 		int fillBody(std::string &path, HttpRequest &req);
+		void fillDefaultBody();
 		void fillMimeTypes();
 		void fillMapError();
 		int searchFileInDir(std::string &path, HttpRequest &req);
 		int generateAutoIndex(std::string &path);
 		bool isForbiddenMethod(HttpRequest &req);
-
+		std::string setPathError();
 		void handleError(HttpRequest &req);
 
 		void exePost();
 		void exeDelete();
 
-		std::string getVersion() const;
-		std::string getStatusMsg() const;
-		std::string getBody() const;
-		// std::string getMethod() const;
-		int getStatusCode() const;
-		std::map<std::string, std::string> getHeaders() const;
+		// std::string getVersion() const;
+		// std::string getStatusMsg() const;
+		// std::string getBody() const;
+		// // std::string getMethod() const;
+		// int getStatusCode() const;
+		// std::map<std::string, std::string> getHeaders() const;
 };
 #endif
 

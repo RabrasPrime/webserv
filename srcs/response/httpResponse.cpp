@@ -1,6 +1,7 @@
 #include "httpResponse.hpp"
 
-httpResponse::httpResponse(){
+httpResponse::httpResponse()
+: _statusCode(0){
 
 	fillMimeTypes();
 	fillMapError();
@@ -12,7 +13,7 @@ std::string httpResponse::convertFinalResponse(){
 
 	std::stringstream ss;
 	ss << _statusCode;
-	std::string resp = _version + ss.str() + " " + _statusMsg + "\r\n";
+	std::string resp = _version + " " + ss.str() + " " + _statusMsg + "\r\n";
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
 		resp += it->first + ": " + it->second + "\r\n";
 	resp += "\r\n";
@@ -22,12 +23,13 @@ std::string httpResponse::convertFinalResponse(){
 
 std::string httpResponse::handleResponse(HttpRequest &req){
 
+	_version = req.version;
 	if (req.method == "GET")
 		exeGet(req);
 	else // Voir pour le  body etc..
 	{
 		_statusCode = 501;
-		_statusMsg = "Not Implemented";
+		handleError(req);
 	}
 	// else if (_method == "POST")
 	// 	exePost();
@@ -38,7 +40,7 @@ std::string httpResponse::handleResponse(HttpRequest &req){
 
 void httpResponse::fillMapError(){
 	std::ifstream inFile;
-	inFile.open(PATH_FILE_ERR);
+	inFile.open(PATH_FILE_CODE);
 	// if (!inFile.is_open())
 	// 	// voir quoi faire EXIT ?
 	std::string line;
@@ -83,14 +85,12 @@ void httpResponse::fillHeaders(std::map<std::string, std::string> &headers){
 	if (_headers["Content-Type"].empty())
 		_headers["Content-Type"] = DEFAULT_TYPE;
 	
-	(void)headers;
-	// _headers["Connection"] = headers["Connection"];
-	// if (_headers["Connection"].empty())
-
-	_headers["Connection"] = "keep alive"; // --> verif ce qu on fait dans ce cas la
+	_headers["Connection"] = headers["Connection"];
+	if (_headers["Connection"].empty())
+		_headers["Connection"] = "Keep-Alive"; // --> verif ce qu on fait dans ce cas la
 	std::stringstream ss;
 	ss << _body.size();
-	_headers["Content-Lenght"] = ss.str();
+	_headers["Content-Length"] = ss.str();
 }
 
 int httpResponse::generateAutoIndex(std::string &path)
@@ -103,9 +103,9 @@ int httpResponse::generateAutoIndex(std::string &path)
 	while (1)
 	{
 		readDir = readdir(currentDir); // secu ?
-		fileName.push_back(readDir->d_name);
 		if (!readDir)
 			break ;
+		fileName.push_back(readDir->d_name);
 	}
 	closedir(currentDir);
 	std::sort(fileName.begin(), fileName.end());
@@ -120,6 +120,7 @@ int httpResponse::generateAutoIndex(std::string &path)
 	}
 	index << "</pre><hr></body></html>";
 	_body = index.str();
+	_bodyType = "html";
 	return 200;
 }
 
@@ -138,6 +139,7 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 			std::ostringstream oss;
 			oss << inFile.rdbuf();
 			_body = oss.str();
+			_bodyType = tryPath.substr(tryPath.find_first_of(".") + 1);
 			return 200;
 		}
 	}
@@ -177,44 +179,121 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 		std::ostringstream oss;
 		oss << inFile.rdbuf();
 		_body = oss.str();
+		_bodyType = path.substr(path.find_first_of(".") + 1);
 	}
 	return 200;	
+}
+
+std::string httpResponse::setPathError()
+{
+	std::string pathErrFile;
+	switch (_statusCode)
+	{
+		case 403:
+			pathErrFile = "file/error_page/error_page_403.html";
+			break ;
+		case 404:
+			pathErrFile = "file/error_page/error_page_404.html";
+			break ;
+		case 405:
+			pathErrFile = "file/error_page/error_page_405.html";
+			break ;
+		case 500:
+			pathErrFile = "file/error_page/error_page_500.html";
+			break ;
+		case 501:
+			pathErrFile = "file/error_page/error_page_501.html";
+			break;
+		default:
+			_statusCode = 500;
+			pathErrFile = "file/error_page 500";
+			_statusMsg = _mErrorMsg[500];
+	}
+	return pathErrFile;
+}
+
+void httpResponse::fillDefaultBody(){
+
+	std::string pathErrFile = setPathError();
+	std::cout << pathErrFile << std::endl;
+	std::ifstream inFile;
+	inFile.open(pathErrFile.c_str(), std::ios::binary);
+	if (!inFile.is_open())
+	{
+		std::ostringstream index;
+		index 	<< "<html><head><title>" << _statusCode << " "<< _statusMsg + "</title></head>"
+				<< "<center><h1>Index of " << _statusCode << " " << _statusMsg << "</h1></center><hr><pre>";
+		_body = index.str();
+		_bodyType = "html";
+	}
+	else
+	{
+		std::ostringstream oss;
+		oss << inFile.rdbuf();
+		_body = oss.str();
+		_bodyType = pathErrFile.substr(pathErrFile.find_first_of(".") + 1);
+	}
 }
 
 void httpResponse::handleError(HttpRequest &req)
 {
 	(void)req;
 	_statusMsg = _mErrorMsg[_statusCode];
-	if (_statusMsg.empty())
+	if (_statusMsg.empty() && _statusCode == 0)
 	{
 		_statusCode = 500;
-		_statusMsg = "Internal erver Error";
+		_statusMsg = "Internal Server Error";
+	}
+	fillDefaultBody();
+
+	_headers["Content-Type"] = _mMimeTypes[_bodyType];
+	if (_headers["Content-Type"].empty())
+		_headers["Content-Type"] = DEFAULT_TYPE;
+	if (_statusCode == 500)
+		_headers["Connection"] = "close"; // --> verif ce qu on fait dans ce cas la
+	else
+		_headers["Connection"] = "Keep-Alive"; // --> verif ce qu on fait dans ce cas la
+	std::stringstream ss;
+	ss << _body.size();
+	_headers["Content-Length"] = ss.str();
+	if (_statusCode == 501 || _statusCode == 405)
+	{
+		std::string allowMethods;
+		for (std::vector<std::string>::iterator it = req.methods.begin(); it != req.methods.end(); ++it)
+		{
+			if (it + 1 != req.methods.end())
+				allowMethods += *it + ", ";
+			else
+				allowMethods += *it;
+		}
+		_headers["Allow"] = allowMethods; 
 	}
 }
 
 void httpResponse::exeGet(HttpRequest &req){
 
 	_statusCode = fillBody(req.path, req);
-	handleError(req);
+	if (_statusCode != 200)
+		handleError(req);
 	fillHeaders(req.headers);
 }
 
-std::string httpResponse::getVersion() const{
-	return _version;
-}
+// std::string httpResponse::getVersion() const{
+// 	return _version;
+// }
 
-std::string httpResponse::getStatusMsg() const{
-	return _statusMsg;
-}
+// std::string httpResponse::getStatusMsg() const{
+// 	return _statusMsg;
+// }
 
-std::string httpResponse::getBody() const{
-	return _body;
-}
+// std::string httpResponse::getBody() const{
+// 	return _body;
+// }
 
-int httpResponse::getStatusCode() const{
-	return _statusCode;
-}
+// int httpResponse::getStatusCode() const{
+// 	return _statusCode;
+// }
 
-std::map<std::string, std::string> httpResponse::getHeaders() const{
-	return _headers;
-}
+// std::map<std::string, std::string> httpResponse::getHeaders() const{
+// 	return _headers;
+// }
