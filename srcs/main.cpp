@@ -12,19 +12,23 @@
 int main()
 {
 	HttpRequest req;
-	req.method = "GET";
-	req.path = "/index.html";
+	req.method = "PUSH";
+	req.path = "/home/samaouch/index.html";
 	req.version = "HTTP/1.1";
 	req.headers["Host"] = "localhost:8080";
 	req.headers["Content-Type"] = "text/html";
 	req.headers["Connection"] = "close";
 	req.body = "<h1>Hello World!<h1>";
 	req.type = "html";
-	req.autoIndex = true;
+	req.auto_index = true;
+	req.indexes.push_back("default_page.html");
+	req.indexes.push_back("index.html");
+	req.methods.push_back("GET");
+	req.methods.push_back("POST");
+	req.methods.push_back("DELETE");
 	std::stringstream ss;
 	ss << req.body.size();
 	req.headers["Content-Length"] = ss.str();
-
 	httpResponse resp;
 	resp.handleResponse(req);
 	std::cout << PURPLE BOLD "Display Status Code/Message" RESET << std::endl;

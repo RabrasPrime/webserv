@@ -1,16 +1,15 @@
 #include "httpResponse.hpp"
 
 httpResponse::httpResponse(){
-	//remplir ErrorMsg 403 404 500 etc....
-	_statusCode = 200; // a virer
-	_statusMsg = "OK"; // a virer
-	fillMimeTypes();
 
+	fillMimeTypes();
+	fillMapError();
 }
 // httpResponse::httpResponse(const HttpRequest &req)
 // : _statusCode(200), _version(req.version), _statusMsg("OK"), _headers(req.headers), _body(req.body), _method(req.method){}
 
 std::string httpResponse::convertFinalResponse(){
+
 	std::stringstream ss;
 	ss << _statusCode;
 	std::string resp = _version + ss.str() + " " + _statusMsg + "\r\n";
@@ -22,8 +21,14 @@ std::string httpResponse::convertFinalResponse(){
 }
 
 std::string httpResponse::handleResponse(HttpRequest &req){
+
 	if (req.method == "GET")
 		exeGet(req);
+	else // Voir pour le  body etc..
+	{
+		_statusCode = 501;
+		_statusMsg = "Not Implemented";
+	}
 	// else if (_method == "POST")
 	// 	exePost();
 	// else if (_method == "DELETE")
@@ -31,13 +36,33 @@ std::string httpResponse::handleResponse(HttpRequest &req){
 	return convertFinalResponse();
 }
 
+void httpResponse::fillMapError(){
+	std::ifstream inFile;
+	inFile.open(PATH_FILE_ERR);
+	// if (!inFile.is_open())
+	// 	// voir quoi faire EXIT ?
+	std::string line;
+	while(std::getline(inFile, line))
+	{
+		if (line.empty())
+			continue;
+		std::string::size_type endCode = line.find_first_of(" ");
+		std::string errorCode = line.substr(0, endCode);
+		std::string::size_type startMsg = line.find_first_not_of(" ", endCode);
+		std::string errorMsg = line.substr(startMsg);
+		std::stringstream ss(errorCode);
+		int value;
+		if (ss >> value)
+			_mErrorMsg[value] = errorMsg;
+	}
+}
+
 void httpResponse::fillMimeTypes(){
 
 	std::ifstream inFile;
-	inFile.open("file/mime_types.txt");
+	inFile.open(PATH_FIlE_MIME);
 	// if (!inFile.is_open())
-	// 	std::cout << "error open file" << std::endl;
-	// 	// voir quoi faire
+	// 	// voir quoi faire EXIT ?
 	std::string line;
 	while (std::getline(inFile, line))
 	{
@@ -53,17 +78,36 @@ void httpResponse::fillMimeTypes(){
 }
 
 void httpResponse::fillHeaders(std::map<std::string, std::string> &headers){
-	std::stringstream ss;
-	ss << _body.size();
+
 	_headers["Content-Type"] = _mMimeTypes[_bodyType];
 	if (_headers["Content-Type"].empty())
-		_headers["Content-Type"] = _mMimeTypes["bin"];
-	_headers["Connection"] = headers["Connection"];
+		_headers["Content-Type"] = DEFAULT_TYPE;
+	
+	(void)headers;
+	// _headers["Connection"] = headers["Connection"];
+	// if (_headers["Connection"].empty())
+
+	_headers["Connection"] = "keep alive"; // --> verif ce qu on fait dans ce cas la
+	std::stringstream ss;
+	ss << _body.size();
 	_headers["Content-Lenght"] = ss.str();
 }
 
-void httpResponse::generateAutoIndex(std::vector<std::string> &fileName, std::string &path)
+int httpResponse::generateAutoIndex(std::string &path)
 {
+	DIR *currentDir = opendir(path.c_str());
+	if (!currentDir)
+		return 403;
+	struct dirent *readDir;
+	std::vector<std::string> fileName;
+	while (1)
+	{
+		readDir = readdir(currentDir); // secu ?
+		fileName.push_back(readDir->d_name);
+		if (!readDir)
+			break ;
+	}
+	closedir(currentDir);
 	std::sort(fileName.begin(), fileName.end());
 	std::ostringstream index;
 	index	<< "<html><head><title>Index of " << path << "</title</head><body>"
@@ -76,82 +120,82 @@ void httpResponse::generateAutoIndex(std::vector<std::string> &fileName, std::st
 	}
 	index << "</pre><hr></body></html>";
 	_body = index.str();
+	return 200;
 }
 
-void httpResponse::searchFileInDir(std::string &path)
+int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 {
-	DIR *currentDir = opendir(path.c_str());
-	if (!currentDir)
+	struct stat s;
+	for (std::vector<std::string>::iterator it = req.indexes.begin(); it != req.indexes.end(); ++it)
 	{
-		_statusCode = 403;
-		_statusMsg = "Forbidden";
-		return ;
-	}
-	struct dirent *readFile;
-	std::vector<std::string> fileName;
-	while (1)
-	{
-		readFile = readdir(currentDir); // secu ?
-		fileName.push_back(readFile->d_name);
-		if (!readFile)
-			break ;
-		if (readFile->d_name == "index.html") // std::vector<std::string> index;
-		{	
-			path += readFile->d_name;
-			closedir(currentDir);
+		std::string tryPath = path + "/" + *it;
+		if (stat(tryPath.c_str(), &s) == 0)
+		{
 			std::ifstream inFile;
-			inFile.open(path.c_str() , std::ios::binary);
+			inFile.open(tryPath.c_str() , std::ios::binary);
 			if (!inFile.is_open())
-			{
-				_statusCode = 403;
-				return ;
-			}
+				return 403;
 			std::ostringstream oss;
 			oss << inFile.rdbuf();
 			_body = oss.str();
-			return ;
+			return 200;
 		}
 	}
-	if (_autoIndex)
-		generateAutoIndex(fileName, path);
+	if (req.auto_index)
+		generateAutoIndex(path);
 	else
-		_statusCode = 403;
-	closedir(currentDir);
-	return ;
+		return 403;
+	return 200;
 }
 
 
-void httpResponse::fillBody(std::string &path) {
-	// if (forbbiden method ---> remplir le body en consequence)
+bool httpResponse::isForbiddenMethod(HttpRequest &req)
+{
+	for (std::vector<std::string>::iterator it = req.methods.begin(); it != req.methods.end(); ++it)
+	{
+		if (*it == req.method)
+			return false;
+	}
+	return true;
+}
+
+int httpResponse::fillBody(std::string &path, HttpRequest &req) {
+
+	if (isForbiddenMethod(req))
+		return 405;
 	struct stat s;
 	if (stat(path.c_str(), &s) == -1)
-	{
-		_statusMsg = "Not found."; // a virer
-		_statusCode = 404;
-		return ;
-	}
+		return 404;
 	std::ifstream inFile;
-	if (_statusCode == 0 && S_ISDIR(s.st_mode))
-		searchFileInDir(path);
+	if (S_ISDIR(s.st_mode))
+		searchFileInDir(path, req);
 	else
 	{
 		inFile.open(path.c_str(), std::ios::binary);
 		if (!inFile.is_open())
-		{
-			_statusCode = 403;
-			return ;
-		}
+			return 403;
 		std::ostringstream oss;
 		oss << inFile.rdbuf();
 		_body = oss.str();
 	}
-	
-	
+	return 200;	
+}
+
+void httpResponse::handleError(HttpRequest &req)
+{
+	(void)req;
+	_statusMsg = _mErrorMsg[_statusCode];
+	if (_statusMsg.empty())
+	{
+		_statusCode = 500;
+		_statusMsg = "Internal erver Error";
+	}
 }
 
 void httpResponse::exeGet(HttpRequest &req){
-	//Check forbidden Method
-	// fillBody(req.path);
+
+	_statusCode = fillBody(req.path, req);
+	handleError(req);
 	fillHeaders(req.headers);
 }
 
@@ -167,9 +211,6 @@ std::string httpResponse::getBody() const{
 	return _body;
 }
 
-// std::string httpResponse::getMethod() const{
-// 	return _method;
-// }
 int httpResponse::getStatusCode() const{
 	return _statusCode;
 }
