@@ -3,40 +3,8 @@
 #include <sys/stat.h>
 #include <sstream>
 
-int count_char(std::string line, char c)
-{
-	int i = 0;
-	while (line[i] == c)
-		i++;
-	return (i);
-}
 
-void handle_server(std::ifstream& file, std::vector<Server>& servers)
-{
-	Server serv;
-	std::string line;
-	while (std::getline(file, line))
-	{
-		if (count_char(line, '\t') < 1)
-		{
-			std::cout << "end serv scope" << std::endl;
-			servers.push_back(serv);
-			return ;
-		}
-		size_t i = 0;
-		while (std::isspace(line[i]))
-			i++;
-		std::string key;
-		while (!std::isspace(line[i]) && i < line.size())
-		{
-			key += line[i];
-			i++;
-		}
-		std::string value(&line[i]);
-		std::cout << "	" << key << "  -->  " << value << std::endl;
 
-	}
-}
 
 int parse(std::vector<Server>& servers, std::string path)
 {
@@ -61,12 +29,16 @@ int parse(std::vector<Server>& servers, std::string path)
 		return (1);
 	}
 	std::string line;
-	while (std::getline(file, line))
+	int read = 0;
+	while (read || std::getline(file, line))
 	{
+		read = 0;
 		std::cout << line << std::endl;
 		if (line == "server")
 		{
-			handle_server(file, servers);
+			Server serv;
+			read = serv.fill_server_config(file);
+			servers.push_back(serv);
 		}
 	}
 

@@ -7,8 +7,11 @@
 class Server : public Config
 {
 	public:
-		Server(){}
-		~Server(){}
+		Server();
+		~Server();
+
+		int		fill_server_config(std::ifstream& file);
+		friend	std::ostream& operator<<(std::ostream& out, const Server& serv);
 
 	private:
 		int								_host;
@@ -21,6 +24,10 @@ class Server : public Config
 		int										get_port() const;
 		const std::string						get_server_name() const;
 		const std::map<std::string, Location>	get_locations() const;
+
+		int		set_listen(const std::string& value);
+		int		set_server_name(const std::string& value);
 };
+
 
 #endif

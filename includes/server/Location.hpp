@@ -6,9 +6,6 @@
 #include <map>
 #include "Config.hpp"
 
-# define METHOD_GET 0b1
-# define METHOD_POST 0b10
-# define METHOD_DELETE 0b100
 
 class Location : public Config
 {

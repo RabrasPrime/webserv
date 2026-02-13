@@ -1,10 +1,14 @@
 server
-	listen 0.0.0.0:8080
-	server_name monsite.com
+		listen 127.0.0.1
+	server_name      
 	root ./www/monsite
-	client_max_body_size 10M
-	error_pages 404 ./www/site1/errors/4k.html
+	client_max_body_size 4k
+	error_pages 404 ./www/site1/errors/404.html
 	error_pages 500 501 ./www/site1/errors/5c.html
+	error_pages 404 ./www/site1/errors/404_new.html
+	error_pages 403 ./www/site1/errors/403.html
+	error_pages
+	methods GET
 	locations
 		path
 		path /images
@@ -13,7 +17,6 @@ server
 			auto_index true
 		path /api
 			methods GET POST
-			client_max_body_size 1M
 			index default_page.html index.html
 		path /upload
 			methods POST
@@ -28,9 +31,8 @@ server
 			cgi_upload_path ./www/script/tmp
 			cgi_timeout 10
 
-
 server
-	listen 127.0.0.1:9090
+	listen 127.0.0.:9090
 	server_name test.local
 	root ./www/test
 
@@ -43,3 +45,9 @@ server
 	listen 80
 	server_name hello.com www.hello.com hello_world.com www.hello_world.com
 	root /var/www/hello
+
+server
+	listen   
+	root /var/www/abc
+	server_name abc.com 
+

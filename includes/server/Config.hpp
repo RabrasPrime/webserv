@@ -5,17 +5,22 @@
 #include <map>
 #include <iostream>
 
+# define METHOD_GET 0b1
+# define METHOD_POST 0b10
+# define METHOD_DELETE 0b100
+# define CLIENT_MAX_BODY_SIZE_DEFAULT 10 * 1024 * 1024 // 10M
+
 class Config
 {
 	public:
-		Config(){}
-		~Config(){}
+		Config();
+		~Config();
 
-	private:
+	protected:
 		std::string							_root;
 		size_t								_client_max_body_size;
 		std::map<int, std::string>			_error_pages;
-		std::vector<std::string>			_methods;
+		int									_methods;
 		bool								_auto_index;
 		std::vector<std::string>			_indexes;
 		std::string							_upload_store;
@@ -30,7 +35,7 @@ class Config
 		const std::string							get_root() const;
 		size_t										get_client_max_body_size() const;
 		const std::map<int, std::string>			get_error_pages() const;
-		const std::vector<std::string>				get_methods() const;
+		int											get_methods() const;
 		bool										get_auto_index() const;
 		const std::vector<std::string>				get_indexes() const;
 		const std::string							get_upload_store() const;
@@ -41,6 +46,9 @@ class Config
 		int											get_cgi_timeout() const;
 
 		// SET
+		int		set_root(const std::string& value);
+		int		set_client_max_body_size(const std::string& value);
+		int		set_error_pages(const std::string& value);
 };
 
 #endif

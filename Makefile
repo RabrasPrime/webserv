@@ -18,6 +18,11 @@ SERVER	=									\
 
 FILES	+=	$(addprefix srcs/server/,$(SERVER))
 
+UTILS	=									\
+				utils.cpp					
+
+FILES	+=	$(addprefix srcs/utils/,$(UTILS))
+
 PARSING_CONFIG_FILE	=			
 
 FILES	+=	$(addprefix srcs/parsing_config_file/,$(PARSING_CONFIG_FILE))
