@@ -7,20 +7,20 @@ server
 	error_pages 500 501 ./www/site1/errors/5c.html
 	error_pages 404 ./www/site1/errors/404_new.html
 	error_pages 403 ./www/site1/errors/403.html
-	error_pages
-	methods GET
+	error_pages 501
+	methods GET POST DELETE
 	locations
 		path
 		path /images
 			root ./data/media
 			methods GET
-			auto_index true
+			auto_index True x
 		path /api
 			methods GET POST
 			index default_page.html index.html
 		path /upload
 			methods POST
-			upload_store ./www/images
+			upload_path ./www/images
 		path /cgi-bin
 			cgi_enabled true
 			methods GET POST
@@ -35,19 +35,23 @@ server
 	listen 127.0.0.:9090
 	server_name test.local
 	root ./www/test
+	methods POST
 
 server
 	listen 80
 	server_name site.com www.site.com sit.com www.sit.com
 	root /var/www/sites
+	methods DELETE
 
 server
 	listen 80
 	server_name hello.com www.hello.com hello_world.com www.hello_world.com
 	root /var/www/hello
+	methods INVALID
 
 server
 	listen   
 	root /var/www/abc
 	server_name abc.com 
+	methods GET
 

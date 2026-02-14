@@ -43,10 +43,14 @@ std::ostream& operator<<(std::ostream& out, const Server& serv)
 						<< std::endl;
 	out << "Port : " << serv._port << std::endl;
 	out << "Server Name : " << serv._server_name << std::endl;
-	out << "Client Max Body Size : " << serv._client_max_body_size << std::endl;
-	out << "Error Pages : " << std::endl;
-	for (std::map<int, std::string>::const_iterator it = serv._error_pages.begin(); it != serv._error_pages.end();it++)
-		out << "\t" << it->first << " " << it->second << std::endl;
+	out << static_cast<Config>(serv);
+	// out << "Client Max Body Size : " << serv._client_max_body_size << std::endl;
+	// out << "Error Pages : " << std::endl;
+	// for (std::map<int, std::string>::const_iterator it = serv._error_pages.begin(); it != serv._error_pages.end();it++)
+	// 	out << "\t" << it->first << " " << it->second << std::endl;
+	// out << "Methods : "	<< (METHOD_DELETE & serv._methods ? "DELETE " : "")
+	// 					<< (METHOD_GET & serv._methods ? "GET " : "")
+	// 					<< (METHOD_POST & serv._methods ? "POST " : "") << std::endl;
 	return (out);
 }
 
@@ -140,7 +144,6 @@ int		Server::set_server_name(const std::string& value)
 	return (0);
 }
 
-
 int Server::fill_server_config(std::ifstream& file)
 {
 	std::string line;
@@ -169,13 +172,8 @@ int Server::fill_server_config(std::ifstream& file)
 			set_listen(value) ? print_warning("Warning","Invalid value on listen !") : "";
 		if (key == "server_name")
 			set_server_name(value) ? print_warning("Warning","Invalid value on server_name !"): "";
-		if (key == "root")
-			set_root(value) ? print_warning("Warning","Invalid value on root !"): "";
-		if (key == "client_max_body_size")
-			set_client_max_body_size(value) ? print_warning("Warning","Invalid value on client_max_body_size !"): "";
-		if (key == "error_pages")
-			set_error_pages(value) ? print_warning("Warning","Invalid value on error_pages !"): "";
-		if (key == "methods")
+
+		fill_config(key, value);
 	}
 	if (file.eof())
 	{

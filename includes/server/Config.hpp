@@ -16,6 +16,9 @@ class Config
 		Config();
 		~Config();
 
+		void fill_config(const std::string& key, const std::string& value);
+		friend std::ostream& operator<<(std::ostream& out, const Config& config);
+
 	protected:
 		std::string							_root;
 		size_t								_client_max_body_size;
@@ -23,12 +26,26 @@ class Config
 		int									_methods;
 		bool								_auto_index;
 		std::vector<std::string>			_indexes;
-		std::string							_upload_store;
+		std::string							_upload_path;
 		bool								_cgi_enabled;
 		std::map<std::string, std::string>	_cgi_ext;
 		std::string							_cgi_working_dir;
 		std::string							_cgi_upload_path;
 		int									_cgi_timeout;
+
+
+		bool								_is_set_root;
+		bool								_is_set_client_max_body_size;
+		bool								_is_set_error_pages;
+		bool								_is_set_methods;
+		bool								_is_set_auto_index;
+		bool								_is_set_indexes;
+		bool								_is_set_upload_path;
+		bool								_is_set_cgi_enabled;
+		bool								_is_set_cgi_ext;
+		bool								_is_set_cgi_working_dir;
+		bool								_is_set_cgi_upload_path;
+		bool								_is_set_cgi_timeout;
 
 	public:
 		// GET
@@ -38,7 +55,7 @@ class Config
 		int											get_methods() const;
 		bool										get_auto_index() const;
 		const std::vector<std::string>				get_indexes() const;
-		const std::string							get_upload_store() const;
+		const std::string							get_upload_path() const;
 		bool										get_cgi_enabled() const;
 		const std::map<std::string, std::string>	get_cgi_ext() const;
 		const std::string							get_cgi_working_dir() const;
@@ -49,6 +66,11 @@ class Config
 		int		set_root(const std::string& value);
 		int		set_client_max_body_size(const std::string& value);
 		int		set_error_pages(const std::string& value);
+		int		set_methods(const std::string& value);
+		int		set_auto_index(const std::string& value);
+		int		set_indexes(const std::string& value);
+		int		set_upload_path(const std::string& value);
+		int		set_cgi_enabled(const std::string& value)
 };
 
 #endif
