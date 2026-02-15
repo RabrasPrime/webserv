@@ -37,7 +37,7 @@ int parse(std::vector<Server>& servers, std::string path)
 		if (line == "server")
 		{
 			Server serv;
-			read = serv.fill_server_config(file);
+			read = serv.fill_server_config(file, line);
 			servers.push_back(serv);
 		}
 	}

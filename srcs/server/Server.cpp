@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "Utils.hpp"
+#include "Color.hpp"
 #include <fstream>
 #include <sstream>
 
@@ -33,7 +34,8 @@ const std::map<std::string, Location>	Server::get_locations() const
 }
 std::ostream& operator<<(std::ostream& out, const Server& serv)
 {
-	out << "Host : "	<< ((serv._host >> 24) & 255)
+	out << _BLUE << "Host : " << _PURPLE
+						<< ((serv._host >> 24) & 255)
 						<< "."
 						<< ((serv._host >> 16) & 255)
 						<< "."
@@ -41,8 +43,8 @@ std::ostream& operator<<(std::ostream& out, const Server& serv)
 						<< "."
 						<< (serv._host & 255)
 						<< std::endl;
-	out << "Port : " << serv._port << std::endl;
-	out << "Server Name : " << serv._server_name << std::endl;
+	out << _BLUE << "Port : " << _PURPLE << serv._port << std::endl;
+	out << _BLUE << "Server Name : " << _PURPLE << serv._server_name << std::endl;
 	out << static_cast<Config>(serv);
 	// out << "Client Max Body Size : " << serv._client_max_body_size << std::endl;
 	// out << "Error Pages : " << std::endl;
@@ -144,10 +146,8 @@ int		Server::set_server_name(const std::string& value)
 	return (0);
 }
 
-int Server::fill_server_config(std::ifstream& file)
+int Server::fill_server_config(std::ifstream& file, std::string& line)
 {
-	std::string line;
-
 	while (std::getline(file, line))
 	{
 		if (count_char(line, '\t') < 1 && line.size() > 0)
@@ -170,10 +170,12 @@ int Server::fill_server_config(std::ifstream& file)
 		std::string value(&line[i]);
 		if (key == "listen")
 			set_listen(value) ? print_warning("Warning","Invalid value on listen !") : "";
-		if (key == "server_name")
+		else if (key == "server_name")
 			set_server_name(value) ? print_warning("Warning","Invalid value on server_name !"): "";
-
-		fill_config(key, value);
+		else if (key == "locations")
+			;
+		else
+			fill_config(key, value);
 	}
 	if (file.eof())
 	{

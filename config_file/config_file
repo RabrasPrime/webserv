@@ -10,7 +10,6 @@ server
 	error_pages 501
 	methods GET POST DELETE
 	locations
-		path
 		path /images
 			root ./data/media
 			methods GET
@@ -25,8 +24,9 @@ server
 			cgi_enabled true
 			methods GET POST
 			root ./www/script/list
-			cgi_ext .py /usr/bin/python3
+			cgi_ext .py .tst /usr/bin/python3
 			cgi_ext .sh /bin/bash
+			cgi_ext .py off
 			cgi_working_dir ./www/script/exec
 			cgi_upload_path ./www/script/tmp
 			cgi_timeout 10

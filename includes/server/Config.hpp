@@ -70,7 +70,11 @@ class Config
 		int		set_auto_index(const std::string& value);
 		int		set_indexes(const std::string& value);
 		int		set_upload_path(const std::string& value);
-		int		set_cgi_enabled(const std::string& value)
+		int		set_cgi_enabled(const std::string& value);
+		int		set_cgi_ext(const std::string& value);
+		int		set_cgi_working_dir(const std::string& value);
+		int		set_cgi_upload_path(const std::string& value);
+		int		set_cgi_timeout(const std::string& value);
 };
 
 #endif

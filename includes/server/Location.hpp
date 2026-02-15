@@ -13,6 +13,8 @@ class Location : public Config
 		Location(){}
 		~Location(){}
 
+		int fill_location_config(std::ifstream& file, std::string& line, int indent);
+
 	private:
 		std::string			_path;
 

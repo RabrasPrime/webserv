@@ -234,7 +234,80 @@ int		Config::set_cgi_enabled(const std::string& value)
 		return (1);
 	return (0);
 }
+int		Config::set_cgi_ext(const std::string& value)
+{
+	std::stringstream ss(value);
+	std::vector<std::string> list;
+	std::string str;
+	while (ss >> str)
+	{
+		list.push_back(str);
+	}
+	if (list.size() < 2)
+		return (1);
+	std::string path = list.back();
+	list.pop_back();
+	for (std::vector<std::string>::iterator it = list.begin();it != list.end();it++)
+	{
+		if ((*it)[0] == '.')
+		{
+			(*it) = &(*it)[1];
+		}
+		if (path != "off")
+			_cgi_ext[*it] = path;
+		else
+			_cgi_ext.erase(*it);
+	}
+	return (0);
+}
+int		Config::set_cgi_working_dir(const std::string& value)
+{
+	std::stringstream ss(value);
+	std::string path;
 
+	if (ss >> path)
+	{
+		char extra;
+		if (ss >> extra)
+			return (1);
+		_cgi_working_dir = path;
+	}
+	else
+		return (1);
+	return (0);
+}
+int		Config::set_cgi_upload_path(const std::string& value)
+{
+	std::stringstream ss(value);
+	std::string path;
+
+	if (ss >> path)
+	{
+		char extra;
+		if (ss >> extra)
+			return (1);
+		_cgi_upload_path = path;
+	}
+	else
+		return (1);
+	return (0);
+}
+int		Config::set_cgi_timeout(const std::string& value)
+{
+	std::stringstream ss(value);
+	int time;
+
+	if (ss >> time)
+	{
+		char extra;
+		if (ss >> extra)
+			return (1);
+		_cgi_timeout = time;
+	}
+	else
+		return (1);
+	return (0);
+}
 
 
 void Config::fill_config(const std::string& key, const std::string& value)
@@ -254,23 +327,38 @@ void Config::fill_config(const std::string& key, const std::string& value)
 	if (key == "upload_path")
 		set_upload_path(value) ? print_warning("Warning","Invalid value on upload_path !"): (_is_set_upload_path = true,"");
 	if (key == "cgi_enabled")
-		set_cgi_enabled(value) ? print_warning("Warning","Invalid value on cgi_enabled !"): (_is_set_upload_path = true,"");
+		set_cgi_enabled(value) ? print_warning("Warning","Invalid value on cgi_enabled !"): (_is_set_cgi_enabled = true,"");
+	if (key == "cgi_ext")
+		set_cgi_ext(value) ? print_warning("Warning","Invalid value on cgi_ext !"): (_is_set_cgi_ext = true,"");
+	if (key == "cgi_working_dir")
+		set_cgi_working_dir(value) ? print_warning("Warning","Invalid value on cgi_working_dir !"): (_is_set_cgi_working_dir = true,"");
+	if (key == "cgi_upload_path")
+		set_cgi_upload_path(value) ? print_warning("Warning","Invalid value on cgi_upload_path !"): (_is_set_cgi_upload_path = true,"");
+	if (key == "cgi_timeout")
+		set_cgi_timeout(value) ? print_warning("Warning","Invalid value on cgi_timeout !"): (_is_set_cgi_timeout = true,"");
 }
 
 std::ostream& operator<<(std::ostream& out, const Config&  config)
 {
-	out << "Client Max Body Size : " << config._client_max_body_size << std::endl;
-	out << "Error Pages : " << std::endl;
+	out << _BLUE << "Client Max Body Size : " << _PURPLE << config._client_max_body_size << _END << std::endl;
+	out << _BLUE << "Error Pages : " << _PURPLE << std::endl;
 	for (std::map<int, std::string>::const_iterator it = config._error_pages.begin(); it != config._error_pages.end();it++)
-		out << "\t" << it->first << " " << it->second << std::endl;
-	out << "Methods : "	<< (METHOD_DELETE & config._methods ? "DELETE " : "")
+		out << _BLUE << "\t" << it->first << _PURPLE << " " << it->second << _END << std::endl;
+	out << _BLUE << "Methods : " << _PURPLE << (METHOD_DELETE & config._methods ? "DELETE " : "")
 						<< (METHOD_GET & config._methods ? "GET " : "")
-						<< (METHOD_POST & config._methods ? "POST " : "") << std::endl;
-	out << "Auto Index : " << config._auto_index << std::endl;
-	out << "Index : ";
+						<< (METHOD_POST & config._methods ? "POST " : "") << _END << std::endl;
+	out << _BLUE << "Auto Index : " << _PURPLE << config._auto_index << _END << std::endl;
+	out << _BLUE << "Index : " << _PURPLE;
 	for (std::vector<std::string>::const_iterator it = config._indexes.begin(); it != config._indexes.end();it++)
 		out << *it << " ";
-	out << std::endl;
-	out << "Upload Path : " << config._upload_path << std::endl;
+	out << _END << std::endl;
+	out << _BLUE << "Upload Path : " << _PURPLE << config._upload_path << _END << std::endl;
+	out << _BLUE << "Cgi Enabled : " << _PURPLE << config._cgi_enabled << _END << std::endl;
+	out << _BLUE << "Cgi Ext : " << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = config._cgi_ext.begin();it != config._cgi_ext.end();it++)
+		out << _BLUE << "\t" << it->first << _PURPLE << " " << it->second << _END << std::endl;
+	out << _BLUE << "Cgi Working Dir : " << _PURPLE << config._cgi_working_dir << _END << std::endl;
+	out << _BLUE << "Cgi Upload Path : " << _PURPLE << config._cgi_upload_path << _END << std::endl;
+	out << _BLUE << "Cgi Timeout : " << _PURPLE << config._cgi_timeout << _END << std::endl;
 	return (out);
 }

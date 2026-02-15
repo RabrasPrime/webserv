@@ -10,7 +10,7 @@ class Server : public Config
 		Server();
 		~Server();
 
-		int		fill_server_config(std::ifstream& file);
+		int fill_server_config(std::ifstream& file, std::string& line);
 		friend	std::ostream& operator<<(std::ostream& out, const Server& serv);
 
 	private:
