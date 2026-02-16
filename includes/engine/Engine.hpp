@@ -23,8 +23,6 @@ class Engine
 	private:
 		int	_epoll_fd;
 		std::vector<Server> _servers_config;
-		int	_port;
-		int	_host;
 
 		std::map<int, Client> _clients;;
 		std::map<int, Listener> _listening_engines;
