@@ -23,6 +23,18 @@ UTILS	=									\
 
 FILES	+=	$(addprefix srcs/utils/,$(UTILS))
 
+ENGINE	=									\
+				Socket.cpp					\
+				Engine.cpp					\
+				Listener.cpp				\
+
+FILES	+=	$(addprefix srcs/engine/,$(ENGINE))
+
+CLIENT	=									\
+				Client.cpp					\
+
+FILES	+=	$(addprefix srcs/client/,$(CLIENT))
+
 PARSING_CONFIG_FILE	=			
 
 FILES	+=	$(addprefix srcs/parsing_config_file/,$(PARSING_CONFIG_FILE))
@@ -47,6 +59,7 @@ includes
 ALL_I_DIR_HEADER	=				\
 -I includes							\
 -I includes/server					\
+-I includes/engine					\
 
 
 CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
