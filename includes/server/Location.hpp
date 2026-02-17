@@ -13,13 +13,19 @@ class Location : public Config
 		Location(){}
 		~Location(){}
 
-		int fill_location_config(std::ifstream& file, std::string& line, int indent);
+		int		fill_location_config(std::ifstream& file, std::string& line, int indent);
+		friend	std::ostream& operator<<(std::ostream& out, const Location& loc);
+		const Location& operator=(const Location& loc);
 
 	private:
 		std::string			_path;
 
 	public:
-		const std::string	get_path() const;
+		// GET
+		const std::string		get_path() const;
+
+		// SET
+		void		set_path(const std::string value);
 };
 
 #endif

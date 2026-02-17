@@ -340,6 +340,7 @@ void Config::fill_config(const std::string& key, const std::string& value)
 
 std::ostream& operator<<(std::ostream& out, const Config&  config)
 {
+	out << _BLUE << "Root : " << _PURPLE << config._root << _END << std::endl;
 	out << _BLUE << "Client Max Body Size : " << _PURPLE << config._client_max_body_size << _END << std::endl;
 	out << _BLUE << "Error Pages : " << _PURPLE << std::endl;
 	for (std::map<int, std::string>::const_iterator it = config._error_pages.begin(); it != config._error_pages.end();it++)

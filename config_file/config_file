@@ -1,5 +1,5 @@
 server
-		listen 127.0.0.1
+	listen 127.0.0.1
 	server_name      
 	root ./www/monsite
 	client_max_body_size 4k
@@ -9,27 +9,26 @@ server
 	error_pages 403 ./www/site1/errors/403.html
 	error_pages 501
 	methods GET POST DELETE
-	locations
-		path /images
-			root ./data/media
-			methods GET
-			auto_index True x
-		path /api
-			methods GET POST
-			index default_page.html index.html
-		path /upload
-			methods POST
-			upload_path ./www/images
-		path /cgi-bin
-			cgi_enabled true
-			methods GET POST
-			root ./www/script/list
-			cgi_ext .py .tst /usr/bin/python3
-			cgi_ext .sh /bin/bash
-			cgi_ext .py off
-			cgi_working_dir ./www/script/exec
-			cgi_upload_path ./www/script/tmp
-			cgi_timeout 10
+	locations /images /picture
+		root ./data/media
+		methods GET POST
+		auto_index True
+	locations /api
+		methods GET POST
+		index default_page.html index.html
+	locations /upload
+		methods POST
+		upload_path ./www/images
+	locations /cgi-bin
+		cgi_enabled true
+		methods GET POST
+		root ./www/script/list
+		cgi_ext .py .tst /usr/bin/python3
+		cgi_ext .sh /bin/bash
+		cgi_ext .py off
+		cgi_working_dir ./www/script/exec
+		cgi_upload_path ./www/script/tmp
+		cgi_timeout 10
 
 server
 	listen 127.0.0.:9090
