@@ -15,6 +15,10 @@ class Listener
 	private:
 		int	fd;
 		std::vector<Server*> _servers;
+
+		int	_port;
+		int	_host;
+		static const int	_backlog = 128;
 	public:
 		Listener();
 		Listener(Server* server);
@@ -22,11 +26,26 @@ class Listener
 		Listener(Server* server, int fd);
 		~Listener();
 
-		int	get_fd() const;
 		void	add_server(Server* server);
 		void	remove_server(Server* server);
+		Server*	match_server(int host, int port) const;
 		void	add_fd(int fd);
-		std::vector<Server*> &get_servers() const;
+
+		bool	create_socket(int host, int port);
+		bool	bind_socket(int host, int port);
+		bool	listen_socket();
+		void	close_socket();
+
+		int	accept_connection();
+
+		int	get_fd() const;
+		int	get_port() const;
+		int	get_host() const;
+		const std::vector<Server*>& get_servers() const;
+
+		bool	is_valid() const;
+		void	set_non_blocking();
+		void	set_non_blocking(int fd);
 };
 
 

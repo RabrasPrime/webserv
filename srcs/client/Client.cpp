@@ -4,6 +4,7 @@
 
 #include "Client.hpp"
 #include "Server.hpp"
+#include <unistd.h>
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -59,3 +60,4 @@ bool Client::is_valid() const
 {
 	return (_fd != -1);
 }
+

@@ -34,7 +34,7 @@ class Engine
 		~Engine();
 
 		void	init_listeners();
-		void	setupt_epoll();
+		void	setup_epoll();
 
 		void	run();
 		void	stop();
@@ -42,8 +42,8 @@ class Engine
 		void	add_client(Client* client);
 		void	remove_client(Client* client);
 
-		void	add_server(Server* server);
-		void	remove_server(Server* server);
+		void	add_server(Server& server);
+		void	remove_server(Server& server);
 		Server*	match_server(int host, int port);
 
 		void	add_listener(Listener* listener);
@@ -56,7 +56,14 @@ class Engine
 		bool	listen_socket(int socket_fd);
 		void	close_socket(int socket_fd);
 
+		void	handle_new_connection(Listener* listener);
+		void	handle_client_read(Client* client);
+		void	handle_client_write(Client* client);
+		void	handle_client_disconnect(Client* client);
 
+		void	add_to_epoll(int fd, uint32_t events);
+		void	modify_epoll(int fd, uint32_t events);
+		void	remove_from_epoll(int fd);
 };
 
 #endif //WEBSERV_ENGINE_HPP
