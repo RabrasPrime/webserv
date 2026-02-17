@@ -12,33 +12,25 @@
 int main()
 {
 	HttpRequest req;
-	req.method = "GET";
-	req.path = "/home/samaouch/Documentsfe";
+	req.method = "POST";
+	req.path = "/home/samaouch/Documents/test/index.html";
 	req.version = "HTTP/1.1";
 	req.headers["Host"] = "localhost:8080";
 	req.headers["Content-Type"] = "text/html";
-	req.headers["Connection"] = "close";
+	req.headers["Connection"] = "Keep-Alive";
 	req.body = "<h1>Hello World!<h1>";
 	req.type = "html";
 	req.auto_index = true;
 	req.indexes.push_back("default_page.html");
 	req.indexes.push_back("index.html");
-	// req.methods.push_back("GET");
+	req.methods.push_back("GET");
 	req.methods.push_back("POST");
 	req.methods.push_back("DELETE");
+	req.maxSize = 458;
 	std::stringstream ss;
 	ss << req.body.size();
 	req.headers["Content-Length"] = ss.str();
 	httpResponse resp;
-	// resp.handleResponse(req);
-	// std::cout << PURPLE BOLD "Display Status Code/Message" RESET << std::endl;
-	// std::cout << GREEN BOLD "HTTP/1.1 " RESET << resp.getStatusCode() << " " << resp.getStatusMsg() << std::endl;
-	// std::cout << std::endl << PURPLE BOLD "Display Headers" RESET << std::endl;
-	// std::map<std::string, std::string> headers = resp.getHeaders();
-	// for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
-	// 	std::cout << (*it).first << ": " << (*it).second << std::endl;
-	// std::cout << std::endl << PURPLE BOLD "Display Body" RESET << std::endl;
-	// std::cout << resp.getBody() << std::endl;
 	std::string response = resp.handleResponse(req);
 	std::cout << std::endl << PURPLE BOLD "Final Response" RESET << std::endl << response << std::endl;
 
@@ -66,3 +58,4 @@ int main()
 	}
 	return 0;
 }
+

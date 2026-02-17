@@ -16,6 +16,7 @@ struct HttpRequest
 	bool						auto_index;
 	std::vector<std::string>	indexes; 
 	bool autoIndex;
+	size_t maxSize;
 };
 
 #endif

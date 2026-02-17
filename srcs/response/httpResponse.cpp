@@ -26,15 +26,15 @@ std::string httpResponse::handleResponse(HttpRequest &req){
 	_version = req.version;
 	if (req.method == "GET")
 		exeGet(req);
-	else // Voir pour le  body etc..
+	else if (req.method == "POST")
+		exePost(req);
+	else if (req.method == "DELETE")
+		exeDelete(req);
+	else
 	{
 		_statusCode = 501;
 		handleError(req);
 	}
-	// else if (_method == "POST")
-	// 	exePost();
-	// else if (_method == "DELETE")
-	// 	exeDelete();
 	return convertFinalResponse();
 }
 
@@ -133,7 +133,7 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 		if (stat(tryPath.c_str(), &s) == 0)
 		{
 			std::ifstream inFile;
-			inFile.open(tryPath.c_str() , std::ios::binary);
+			inFile.open(tryPath.c_str(), std::ios::binary);
 			if (!inFile.is_open())
 				return 403;
 			std::ostringstream oss;
@@ -198,6 +198,15 @@ std::string httpResponse::setPathError()
 		case 405:
 			pathErrFile = "file/error_page/error_page_405.html";
 			break ;
+		case 409:
+			pathErrFile = "file/error_page/error_page_409.html";
+			break ;
+		case 411:
+			pathErrFile = "file/error_page/error_page_411.html";
+			break ;
+		case 413:
+			pathErrFile = "file/error_page/error_page_413.html";
+			break ;
 		case 500:
 			pathErrFile = "file/error_page/error_page_500.html";
 			break ;
@@ -215,7 +224,6 @@ std::string httpResponse::setPathError()
 void httpResponse::fillDefaultBody(){
 
 	std::string pathErrFile = setPathError();
-	std::cout << pathErrFile << std::endl;
 	std::ifstream inFile;
 	inFile.open(pathErrFile.c_str(), std::ios::binary);
 	if (!inFile.is_open())
@@ -237,7 +245,6 @@ void httpResponse::fillDefaultBody(){
 
 void httpResponse::handleError(HttpRequest &req)
 {
-	(void)req;
 	_statusMsg = _mErrorMsg[_statusCode];
 	if (_statusMsg.empty() && _statusCode == 0)
 	{
@@ -278,22 +285,128 @@ void httpResponse::exeGet(HttpRequest &req){
 	fillHeaders(req.headers);
 }
 
-// std::string httpResponse::getVersion() const{
-// 	return _version;
-// }
+void httpResponse::fillBody(HttpRequest &req)
+{
+	std::ostringstream index;
+	index << "<html><head><style>body{ background: #1a1a1a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; flex-direction: column;} h1 {font-size: 100px; color: #16d705; margin-top: -50px; } </style></head><body> <h1>";
+	if (_statusCode == 200 && req.method == "DELETE")
+		index << " File deleted sucessfully";
+	else if (_statusCode == 200)
+		index << " File updated sucessfully";
+	else
+		index << " File created sucessfully";
+	index <<  "</h1></body></html>";
+	_body = index.str();
+	_bodyType = "html";
+}
 
-// std::string httpResponse::getStatusMsg() const{
-// 	return _statusMsg;
-// }
+int httpResponse::isFileExist(std::string &path, HttpRequest &req)
+{
+	if (isForbiddenMethod(req))
+		return 405;
+	bool fileCreated = false;
+	struct stat s;
 
-// std::string httpResponse::getBody() const{
-// 	return _body;
-// }
+	size_t parentDir = path.find_last_of("/\\");
+	std::string dirPath;
+	if (parentDir == std::string::npos)
+		dirPath = ".";
+	else if (parentDir == 0)
+		dirPath = "/";
+	else
+		dirPath = path.substr(0, parentDir);
+	
+	if (stat(path.c_str(), &s) == 0)
+	{
+		if (S_ISDIR(s.st_mode))
+			return 409;
+		if (access(path.c_str(), W_OK) == -1)
+			return 403;
+	}
+	else
+	{
+		if (stat(dirPath.c_str(), &s) == -1 || !S_ISDIR(s.st_mode))
+			return 404;
+		if (access(dirPath.c_str(), W_OK) == -1)
+			return 403;
+		fileCreated = true;
+	}
 
-// int httpResponse::getStatusCode() const{
-// 	return _statusCode;
-// }
+	std::ofstream outFile;
+	outFile.open(path.c_str(), std::ios::binary | std::ios::trunc);
+	if (!outFile.is_open())
+		return 500;
+	outFile.write(req.body.c_str(), req.body.size());
+	if (!outFile.good())
+	{
+		outFile.close();
+		return 500;
+	}
+	outFile.close();
+	return fileCreated ? 201 : 200;
+}
 
-// std::map<std::string, std::string> httpResponse::getHeaders() const{
-// 	return _headers;
-// }
+void httpResponse::exePost(HttpRequest &req)
+{
+ 	if (req.body.size() > req.maxSize)
+	{
+		_statusCode = 413;
+		handleError(req);
+		return ;
+	}
+	if (req.body.size() == 0)
+	{
+		_statusCode = 411;
+		handleError(req);
+		return ;
+	}
+	_statusCode = isFileExist(req.path, req);
+	if (_statusCode != 200 && _statusCode != 201)
+	{
+		handleError(req);
+		return ;
+	}
+	_statusMsg = _mErrorMsg[_statusCode];
+	fillBody(req);
+	fillHeaders(req.headers);
+}
+
+int httpResponse::deleteFile(std::string &path, HttpRequest &req)
+{
+	if (isForbiddenMethod(req))
+		return 405;
+	size_t parentDir = path.find_last_of("/\\");
+	std::string dirPath;
+	if (parentDir == std::string::npos)
+		dirPath = ".";
+	else if (parentDir == 0)
+		dirPath = "/";
+	else
+		dirPath = path.substr(0, parentDir);
+	if (access(dirPath.c_str(), X_OK) == -1)
+		return 403;
+	struct stat s;
+	if (stat(path.c_str(), &s) == -1)
+		return 404;
+	if (S_ISDIR(s.st_mode))
+		return 403;
+	if (access(dirPath.c_str(), W_OK) == -1)
+		return 404;
+	if (unlink(path.c_str()) == -1)
+		return 500;
+	return 200;
+}
+
+void httpResponse::exeDelete(HttpRequest &req)
+{
+	_statusCode = deleteFile(req.path, req);
+	if (_statusCode != 200 && _statusCode != 201)
+	{
+		handleError(req);
+		return ;
+	}
+	_statusCode = 200;
+	_statusMsg = _mErrorMsg[_statusCode];
+	fillBody(req);
+	fillHeaders(req.headers);
+}

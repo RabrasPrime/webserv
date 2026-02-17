@@ -7,6 +7,7 @@
 # include <exception>
 # include <map>
 # include <dirent.h>
+# include <unistd.h>
 # include <sstream>
 # include <vector>
 # include <algorithm>
@@ -20,7 +21,6 @@ class httpResponse
 {
 	public:
 		httpResponse();
-		// httpResponse(const HttpRequest &req);
 		~httpResponse(){}
 	
 	private:
@@ -32,7 +32,6 @@ class httpResponse
 		std::map<int, std::string> _mErrorMsg;
 		std::string _bodyType;
 		std::map<std::string, std::string> _mMimeTypes;
-		bool _autoIndex;
 
 	public:
 		std::string handleResponse(HttpRequest &req);
@@ -49,15 +48,12 @@ class httpResponse
 		std::string setPathError();
 		void handleError(HttpRequest &req);
 
-		void exePost();
-		void exeDelete();
+		void exePost(HttpRequest &req);
+		int isFileExist(std::string &path, HttpRequest &req);
+		void fillBody(HttpRequest &req);
 
-		// std::string getVersion() const;
-		// std::string getStatusMsg() const;
-		// std::string getBody() const;
-		// // std::string getMethod() const;
-		// int getStatusCode() const;
-		// std::map<std::string, std::string> getHeaders() const;
+		void exeDelete(HttpRequest &req);
+		int deleteFile(std::string &path, HttpRequest &req);
 };
 #endif
 
