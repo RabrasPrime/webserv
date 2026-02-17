@@ -148,8 +148,10 @@ int		Server::set_server_name(const std::string& value)
 
 int Server::fill_server_config(std::ifstream& file, std::string& line)
 {
-	while (std::getline(file, line))
+	int read = 0;
+	while (read || std::getline(file, line))
 	{
+		read = 0;
 		if (count_char(line, '\t') < 1 && line.size() > 0)
 		{
 			std::cout << *this << std::endl;
@@ -173,7 +175,20 @@ int Server::fill_server_config(std::ifstream& file, std::string& line)
 		else if (key == "server_name")
 			set_server_name(value) ? print_warning("Warning","Invalid value on server_name !"): "";
 		else if (key == "locations")
-			;
+		{
+			Location loc;
+			std::stringstream ss(value);
+			std::string str;
+			read = loc.fill_location_config(file, line, count_char(line, '\t'));
+			while (ss >> str)
+			{
+				Location tmp;
+				tmp = loc;
+				tmp.set_path(str);
+				this->_locations[str] = tmp;
+				std::cout << tmp << std::endl;
+			}
+		}
 		else
 			fill_config(key, value);
 	}
