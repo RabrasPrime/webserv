@@ -3,11 +3,11 @@
 #include "Color.hpp"
 #include <fstream>
 #include <sstream>
+#include <cstring>
+#include <string>
 
 
 Server::Server()
-: _host(0)
-, _port(80)
 {
 
 }
@@ -16,14 +16,6 @@ Server::~Server()
 
 }
 
-int								Server::get_host() const
-{
-	return (_host);
-}
-int								Server::get_port() const
-{
-	return (_port);
-}
 const std::string						Server::get_server_name() const
 {
 	return (_server_name);
@@ -34,16 +26,16 @@ const std::map<std::string, Location>	Server::get_locations() const
 }
 std::ostream& operator<<(std::ostream& out, const Server& serv)
 {
-	out << _BLUE << "Host : " << _PURPLE
-						<< ((serv._host >> 24) & 255)
-						<< "."
-						<< ((serv._host >> 16) & 255)
-						<< "."
-						<< ((serv._host >> 8) & 255)
-						<< "."
-						<< (serv._host & 255)
-						<< std::endl;
-	out << _BLUE << "Port : " << _PURPLE << serv._port << std::endl;
+	// out << _BLUE << "Host : " << _PURPLE
+	// 					<< ((serv._host >> 24) & 255)
+	// 					<< "."
+	// 					<< ((serv._host >> 16) & 255)
+	// 					<< "."
+	// 					<< ((serv._host >> 8) & 255)
+	// 					<< "."
+	// 					<< (serv._host & 255)
+	// 					<< std::endl;
+	// out << _BLUE << "Port : " << _PURPLE << serv._port << std::endl;
 	out << _BLUE << "Server Name : " << _PURPLE << serv._server_name << std::endl;
 	out << static_cast<Config>(serv);
 	// out << "Client Max Body Size : " << serv._client_max_body_size << std::endl;
@@ -66,77 +58,144 @@ int is_valid_octet_addr(int value)
 
 int		Server::set_listen(const std::string& value)
 {
-	char extra;
-	size_t pos1 = value.find(':');
-	size_t pos2 = value.find('.');
+	struct sockaddr_storage storage;
+	std::memset(&storage, 0, sizeof(storage)); 
 
-	if (pos1 != std::string::npos)
+	
+	if (value.find('.') != std::string::npos)
 	{
-		// adress et port
-		std::stringstream ss(value);
-		int addr_part1;
-		int addr_part2;
-		int addr_part3;
-		int addr_part4;
-		int port;
-		char c1;
-		char c2;
-		char c3;
-		char c4;
-		if (ss >> addr_part1 >> c1 >> addr_part2 >> c2 >> addr_part3 >> c3 >> addr_part4 >> c4 >> port)
+		//ipv4
+		size_t pos = value.find(':');
+		if (pos != std::string::npos)
 		{
-			if (ss >> extra
-				|| !is_valid_octet_addr(addr_part1)
-				|| !is_valid_octet_addr(addr_part2)
-				|| !is_valid_octet_addr(addr_part3)
-				|| !is_valid_octet_addr(addr_part4)
-				|| port <= 0
-				|| c1 != '.' || c2 != '.' || c3 != '.')
+			std::string host(value.substr(0, pos));
+			std::stringstream ss(&value[pos + 1]);
+			int port;
+			if (!ss >> port)
 				return (1);
-			_host = (addr_part1 << 24) + (addr_part2 << 16) + (addr_part3 << 8) + addr_part4;
-			_port = port;
+			char extra;
+			if (ss >> extra || port < 1)
+				return (1);
+			struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
+			addr4->sin_family = AF_INET;
+			addr4->sin_port = htons(port);
+			if (!inet_pton(AF_INET, host.c_str(), &addr4->sin_addr))
+				return (1);
+			//pushback
 		}
 		else
-			return (1);
+		{
+			std::string host(value);
+			struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
+			addr4->sin_family = AF_INET;
+			addr4->sin_port = htons(80);
+			if (!inet_pton(AF_INET, host.c_str(), &addr4->sin_addr))
+				return (1);
+			//pushback
+		}
+
+		
 	}
-	else if (pos2 != std::string::npos)
+	else if (value.find(':') != std::string::npos)
 	{
-		// adresse
-		std::stringstream ss(value);
-		int addr_part1;
-		int addr_part2;
-		int addr_part3;
-		int addr_part4;
-		char c1;
-		char c2;
-		char c3;
-		if (ss >> addr_part1 >> c1 >> addr_part2 >> c2 >> addr_part3 >> c3 >> addr_part4)
+		//ipv6
+		size_t pos = value.find(']');
+		if (pos != std::string::npos)
 		{
-			if (ss >> extra
-				|| !is_valid_octet_addr(addr_part1)
-				|| !is_valid_octet_addr(addr_part2)
-				|| !is_valid_octet_addr(addr_part3)
-				|| !is_valid_octet_addr(addr_part4)
-				|| c1 != '.' || c2 != '.' || c3 != '.')
-				return (1);
-			_host = (addr_part1 << 24) + (addr_part2 << 16) + (addr_part3 << 8) + addr_part4;
+			std::string host(value.substr(1, pos));
+			int port;
+			if (value[])
+			std::stringstream ss(value)
 		}
 		else
-			return (1);
+		{
+
+		}
+
+		struct sockaddr_in6* addr6 = (struct sockaddr_in6*)&storage;
+		addr6->sin6_family = AF_INET6;
+		addr6->sin6_port = htons(8080);
+		inet_pton(AF_INET6, "2001:db8::1", &addr6->sin6_addr);
 	}
 	else
 	{
-		// port
-		std::stringstream ss(value);
-		if (ss >> _port)
-		{
-			if (ss >> extra || _port <= 0)
-				return (1);
-		}
-		else
-			return (1);
+		//port
 	}
-	return (0);
+
+
+
+
+	// char extra;
+	// size_t pos1 = value.find(':');
+	// size_t pos2 = value.find('.');
+
+	// if (pos1 != std::string::npos)
+	// {
+	// 	// adress et port
+	// 	std::stringstream ss(value);
+	// 	int addr_part1;
+	// 	int addr_part2;
+	// 	int addr_part3;
+	// 	int addr_part4;
+	// 	int port;
+	// 	char c1;
+	// 	char c2;
+	// 	char c3;
+	// 	char c4;
+	// 	if (ss >> addr_part1 >> c1 >> addr_part2 >> c2 >> addr_part3 >> c3 >> addr_part4 >> c4 >> port)
+	// 	{
+	// 		if (ss >> extra
+	// 			|| !is_valid_octet_addr(addr_part1)
+	// 			|| !is_valid_octet_addr(addr_part2)
+	// 			|| !is_valid_octet_addr(addr_part3)
+	// 			|| !is_valid_octet_addr(addr_part4)
+	// 			|| port <= 0
+	// 			|| c1 != '.' || c2 != '.' || c3 != '.')
+	// 			return (1);
+	// 		_host = (addr_part1 << 24) + (addr_part2 << 16) + (addr_part3 << 8) + addr_part4;
+	// 		_port = port;
+	// 	}
+	// 	else
+	// 		return (1);
+	// }
+	// else if (pos2 != std::string::npos)
+	// {
+	// 	// adresse
+	// 	std::stringstream ss(value);
+	// 	int addr_part1;
+	// 	int addr_part2;
+	// 	int addr_part3;
+	// 	int addr_part4;
+	// 	char c1;
+	// 	char c2;
+	// 	char c3;
+	// 	if (ss >> addr_part1 >> c1 >> addr_part2 >> c2 >> addr_part3 >> c3 >> addr_part4)
+	// 	{
+	// 		if (ss >> extra
+	// 			|| !is_valid_octet_addr(addr_part1)
+	// 			|| !is_valid_octet_addr(addr_part2)
+	// 			|| !is_valid_octet_addr(addr_part3)
+	// 			|| !is_valid_octet_addr(addr_part4)
+	// 			|| c1 != '.' || c2 != '.' || c3 != '.')
+	// 			return (1);
+	// 		_host = (addr_part1 << 24) + (addr_part2 << 16) + (addr_part3 << 8) + addr_part4;
+	// 	}
+	// 	else
+	// 		return (1);
+	// }
+	// else
+	// {
+	// 	// port
+	// 	std::stringstream ss(value);
+	// 	if (ss >> _port)
+	// 	{
+	// 		if (ss >> extra || _port <= 0)
+	// 			return (1);
+	// 	}
+	// 	else
+	// 		return (1);
+	// }
+	// return (0);
 }
 int		Server::set_server_name(const std::string& value)
 {

@@ -1,5 +1,5 @@
 server
-		listen 127.0.0.1
+	listen 127.0.0.1
 	server_name      
 	root ./www/monsite
 	client_max_body_size 4k
