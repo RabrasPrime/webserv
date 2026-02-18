@@ -33,6 +33,19 @@ const Location& Location::operator=(const Location& loc)
 	_cgi_working_dir = loc._cgi_working_dir;
 	_cgi_upload_path = loc._cgi_upload_path;
 	_cgi_timeout = loc._cgi_timeout;
+
+	_is_set_root = loc._is_set_root;
+	_is_set_client_max_body_size = loc._is_set_client_max_body_size;
+	_is_set_error_pages = loc._is_set_error_pages;
+	_is_set_methods = loc._is_set_methods;
+	_is_set_auto_index = loc._is_set_auto_index;
+	_is_set_indexes = loc._is_set_indexes;
+	_is_set_upload_path = loc._is_set_upload_path;
+	_is_set_cgi_enabled = loc._is_set_cgi_enabled;
+	_is_set_cgi_ext = loc._is_set_cgi_ext;
+	_is_set_cgi_working_dir = loc._is_set_cgi_working_dir;
+	_is_set_cgi_upload_path = loc._is_set_cgi_upload_path;
+	_is_set_cgi_timeout = loc._is_set_cgi_timeout;
 	return (*this);
 }
 
@@ -43,7 +56,6 @@ int Location::fill_location_config(std::ifstream& file, std::string& line, int i
 	{
 		if (count_char(line, '\t') < indent + 1)
 		{
-			// std::cout << *this << std::endl;
 			return (1);
 		}
 		size_t i = 0;
@@ -61,4 +73,32 @@ int Location::fill_location_config(std::ifstream& file, std::string& line, int i
 		fill_config(key, value);
 	}
 	return (0);
+}
+
+void Location::heritage_from_server(const Server& serv)
+{
+	if (!_is_set_root)
+		_root = serv.get_root();
+	if (!_is_set_client_max_body_size)
+		_client_max_body_size = serv.get_client_max_body_size();
+	if (!_is_set_error_pages)
+		_error_pages = serv.get_error_pages();
+	if (!_is_set_methods)
+		_methods = serv.get_methods();
+	if (!_is_set_auto_index)
+		_auto_index = serv.get_auto_index();
+	if (!_is_set_indexes)
+		_indexes = serv.get_indexes();
+	if (!_is_set_upload_path)
+		_upload_path = serv.get_upload_path();
+	if (!_is_set_cgi_enabled)
+		_cgi_enabled = serv.get_cgi_enabled();
+	if (!_is_set_cgi_ext)
+		_cgi_ext = serv.get_cgi_ext();
+	if (!_is_set_cgi_working_dir)
+		_cgi_working_dir = serv.get_cgi_working_dir();
+	if (!_is_set_cgi_upload_path)
+		_cgi_upload_path = serv.get_cgi_upload_path();
+	if (!_is_set_cgi_timeout)
+		_cgi_timeout = serv.get_cgi_timeout();
 }

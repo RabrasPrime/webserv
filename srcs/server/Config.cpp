@@ -313,29 +313,29 @@ int		Config::set_cgi_timeout(const std::string& value)
 void Config::fill_config(const std::string& key, const std::string& value)
 {
 	if (key == "root")
-		set_root(value) ? print_warning("Warning","Invalid value on root !"): (_is_set_root = true,"");
+		set_root(value) ? print_warning("Warning","Invalid value on root !", value): (_is_set_root = true,"");
 	if (key == "client_max_body_size")
-		set_client_max_body_size(value) ? print_warning("Warning","Invalid value on client_max_body_size !"): (_is_set_client_max_body_size = true,"");
+		set_client_max_body_size(value) ? print_warning("Warning","Invalid value on client_max_body_size !", value): (_is_set_client_max_body_size = true,"");
 	if (key == "error_pages")
-		set_error_pages(value) ? print_warning("Warning","Invalid value on error_pages !"): (_is_set_error_pages = true,"");
+		set_error_pages(value) ? print_warning("Warning","Invalid value on error_pages !", value): (_is_set_error_pages = true,"");
 	if (key == "methods")
-		set_methods(value) ? print_warning("Warning","Invalid value on methods !"): (_is_set_methods = true,"");
+		set_methods(value) ? print_warning("Warning","Invalid value on methods !", value): (_is_set_methods = true,"");
 	if (key == "auto_index")
-		set_auto_index(value) ? print_warning("Warning","Invalid value on auto_index !"): (_is_set_auto_index = true,"");
+		set_auto_index(value) ? print_warning("Warning","Invalid value on auto_index !", value): (_is_set_auto_index = true,"");
 	if (key == "index")
-		set_indexes(value) ? print_warning("Warning","Invalid value on index !"): (_is_set_indexes = true,"");
+		set_indexes(value) ? print_warning("Warning","Invalid value on index !", value): (_is_set_indexes = true,"");
 	if (key == "upload_path")
-		set_upload_path(value) ? print_warning("Warning","Invalid value on upload_path !"): (_is_set_upload_path = true,"");
+		set_upload_path(value) ? print_warning("Warning","Invalid value on upload_path !", value): (_is_set_upload_path = true,"");
 	if (key == "cgi_enabled")
-		set_cgi_enabled(value) ? print_warning("Warning","Invalid value on cgi_enabled !"): (_is_set_cgi_enabled = true,"");
+		set_cgi_enabled(value) ? print_warning("Warning","Invalid value on cgi_enabled !", value): (_is_set_cgi_enabled = true,"");
 	if (key == "cgi_ext")
-		set_cgi_ext(value) ? print_warning("Warning","Invalid value on cgi_ext !"): (_is_set_cgi_ext = true,"");
+		set_cgi_ext(value) ? print_warning("Warning","Invalid value on cgi_ext !", value): (_is_set_cgi_ext = true,"");
 	if (key == "cgi_working_dir")
-		set_cgi_working_dir(value) ? print_warning("Warning","Invalid value on cgi_working_dir !"): (_is_set_cgi_working_dir = true,"");
+		set_cgi_working_dir(value) ? print_warning("Warning","Invalid value on cgi_working_dir !", value): (_is_set_cgi_working_dir = true,"");
 	if (key == "cgi_upload_path")
-		set_cgi_upload_path(value) ? print_warning("Warning","Invalid value on cgi_upload_path !"): (_is_set_cgi_upload_path = true,"");
+		set_cgi_upload_path(value) ? print_warning("Warning","Invalid value on cgi_upload_path !", value): (_is_set_cgi_upload_path = true,"");
 	if (key == "cgi_timeout")
-		set_cgi_timeout(value) ? print_warning("Warning","Invalid value on cgi_timeout !"): (_is_set_cgi_timeout = true,"");
+		set_cgi_timeout(value) ? print_warning("Warning","Invalid value on cgi_timeout !", value): (_is_set_cgi_timeout = true,"");
 }
 
 std::ostream& operator<<(std::ostream& out, const Config&  config)

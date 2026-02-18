@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+class Location;
 
 class Server : public Config
 {
@@ -15,11 +16,10 @@ class Server : public Config
 
 		int fill_server_config(std::ifstream& file, std::string& line);
 		friend	std::ostream& operator<<(std::ostream& out, const Server& serv);
+		void fill_locations();
 
 	private:
 		std::vector<struct sockaddr_storage>	_addr;
-		// int										_host;
-		// int										_port;
 		std::string								_server_name;
 		std::map<std::string, Location>			_locations;
 
