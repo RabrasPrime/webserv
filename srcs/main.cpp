@@ -1,62 +1,117 @@
-#include <iostream>
-#include <map>
-#include <string>
-#include "Color.hpp"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
+#include "Server.hpp"
+#include <fstream>
+#include <sys/stat.h>
 #include <sstream>
-#include "httpResponse.hpp"
-#include "httpRequest.hpp"
 
-int main()
+int parse(std::vector<Server>& servers, std::string path)
 {
-	HttpRequest req;
-	req.method = "POST";
-	req.path = "/home/samaouch/Documents/api_local/42_location.py?samaouch";
-	req.version = "HTTP/1.1";
-	req.headers["Host"] = "localhost:8080";
-	req.headers["Content-Type"] = "text/html";
-	req.headers["Connection"] = "Keep-Alive";
-	req.body = "<h1>Hello World!<h1>";
-	req.type = "html";
-	req.queryString = "samaouch";
-	req.auto_index = true;
-	req.indexes.push_back("default_page.html");
-	req.indexes.push_back("index.html");
-	req.methods.push_back("GET");
-	req.methods.push_back("POST");
-	req.methods.push_back("DELETE");
-	req.maxSize = 458;
-	std::stringstream ss;
-	ss << req.body.size();
-	req.headers["Content-Length"] = ss.str();
-	httpResponse resp;
-	// std::string response = resp.handleResponse(req);
-	// std::cout << std::endl << PURPLE BOLD "Final Response" RESET << std::endl << response << std::endl;
+	struct stat info;
 
-	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	struct sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(8080);
-	bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
-
-	listen(server_fd, 10);
-	std::cout << YELLOW BOLD "Run Server to http://localhost:8080" RESET << std::endl;
-
-	while (1)
+	if (stat(path.c_str(), &info) != 0)
 	{
-		int client_fd = accept(server_fd, NULL, NULL);
-
-		char buffer[4096] = {0};
-		read(client_fd, buffer, sizeof(buffer));
-		std::cout << BLUE BOLD "Buffer: " RESET << std::endl << buffer << std::endl;
-		std::string response = resp.handleResponse(req);
-		std::cout << std::endl << PURPLE BOLD "Final Response" RESET << std::endl << response << std::endl;
-		write(client_fd, response.c_str(), response.size());
-		close(client_fd);
+		std::cout << "Invalid config file path" << std::endl;
+		return (1);
 	}
-	return 0;
+	if (info.st_mode & S_IFDIR)
+	{
+		std::cout << "Config file path is a directory" << std::endl;
+		return (1);
+	}
+
+	std::ifstream file(path.c_str());
+
+	if (!file.is_open())
+	{
+		std::cout << "Failed to open file" << std::endl;
+		return (1);
+	}
+	std::string line;
+	int read = 0;
+	while (read || std::getline(file, line))
+	{
+		read = 0;
+		if (line == "server")
+		{
+			Server serv;
+			read = serv.fill_server_config(file, line);
+			servers.push_back(serv);
+		}
+	}
+
+	return (0);
 }
+
+int main(int ac, char **av)
+{
+	std::vector<Server> servers;
+	std::string path;
+	if (ac > 1)
+		path = av[1];
+	else
+		path = "config_file/config_file";
+	if (parse(servers, path))
+		return (1);
+	return (0);
+}
+// #include <iostream>
+// #include <map>
+// #include <string>
+// #include "Color.hpp"
+// #include <sys/socket.h>
+// #include <netinet/in.h>
+// #include <unistd.h>
+// #include <sstream>
+// #include "httpResponse.hpp"
+// #include "httpRequest.hpp"
+
+// int main()
+// {
+// 	HttpRequest req;
+// 	req.method = "POST";
+// 	req.path = "/home/samaouch/Documents/api_local/42_location.py?samaouch";
+// 	req.version = "HTTP/1.1";
+// 	req.headers["Host"] = "localhost:8080";
+// 	req.headers["Content-Type"] = "text/html";
+// 	req.headers["Connection"] = "Keep-Alive";
+// 	req.body = "<h1>Hello World!<h1>";
+// 	req.type = "html";
+// 	req.queryString = "samaouch";
+// 	req.auto_index = true;
+// 	req.indexes.push_back("default_page.html");
+// 	req.indexes.push_back("index.html");
+// 	req.methods.push_back("GET");
+// 	req.methods.push_back("POST");
+// 	req.methods.push_back("DELETE");
+// 	req.maxSize = 458;
+// 	std::stringstream ss;
+// 	ss << req.body.size();
+// 	req.headers["Content-Length"] = ss.str();
+// 	httpResponse resp;
+// 	// std::string response = resp.handleResponse(req);
+// 	// std::cout << std::endl << PURPLE BOLD "Final Response" RESET << std::endl << response << std::endl;
+
+// 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+// 	struct sockaddr_in addr;
+// 	addr.sin_family = AF_INET;
+// 	addr.sin_addr.s_addr = INADDR_ANY;
+// 	addr.sin_port = htons(8080);
+// 	bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
+
+// 	listen(server_fd, 10);
+// 	std::cout << YELLOW BOLD "Run Server to http://localhost:8080" RESET << std::endl;
+
+// 	while (1)
+// 	{
+// 		int client_fd = accept(server_fd, NULL, NULL);
+
+// 		char buffer[4096] = {0};
+// 		read(client_fd, buffer, sizeof(buffer));
+// 		std::cout << BLUE BOLD "Buffer: " RESET << std::endl << buffer << std::endl;
+// 		std::string response = resp.handleResponse(req);
+// 		std::cout << std::endl << PURPLE BOLD "Final Response" RESET << std::endl << response << std::endl;
+// 		write(client_fd, response.c_str(), response.size());
+// 		close(client_fd);
+// 	}
+// 	return 0;
+// }
 

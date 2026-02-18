@@ -1,0 +1,234 @@
+#include "Server.hpp"
+#include "Utils.hpp"
+#include "Color.hpp"
+#include <fstream>
+#include <sstream>
+#include <cstring>
+#include <string>
+
+
+Server::Server()
+{
+
+}
+Server::~Server()
+{
+
+}
+
+const std::string						Server::get_server_name() const
+{
+	return (_server_name);
+}
+const std::map<std::string, Location>	Server::get_locations() const
+{
+	return (_locations);
+}
+std::ostream& operator<<(std::ostream& out, const Server& serv)
+{
+	// out << _BLUE << "Host : " << _PURPLE
+	// 					<< ((serv._host >> 24) & 255)
+	// 					<< "."
+	// 					<< ((serv._host >> 16) & 255)
+	// 					<< "."
+	// 					<< ((serv._host >> 8) & 255)
+	// 					<< "."
+	// 					<< (serv._host & 255)
+	// 					<< std::endl;
+	// out << _BLUE << "Port : " << _PURPLE << serv._port << std::endl;
+	out << "Addr : " << std::endl;
+	for (std::vector<struct sockaddr_storage>::const_iterator it = serv._addr.begin();it != serv._addr.end(); it++)
+	{
+		char ip_str[INET6_ADDRSTRLEN];
+		int port;
+		if (it->ss_family == AF_INET) {
+			const struct sockaddr_in* addr4 = (const struct sockaddr_in*)&(*it);
+			inet_ntop(AF_INET, &(addr4->sin_addr), ip_str, INET_ADDRSTRLEN);
+			port = ntohs(addr4->sin_port);
+			std::cout << "\tIPv4: " << ip_str << ":" << port << std::endl;
+		} 
+		else if (it->ss_family == AF_INET6) {
+			const struct sockaddr_in6* addr6 = (const struct sockaddr_in6*)&(*it);
+			inet_ntop(AF_INET6, &(addr6->sin6_addr), ip_str, INET6_ADDRSTRLEN);
+			port = ntohs(addr6->sin6_port);
+			std::cout << "\tIPv6: [" << ip_str << "]:" << port << std::endl;
+		}
+	}
+	out << _BLUE << "Server Name : " << _PURPLE << serv._server_name << std::endl;
+	out << static_cast<Config>(serv);
+
+	for (std::map<std::string, Location>::const_iterator it = serv._locations.begin();it != serv._locations.end();it++)
+	{
+		out << it->second;
+	}
+	return (out);
+}
+
+int is_valid_octet_addr(int value)
+{
+	if (value < 0 || value > 255)
+		return (0);
+	return (1);
+}
+
+
+int		Server::set_listen(const std::string& value)
+{
+	struct sockaddr_storage storage;
+	std::memset(&storage, 0, sizeof(storage)); 
+
+	if (value.find('.') != std::string::npos)
+	{
+		//ipv4
+		size_t pos = value.find(':');
+		if (pos != std::string::npos)
+		{
+			std::string host(value.substr(0, pos));
+			std::stringstream ss(&value[pos + 1]);
+			int port;
+			if (!(ss >> port))
+				return (1);
+			char extra;
+			if (ss >> extra || port < 1)
+				return (1);
+			struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
+			addr4->sin_family = AF_INET;
+			addr4->sin_port = htons(port);
+			if (!inet_pton(AF_INET, host.c_str(), &addr4->sin_addr))
+				return (1);
+			//pushback
+		}
+		else
+		{
+			std::string host(value);
+			struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
+			addr4->sin_family = AF_INET;
+			addr4->sin_port = htons(80);//default
+			if (!inet_pton(AF_INET, host.c_str(), &addr4->sin_addr))
+				return (1);
+			//pushback
+		}
+
+		
+	}
+	else if (value.find(':') != std::string::npos)
+	{
+		//ipv6
+		size_t pos = value.find(']');
+		if (pos != std::string::npos)
+		{
+			std::string host(value.substr(1, pos - 1));
+			if (value[pos + 1] != ':')
+				return (1);
+			std::stringstream ss(&value[pos + 2]);
+			int port;
+			if (!(ss >> port))
+				return (1);
+			char extra;
+			if (ss >> extra || port < 1)
+				return (1);
+			struct sockaddr_in6* addr6 = (struct sockaddr_in6*)&storage;
+			addr6->sin6_family = AF_INET6;
+			addr6->sin6_port = htons(port);
+			if (!inet_pton(AF_INET6, host.c_str(), &addr6->sin6_addr))
+				return (1);
+		}
+		else
+		{
+			if (value.find(' ') != std::string::npos)
+				return (1);
+			struct sockaddr_in6* addr6 = (struct sockaddr_in6*)&storage;
+			addr6->sin6_family = AF_INET6;
+			addr6->sin6_port = htons(80);//default
+			if (!inet_pton(AF_INET6, value.c_str(), &addr6->sin6_addr))
+				return (1);
+		}
+
+	}
+	else
+	{
+		//port
+		int port;
+		std::stringstream ss(value);
+		if (!(ss >> port))
+			return (1);
+		char extra;
+		if (ss >> extra)
+			return (1);
+		
+		std::string host(value);
+		struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
+		addr4->sin_family = AF_INET;
+		addr4->sin_port = htons(port);
+		if (!inet_pton(AF_INET, "0.0.0.0", &addr4->sin_addr))
+			return (1);
+	}
+	_addr.push_back(storage);
+	return (0);
+}
+int		Server::set_server_name(const std::string& value)
+{
+	if (value.size() <= 0)
+		return (1);
+	_server_name = value;
+	return (0);
+}
+
+int Server::fill_server_config(std::ifstream& file, std::string& line)
+{
+	int read = 0;
+	while (read || std::getline(file, line))
+	{
+		read = 0;
+		if (count_char(line, '\t') < 1 && line.size() > 0)
+		{
+			fill_locations();
+			return (1);
+		}
+		size_t i = 0;
+		while (std::isspace(line[i]))
+			i++;
+		std::string key;
+		while (!std::isspace(line[i]) && i < line.size())
+		{
+			key += line[i];
+			i++;
+		}
+		while (std::isspace(line[i]))
+			i++;
+		std::string value(&line[i]);
+		if (key == "listen")
+			set_listen(value) ? print_warning("Warning","Invalid value on listen !", value) : "";
+		else if (key == "server_name")
+			set_server_name(value) ? print_warning("Warning","Invalid value on server_name !", value): "";
+		else if (key == "locations")
+		{
+			Location loc;
+			std::stringstream ss(value);
+			std::string str;
+			read = loc.fill_location_config(file, line, count_char(line, '\t'));
+			while (ss >> str)
+			{
+				Location tmp;
+				tmp = loc;
+				tmp.set_path(str);
+				this->_locations[str] = tmp;
+			}
+		}
+		else
+			fill_config(key, value);
+	}
+	if (file.eof())
+	{
+		fill_locations();
+	}
+	return (0);
+}
+
+void Server::fill_locations()
+{
+	for (std::map<std::string, Location>::iterator it = _locations.begin();it != _locations.end();it++)
+	{
+		it->second.heritage_from_server(*this);
+	}
+}
