@@ -10,54 +10,18 @@
 #include <algorithm>
 #include <cstring>
 
-Client::Client(): _fd(-1), _server(NULL){}
-
-Client::Client(int fd, Server *server): _fd(fd), _server(server){}
-
-Client::~Client(){}
-
-int Client::get_fd() const
+Client::Client(): _fd(-1), _server(NULL), _state(READING)
 {
-	return (_fd);
+	gettimeofday(&_last_active_time, NULL);
 }
 
-Server* Client::get_server() const
+Client::Client(int fd, Server *server): _fd(fd), _server(server), _state(READING)
 {
-	return (_server);
+	gettimeofday(&_last_active_time, NULL);
 }
 
-std::string& Client::get_read_buffer()
+Client::~Client()
 {
-	return (_read_buffer);
+	if (_fd != -1)
+		close(_fd);
 }
-
-const std::string& Client::get_read_buffer() const
-{
-	return (_read_buffer);
-}
-
-std::string& Client::get_write_buffer()
-{
-	return (_write_buffer);
-}
-
-const std::string& Client::get_write_buffer() const
-{
-	return (_write_buffer);
-}
-
-char& Client::operator[](size_t index)
-{
-	return (_read_buffer[index]);
-}
-
-const char& Client::operator[](size_t index) const
-{
-	return (_read_buffer[index]);
-}
-
-bool Client::is_valid() const
-{
-	return (_fd != -1);
-}
-

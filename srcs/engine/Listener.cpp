@@ -3,46 +3,20 @@
 //
 
 #include "Listener.hpp"
+#include <unistd.h>
 
-Listener::Listener(): fd(-1){}
+Listener::Listener() : _fd(-1), _port(0), _host(0) {}
 
-Listener::Listener(Server* server): fd(-1)
+Listener::Listener(Server* server) : _fd(-1), _port(0), _host(0)
 {
-	_servers.push_back(server);
+	add_server(server);
 }
 
-Listener::Listener(int fd): fd(fd){}
+Listener::Listener(int fd) : _fd(fd), _port(0), _host(0) {}
 
-Listener::Listener(Server* server, int fd): fd(fd)
-{
-	_servers.push_back(server);
+Listener::~Listener() {
+	if (_fd != -1) {
+		close(_fd);
+	}
 }
 
-Listener::~Listener(){}
-
-int Listener::get_fd() const
-{
-	return (fd);
-}
-
-void Listener::add_server(Server* server)
-{
-	_servers.push_back(server);
-}
-
-void Listener::remove_server(Server* server)
-{
-	std::vector<Server*>::iterator it = std::find(_servers.begin(), _servers.end(), server);
-	if (it != _servers.end())
-		_servers.erase(it);
-}
-
-void Listener::add_fd(int fd)
-{
-	this->fd = fd;
-}
-
-std::vector<Server*> &Listener::get_servers() const
-{
-	return ((std::vector<Server*>&)_servers);
-}

@@ -2,8 +2,7 @@
 // Created by tjooris on 2/16/26.
 //
 
-#ifndef WEBSERV_CLIENT_HPP
-#define WEBSERV_CLIENT_HPP
+#pragma once
 
 #include <stdio.h>
 
@@ -24,14 +23,14 @@ class Client
 
 		struct timeval	_last_active_time;
 
-		enum State
+		enum Status
 		{
 			READING,
 			WRITING,
 			PROCESSING,
 			CLOSED
 		};
-		State _state;
+		Status _status;
 	public:
 		Client();
 		Client(int fd, Server *server);
@@ -54,8 +53,8 @@ class Client
 		std::string& get_write_buffer();
 		const std::string& get_write_buffer() const;
 
-		State	get_state();
-		void	set_state(State new_state);
+		Status	get_status() const;
+		void	set_status(Status new_status);
 
 		char& operator[](size_t index);
 		const char& operator[](size_t index) const;
@@ -64,6 +63,3 @@ class Client
 		void close();
 		void set_non_blocking();
 };
-
-
-#endif //WEBSERV_CLIENT_HPP

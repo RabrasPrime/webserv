@@ -3,3 +3,9 @@
 //
 
 #include "Engine.hpp"
+
+Engine::Engine(): _is_running(false) {}
+
+Engine::~Engine() {
+	stop();
+}

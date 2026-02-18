@@ -1,69 +1,47 @@
-//
-// Created by tjooris on 2/16/26.
-//
-
-#ifndef WEBSERV_ENGINE_HPP
-#define WEBSERV_ENGINE_HPP
+#pragma once
 
 #include <map>
-#include <string>
-
-#include "Server.hpp"
 #include <vector>
 #include <sys/epoll.h>
+#include "Server.hpp"
 #include "Listener.hpp"
 #include "Client.hpp"
 
-
-class Client;
-class Server;
-
-class Engine
-{
+class Engine {
 	private:
-		int	_epoll_fd;
+		int _epoll_fd;
 		std::vector<Server> _servers_config;
 
-		std::map<int, Client> _clients;;
-		std::map<int, Listener> _listening_engines;
+		std::map<int, Client> _clients;
+		std::map<int, Listener> _listeners;
 
-		bool	_is_running;
-		static	const int	_max_events = 64;
+		enum FdType { FD_LISTENER, FD_CLIENT };
+		std::map<int, FdType> _fd_types;
+
+		bool _is_running;
+		static const int MAX_EVENTS = 64;
+
 	public:
 		Engine();
 		~Engine();
 
-		void	init_listeners();
-		void	setup_epoll();
+		void init_listeners();
+		void setup_epoll();
 
-		void	run();
-		void	stop();
+		void run();
+		void stop();
+		bool is_running() const;
 
-		void	add_client(Client* client);
-		void	remove_client(Client* client);
+		void handle_new_connection(int listener_fd);
+		void handle_client_read(int client_fd);
+		void handle_client_write(int client_fd);
+		void handle_client_disconnect(int client_fd);
 
-		void	add_server(Server& server);
-		void	remove_server(Server& server);
-		Server*	match_server(int host, int port);
+		void add_to_epoll(int fd, uint32_t events);
+		void modify_epoll(int fd, uint32_t events);
+		void remove_from_epoll(int fd);
 
-		void	add_listener(Listener* listener);
-		void	remove_listener(Listener* listener);
-
-		bool	is_running();
-
-		bool	create_socket(int host, int port);
-		bool	bind_socket(int socket_fd, int host, int port);
-		bool	listen_socket(int socket_fd);
-		void	close_socket(int socket_fd);
-
-		void	handle_new_connection(Listener* listener);
-		void	handle_client_read(Client* client);
-		void	handle_client_write(Client* client);
-		void	handle_client_disconnect(Client* client);
-
-		void	add_to_epoll(int fd, uint32_t events);
-		void	modify_epoll(int fd, uint32_t events);
-		void	remove_from_epoll(int fd);
+		void add_server(const Server& server);
+		Server* match_server(const std::string& host_header);
 };
 
-#endif //WEBSERV_ENGINE_HPP

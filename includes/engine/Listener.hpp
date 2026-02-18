@@ -1,52 +1,38 @@
-//
-// Created by tjooris on 2/16/26.
-//
-
-#ifndef WEBSERV_LISTENER_HPP
-#define WEBSERV_LISTENER_HPP
+#pragma once
 
 #include "Server.hpp"
 #include <vector>
 
-class Server;
-
-class Listener
-{
+class Listener {
 	private:
-		int	fd;
+		int _fd;
+		int _port;
+		int _host;
 		std::vector<Server*> _servers;
 
-		int	_port;
-		int	_host;
-		static const int	_backlog = 128;
+		static const int BACKLOG = 128;
+
 	public:
 		Listener();
-		Listener(Server* server);
-		Listener(int fd);
-		Listener(Server* server, int fd);
+		Listener(int host, int port);
 		~Listener();
 
-		void	add_server(Server* server);
-		void	remove_server(Server* server);
-		Server*	match_server(int host, int port) const;
-		void	add_fd(int fd);
+		bool create_socket();
+		bool bind_socket();
+		bool listen_socket();
+		void close_socket();
 
-		bool	create_socket(int host, int port);
-		bool	bind_socket(int host, int port);
-		bool	listen_socket();
-		void	close_socket();
+		int accept_connection();
 
-		int	accept_connection();
+		void add_server(Server* server);
+		void remove_server(Server* server);
+		Server* match_server(const std::string& host_header) const;
 
-		int	get_fd() const;
-		int	get_port() const;
-		int	get_host() const;
+		int get_fd() const;
+		int get_port() const;
+		int get_host() const;
 		const std::vector<Server*>& get_servers() const;
 
-		bool	is_valid() const;
-		void	set_non_blocking();
-		void	set_non_blocking(int fd);
+		bool is_valid() const;
+		void set_non_blocking();
 };
-
-
-#endif //WEBSERV_LISTENER_HPP
