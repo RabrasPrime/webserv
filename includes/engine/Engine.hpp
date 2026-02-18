@@ -7,7 +7,10 @@
 #include "Listener.hpp"
 #include "Client.hpp"
 
-class Engine {
+class Client;
+
+class Engine
+{
 	private:
 		int _epoll_fd;
 		std::vector<Server> _servers_config;
@@ -48,4 +51,3 @@ class Engine {
 		void add_server(const Server& server);
 		Server* match_server(const std::string& host_header);
 };
-

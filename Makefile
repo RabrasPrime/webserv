@@ -23,10 +23,22 @@ UTILS	=									\
 
 FILES	+=	$(addprefix srcs/utils/,$(UTILS))
 
+CLIENT	=									\
+				Client.cpp					\
+
+FILES	+=	$(addprefix srcs/client/,$(CLIENT))
+
+ENGINE	=									\
+				Engine.cpp					\
+				Listener.cpp				\
+
+FILES	+=	$(addprefix srcs/engine/,$(ENGINE))
+
 PARSING_CONFIG_FILE	=			
 
 RESPONSE_FILE =								\
 				httpResponse.cpp			\
+
 		
 FILES	+=	$(addprefix srcs/parsing_config_file/,$(PARSING_CONFIG_FILE))
 
@@ -54,6 +66,7 @@ ALL_I_DIR_HEADER	=				\
 -I includes/server					\
 -I includes/response				\
 -I includes/utils					\
+-I includes/engine					\
 
 CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
 
