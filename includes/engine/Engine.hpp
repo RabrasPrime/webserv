@@ -15,7 +15,11 @@ class Engine {
 		std::map<int, Client> _clients;
 		std::map<int, Listener> _listeners;
 
-		enum FdType { FD_LISTENER, FD_CLIENT };
+		enum FdType
+		{
+			FD_LISTENER,
+			FD_CLIENT
+		};
 		std::map<int, FdType> _fd_types;
 
 		bool _is_running;
