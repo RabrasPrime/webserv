@@ -8,28 +8,30 @@ SHELL = /bin/bash
 
 EXECFLAGS = 
 
+# FILES
 FILES	=									\
-				srcs/main.cpp				\
+				srcs/main.cpp				
 
+# SERVER
 SERVER	=									\
 				Config.cpp					\
 				Location.cpp				\
 				Server.cpp					
-
 FILES	+=	$(addprefix srcs/server/,$(SERVER))
 
+# UTILS
 UTILS	=									\
 				utils.cpp					
-
 FILES	+=	$(addprefix srcs/utils/,$(UTILS))
 
-PARSING_CONFIG_FILE	=			
-
-RESPONSE_FILE =								\
-				httpResponse.cpp			\
-		
+# PARSING_CONFIG_FILE
+PARSING_CONFIG_FILE	=						\
+				parsing_config_file.cpp
 FILES	+=	$(addprefix srcs/parsing_config_file/,$(PARSING_CONFIG_FILE))
 
+# RESPONSE_FILE
+RESPONSE_FILE =								\
+				httpResponse.cpp			
 FILES	+=	$(addprefix srcs/response/,$(RESPONSE_FILE))
 
 OBJS	=	$(addprefix .obj/, $(FILES:.cpp=.o))
