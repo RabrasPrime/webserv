@@ -7,16 +7,18 @@
 
 Listener::Listener() : _fd(-1), _port(0), _host(0) {}
 
-Listener::Listener(Server* server) : _fd(-1), _port(0), _host(0)
-{
-	add_server(server);
-}
-
-Listener::Listener(int fd) : _fd(fd), _port(0), _host(0) {}
+Listener::Listener(int host, int port) : _fd(-1), _port(port), _host(host) {}
 
 Listener::~Listener() {
-	if (_fd != -1) {
-		close(_fd);
-	}
+	close_socket();
 }
 
+bool Listener::create_socket() {
+	_fd = socket(AF_INET, SOCK_STREAM, 0);
+	return _fd != -1;
+}
+
+bool Listener::bind_socket()
+{
+
+}
