@@ -36,15 +36,31 @@ std::ostream& operator<<(std::ostream& out, const Server& serv)
 	// 					<< (serv._host & 255)
 	// 					<< std::endl;
 	// out << _BLUE << "Port : " << _PURPLE << serv._port << std::endl;
+	out << "Addr : " << std::endl;
+	for (std::vector<struct sockaddr_storage>::const_iterator it = serv._addr.begin();it != serv._addr.end(); it++)
+	{
+		char ip_str[INET6_ADDRSTRLEN];
+		int port;
+		if (it->ss_family == AF_INET) {
+			const struct sockaddr_in* addr4 = (const struct sockaddr_in*)&(*it);
+			inet_ntop(AF_INET, &(addr4->sin_addr), ip_str, INET_ADDRSTRLEN);
+			port = ntohs(addr4->sin_port);
+			std::cout << "\tIPv4: " << ip_str << ":" << port << std::endl;
+		} 
+		else if (it->ss_family == AF_INET6) {
+			const struct sockaddr_in6* addr6 = (const struct sockaddr_in6*)&(*it);
+			inet_ntop(AF_INET6, &(addr6->sin6_addr), ip_str, INET6_ADDRSTRLEN);
+			port = ntohs(addr6->sin6_port);
+			std::cout << "\tIPv6: [" << ip_str << "]:" << port << std::endl;
+		}
+	}
 	out << _BLUE << "Server Name : " << _PURPLE << serv._server_name << std::endl;
 	out << static_cast<Config>(serv);
-	// out << "Client Max Body Size : " << serv._client_max_body_size << std::endl;
-	// out << "Error Pages : " << std::endl;
-	// for (std::map<int, std::string>::const_iterator it = serv._error_pages.begin(); it != serv._error_pages.end();it++)
-	// 	out << "\t" << it->first << " " << it->second << std::endl;
-	// out << "Methods : "	<< (METHOD_DELETE & serv._methods ? "DELETE " : "")
-	// 					<< (METHOD_GET & serv._methods ? "GET " : "")
-	// 					<< (METHOD_POST & serv._methods ? "POST " : "") << std::endl;
+
+	for (std::map<std::string, Location>::const_iterator it = serv._locations.begin();it != serv._locations.end();it++)
+	{
+		out << it->second;
+	}
 	return (out);
 }
 
@@ -61,7 +77,6 @@ int		Server::set_listen(const std::string& value)
 	struct sockaddr_storage storage;
 	std::memset(&storage, 0, sizeof(storage)); 
 
-	
 	if (value.find('.') != std::string::npos)
 	{
 		//ipv4
@@ -71,7 +86,7 @@ int		Server::set_listen(const std::string& value)
 			std::string host(value.substr(0, pos));
 			std::stringstream ss(&value[pos + 1]);
 			int port;
-			if (!ss >> port)
+			if (!(ss >> port))
 				return (1);
 			char extra;
 			if (ss >> extra || port < 1)
@@ -88,7 +103,7 @@ int		Server::set_listen(const std::string& value)
 			std::string host(value);
 			struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
 			addr4->sin_family = AF_INET;
-			addr4->sin_port = htons(80);
+			addr4->sin_port = htons(80);//default
 			if (!inet_pton(AF_INET, host.c_str(), &addr4->sin_addr))
 				return (1);
 			//pushback
@@ -102,100 +117,54 @@ int		Server::set_listen(const std::string& value)
 		size_t pos = value.find(']');
 		if (pos != std::string::npos)
 		{
-			std::string host(value.substr(1, pos));
+			std::string host(value.substr(1, pos - 1));
+			if (value[pos + 1] != ':')
+				return (1);
+			std::stringstream ss(&value[pos + 2]);
 			int port;
-			if (value[])
-			std::stringstream ss(value)
+			if (!(ss >> port))
+				return (1);
+			char extra;
+			if (ss >> extra || port < 1)
+				return (1);
+			struct sockaddr_in6* addr6 = (struct sockaddr_in6*)&storage;
+			addr6->sin6_family = AF_INET6;
+			addr6->sin6_port = htons(port);
+			if (!inet_pton(AF_INET6, host.c_str(), &addr6->sin6_addr))
+				return (1);
 		}
 		else
 		{
-
+			if (value.find(' ') != std::string::npos)
+				return (1);
+			struct sockaddr_in6* addr6 = (struct sockaddr_in6*)&storage;
+			addr6->sin6_family = AF_INET6;
+			addr6->sin6_port = htons(80);//default
+			if (!inet_pton(AF_INET6, value.c_str(), &addr6->sin6_addr))
+				return (1);
 		}
 
-		struct sockaddr_in6* addr6 = (struct sockaddr_in6*)&storage;
-		addr6->sin6_family = AF_INET6;
-		addr6->sin6_port = htons(8080);
-		inet_pton(AF_INET6, "2001:db8::1", &addr6->sin6_addr);
 	}
 	else
 	{
 		//port
+		int port;
+		std::stringstream ss(value);
+		if (!(ss >> port))
+			return (1);
+		char extra;
+		if (ss >> extra)
+			return (1);
+		
+		std::string host(value);
+		struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
+		addr4->sin_family = AF_INET;
+		addr4->sin_port = htons(port);
+		if (!inet_pton(AF_INET, "0.0.0.0", &addr4->sin_addr))
+			return (1);
 	}
-
-
-
-
-	// char extra;
-	// size_t pos1 = value.find(':');
-	// size_t pos2 = value.find('.');
-
-	// if (pos1 != std::string::npos)
-	// {
-	// 	// adress et port
-	// 	std::stringstream ss(value);
-	// 	int addr_part1;
-	// 	int addr_part2;
-	// 	int addr_part3;
-	// 	int addr_part4;
-	// 	int port;
-	// 	char c1;
-	// 	char c2;
-	// 	char c3;
-	// 	char c4;
-	// 	if (ss >> addr_part1 >> c1 >> addr_part2 >> c2 >> addr_part3 >> c3 >> addr_part4 >> c4 >> port)
-	// 	{
-	// 		if (ss >> extra
-	// 			|| !is_valid_octet_addr(addr_part1)
-	// 			|| !is_valid_octet_addr(addr_part2)
-	// 			|| !is_valid_octet_addr(addr_part3)
-	// 			|| !is_valid_octet_addr(addr_part4)
-	// 			|| port <= 0
-	// 			|| c1 != '.' || c2 != '.' || c3 != '.')
-	// 			return (1);
-	// 		_host = (addr_part1 << 24) + (addr_part2 << 16) + (addr_part3 << 8) + addr_part4;
-	// 		_port = port;
-	// 	}
-	// 	else
-	// 		return (1);
-	// }
-	// else if (pos2 != std::string::npos)
-	// {
-	// 	// adresse
-	// 	std::stringstream ss(value);
-	// 	int addr_part1;
-	// 	int addr_part2;
-	// 	int addr_part3;
-	// 	int addr_part4;
-	// 	char c1;
-	// 	char c2;
-	// 	char c3;
-	// 	if (ss >> addr_part1 >> c1 >> addr_part2 >> c2 >> addr_part3 >> c3 >> addr_part4)
-	// 	{
-	// 		if (ss >> extra
-	// 			|| !is_valid_octet_addr(addr_part1)
-	// 			|| !is_valid_octet_addr(addr_part2)
-	// 			|| !is_valid_octet_addr(addr_part3)
-	// 			|| !is_valid_octet_addr(addr_part4)
-	// 			|| c1 != '.' || c2 != '.' || c3 != '.')
-	// 			return (1);
-	// 		_host = (addr_part1 << 24) + (addr_part2 << 16) + (addr_part3 << 8) + addr_part4;
-	// 	}
-	// 	else
-	// 		return (1);
-	// }
-	// else
-	// {
-	// 	// port
-	// 	std::stringstream ss(value);
-	// 	if (ss >> _port)
-	// 	{
-	// 		if (ss >> extra || _port <= 0)
-	// 			return (1);
-	// 	}
-	// 	else
-	// 		return (1);
-	// }
-	// return (0);
+	_addr.push_back(storage);
+	return (0);
 }
 int		Server::set_server_name(const std::string& value)
 {
@@ -213,8 +182,7 @@ int Server::fill_server_config(std::ifstream& file, std::string& line)
 		read = 0;
 		if (count_char(line, '\t') < 1 && line.size() > 0)
 		{
-			std::cout << *this << std::endl;
-			std::cout << "end serv scope" << std::endl;
+			fill_locations();
 			return (1);
 		}
 		size_t i = 0;
@@ -230,9 +198,9 @@ int Server::fill_server_config(std::ifstream& file, std::string& line)
 			i++;
 		std::string value(&line[i]);
 		if (key == "listen")
-			set_listen(value) ? print_warning("Warning","Invalid value on listen !") : "";
+			set_listen(value) ? print_warning("Warning","Invalid value on listen !", value) : "";
 		else if (key == "server_name")
-			set_server_name(value) ? print_warning("Warning","Invalid value on server_name !"): "";
+			set_server_name(value) ? print_warning("Warning","Invalid value on server_name !", value): "";
 		else if (key == "locations")
 		{
 			Location loc;
@@ -245,7 +213,6 @@ int Server::fill_server_config(std::ifstream& file, std::string& line)
 				tmp = loc;
 				tmp.set_path(str);
 				this->_locations[str] = tmp;
-				std::cout << tmp << std::endl;
 			}
 		}
 		else
@@ -253,8 +220,15 @@ int Server::fill_server_config(std::ifstream& file, std::string& line)
 	}
 	if (file.eof())
 	{
-		std::cout << *this << std::endl;
-		std::cout << "end serv scope" << std::endl;
+		fill_locations();
 	}
 	return (0);
+}
+
+void Server::fill_locations()
+{
+	for (std::map<std::string, Location>::iterator it = _locations.begin();it != _locations.end();it++)
+	{
+		it->second.heritage_from_server(*this);
+	}
 }

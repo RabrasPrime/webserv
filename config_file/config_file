@@ -1,5 +1,8 @@
 server
 	listen 127.0.0.1
+	listen 192.168.1.112:9080
+	listen [::1]:8080
+	listen 2001:db8::1
 	server_name      
 	root ./www/monsite
 	client_max_body_size 4k
@@ -46,7 +49,7 @@ server
 	listen 80
 	server_name hello.com www.hello.com hello_world.com www.hello_world.com
 	root /var/www/hello
-	methods INVALID
+	methods I
 
 server
 	listen   

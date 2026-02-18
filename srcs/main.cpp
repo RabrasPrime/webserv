@@ -33,7 +33,6 @@ int parse(std::vector<Server>& servers, std::string path)
 	while (read || std::getline(file, line))
 	{
 		read = 0;
-		std::cout << line << std::endl;
 		if (line == "server")
 		{
 			Server serv;

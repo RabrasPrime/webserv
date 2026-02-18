@@ -5,7 +5,9 @@
 #include <vector>
 #include <map>
 #include "Config.hpp"
+#include "Server.hpp"
 
+class Server;
 
 class Location : public Config
 {
@@ -16,6 +18,7 @@ class Location : public Config
 		int		fill_location_config(std::ifstream& file, std::string& line, int indent);
 		friend	std::ostream& operator<<(std::ostream& out, const Location& loc);
 		const Location& operator=(const Location& loc);
+		void heritage_from_server(const Server& serv);
 
 	private:
 		std::string			_path;
