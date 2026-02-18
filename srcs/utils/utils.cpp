@@ -11,6 +11,6 @@ int count_char(const std::string& line, char c)
 
 std::string print_warning(const std::string& title, const std::string& content, const std::string& value)
 {
-	std::cout << "⚠️  "  _ORANGE _BOLD _UNDER << title << _END << " : " << _ORANGE << content << _END << "  ➡️   \"" << value << "\"" << std::endl;
+	std::cout << "⚠️  " ORANGE BOLD UNDER << title << RESET << " : " << ORANGE << content << RESET << "  ➡️   \"" << value << "\"" << std::endl;
 	return "";
 }

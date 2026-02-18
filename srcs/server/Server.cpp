@@ -26,7 +26,7 @@ const std::map<std::string, Location>	Server::get_locations() const
 }
 std::ostream& operator<<(std::ostream& out, const Server& serv)
 {
-	// out << _BLUE << "Host : " << _PURPLE
+	// out << BLUE << "Host : " << PURPLE
 	// 					<< ((serv._host >> 24) & 255)
 	// 					<< "."
 	// 					<< ((serv._host >> 16) & 255)
@@ -35,7 +35,7 @@ std::ostream& operator<<(std::ostream& out, const Server& serv)
 	// 					<< "."
 	// 					<< (serv._host & 255)
 	// 					<< std::endl;
-	// out << _BLUE << "Port : " << _PURPLE << serv._port << std::endl;
+	// out << BLUE << "Port : " << PURPLE << serv._port << std::endl;
 	out << "Addr : " << std::endl;
 	for (std::vector<struct sockaddr_storage>::const_iterator it = serv._addr.begin();it != serv._addr.end(); it++)
 	{
@@ -54,7 +54,7 @@ std::ostream& operator<<(std::ostream& out, const Server& serv)
 			std::cout << "\tIPv6: [" << ip_str << "]:" << port << std::endl;
 		}
 	}
-	out << _BLUE << "Server Name : " << _PURPLE << serv._server_name << std::endl;
+	out << BLUE << "Server Name : " << PURPLE << serv._server_name << std::endl;
 	out << static_cast<Config>(serv);
 
 	for (std::map<std::string, Location>::const_iterator it = serv._locations.begin();it != serv._locations.end();it++)

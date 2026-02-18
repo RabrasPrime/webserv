@@ -340,26 +340,26 @@ void Config::fill_config(const std::string& key, const std::string& value)
 
 std::ostream& operator<<(std::ostream& out, const Config&  config)
 {
-	out << _BLUE << "Root : " << _PURPLE << config._root << _END << std::endl;
-	out << _BLUE << "Client Max Body Size : " << _PURPLE << config._client_max_body_size << _END << std::endl;
-	out << _BLUE << "Error Pages : " << _PURPLE << std::endl;
+	out << BLUE << "Root : " << PURPLE << config._root << RESET << std::endl;
+	out << BLUE << "Client Max Body Size : " << PURPLE << config._client_max_body_size << RESET << std::endl;
+	out << BLUE << "Error Pages : " << PURPLE << std::endl;
 	for (std::map<int, std::string>::const_iterator it = config._error_pages.begin(); it != config._error_pages.end();it++)
-		out << _BLUE << "\t" << it->first << _PURPLE << " " << it->second << _END << std::endl;
-	out << _BLUE << "Methods : " << _PURPLE << (METHOD_DELETE & config._methods ? "DELETE " : "")
+		out << BLUE << "\t" << it->first << PURPLE << " " << it->second << RESET << std::endl;
+	out << BLUE << "Methods : " << PURPLE << (METHOD_DELETE & config._methods ? "DELETE " : "")
 						<< (METHOD_GET & config._methods ? "GET " : "")
-						<< (METHOD_POST & config._methods ? "POST " : "") << _END << std::endl;
-	out << _BLUE << "Auto Index : " << _PURPLE << config._auto_index << _END << std::endl;
-	out << _BLUE << "Index : " << _PURPLE;
+						<< (METHOD_POST & config._methods ? "POST " : "") << RESET << std::endl;
+	out << BLUE << "Auto Index : " << PURPLE << config._auto_index << RESET << std::endl;
+	out << BLUE << "Index : " << PURPLE;
 	for (std::vector<std::string>::const_iterator it = config._indexes.begin(); it != config._indexes.end();it++)
 		out << *it << " ";
-	out << _END << std::endl;
-	out << _BLUE << "Upload Path : " << _PURPLE << config._upload_path << _END << std::endl;
-	out << _BLUE << "Cgi Enabled : " << _PURPLE << config._cgi_enabled << _END << std::endl;
-	out << _BLUE << "Cgi Ext : " << std::endl;
+	out << RESET << std::endl;
+	out << BLUE << "Upload Path : " << PURPLE << config._upload_path << RESET << std::endl;
+	out << BLUE << "Cgi Enabled : " << PURPLE << config._cgi_enabled << RESET << std::endl;
+	out << BLUE << "Cgi Ext : " << std::endl;
 	for (std::map<std::string, std::string>::const_iterator it = config._cgi_ext.begin();it != config._cgi_ext.end();it++)
-		out << _BLUE << "\t" << it->first << _PURPLE << " " << it->second << _END << std::endl;
-	out << _BLUE << "Cgi Working Dir : " << _PURPLE << config._cgi_working_dir << _END << std::endl;
-	out << _BLUE << "Cgi Upload Path : " << _PURPLE << config._cgi_upload_path << _END << std::endl;
-	out << _BLUE << "Cgi Timeout : " << _PURPLE << config._cgi_timeout << _END << std::endl;
+		out << BLUE << "\t" << it->first << PURPLE << " " << it->second << RESET << std::endl;
+	out << BLUE << "Cgi Working Dir : " << PURPLE << config._cgi_working_dir << RESET << std::endl;
+	out << BLUE << "Cgi Upload Path : " << PURPLE << config._cgi_upload_path << RESET << std::endl;
+	out << BLUE << "Cgi Timeout : " << PURPLE << config._cgi_timeout << RESET << std::endl;
 	return (out);
 }
