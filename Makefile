@@ -25,7 +25,12 @@ FILES	+=	$(addprefix srcs/utils/,$(UTILS))
 
 PARSING_CONFIG_FILE	=			
 
+RESPONSE_FILE =								\
+				httpResponse.cpp			\
+		
 FILES	+=	$(addprefix srcs/parsing_config_file/,$(PARSING_CONFIG_FILE))
+
+FILES	+=	$(addprefix srcs/response/,$(RESPONSE_FILE))
 
 OBJS	=	$(addprefix .obj/, $(FILES:.cpp=.o))
 
@@ -47,7 +52,8 @@ includes
 ALL_I_DIR_HEADER	=				\
 -I includes							\
 -I includes/server					\
-
+-I includes/response				\
+-I includes/utils					\
 
 CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
 
