@@ -12,7 +12,7 @@
 int main()
 {
 	HttpRequest req;
-	req.method = "POST";
+	req.method = "GET";
 	req.path = "/home/samaouch/Documents/api_local/42_location.py?samaouch";
 	req.version = "HTTP/1.1";
 	req.headers["Host"] = "localhost:8080";

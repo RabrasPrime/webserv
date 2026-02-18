@@ -7,8 +7,6 @@ httpResponse::httpResponse()
 	fillMapExtension(_mCgiTypes, PATH_FILE_CGI);
 	fillMapError();
 }
-// httpResponse::httpResponse(const HttpRequest &req)
-// : _statusCode(200), _version(req.version), _statusMsg("OK"), _headers(req.headers), _body(req.body), _method(req.method){}
 
 std::string httpResponse::convertFinalResponse(){
 
@@ -24,30 +22,71 @@ std::string httpResponse::convertFinalResponse(){
 
 bool httpResponse::isCgiExtension(std::string currentPath){
 	
-	std::cout << YELLOW BOLD "CURRENT PATH DANS CGI EXTENSION" RESET << currentPath << std::endl;
 	size_t end = currentPath.find_last_of(".");
 	std::string extension = currentPath.substr(end + 1);
-	std::cout << PURPLE BOLD "extension: " RESET << extension << std::endl;	
 	for (std::map<std::string, std::string>::iterator it = _mCgiTypes.begin(); it != _mCgiTypes.end(); ++it)
 	{
-		std::cout << GREEN BOLD "MAP FIRST: " RESET << (*it).first << std::endl;
 		if (extension == (*it).first)
 		{
 			_binary = (*it).second;
-			std::cout << BLUE BOLD "IS CGI FIRST" RESET << std::endl;
 			return true;
 		}
 	}
 	return false;
 }
 
+char** httpResponse::createEnv(HttpRequest &req, std::string path){
+
+	std::vector<std::string> envList;
+	envList.push_back("REQUEST_METHOD=" + req.method);
+	envList.push_back("QUERY_STRING=" + req.queryString);
+	std::stringstream ss;
+	ss << req.body.size();
+	envList.push_back("CONTENT_LENGTH=" + ss.str());
+	envList.push_back("CONTENT_TYPE=" + req.headers["Content-Type"]);
+	envList.push_back("PATH_INFO=" + path);
+	envList.push_back("SCRIPT_NAME=" + path);
+	envList.push_back("SERVER_PROTOCOL=" + req.version);
+	envList.push_back("REDIRECT_STATUS=200");
+
+	char **env = new char*[envList.size() + 1];
+	for (size_t i = 0; i < envList.size(); ++i)
+	{
+		env[i] = new char[(envList[i].size() + 1)];
+		std::copy(envList[i].begin(), envList[i].end(), env[i]);
+		env[i][envList[i].size()] = '\0';
+	}
+	env[envList.size()] = NULL;
+
+	return env;
+}
+
+void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
+
+	std::string outCgi;
+	char buffer[4096];
+	int bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
+	while ((bytesRead > 0))
+	{
+		buffer[bytesRead] = '\0';
+		outCgi += buffer;
+		bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
+	}
+	close(pipeOut[0]);
+
+	int status;
+	waitpid(pid, &status, 0);
+	_cgiOutput = outCgi;
+
+}
+
 int httpResponse::exeCgi(std::string path, HttpRequest &req){
 	
 	int pipeOut[2], pipeIn[2];
-
-	std::cout << "path ::" << path << std::endl;
+	
 	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
 		return 500;
+	
 	pid_t pid = fork();
 	if (pid < 0)
 		return 500;
@@ -61,60 +100,20 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		close(pipeIn[0]);
 		close(pipeOut[0]);
 		close(pipeOut[1]);
+
 		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(path.c_str()), NULL};
-		std::vector<std::string> envList;
-		envList.push_back("REQUEST_METHOD=" + req.method);
-		envList.push_back("QUERY_STRING=" + req.queryString);
-		std::stringstream ss;
-		ss << _body.size();
-		envList.push_back("CONTENT_LENGTH=" + ss.str());
-		envList.push_back("CONTENT_TYPE=" + req.body);
-		envList.push_back("PATH_INFO=" + path);
-		envList.push_back("SCRIPT_NAME=" + path);
-		envList.push_back("SERVER_PROTOCOL=" + req.version);
-		envList.push_back("REDIRECT_STATUS=200");
-		char **env = new char*[envList.size() + 1];
-		for (size_t i = 0; i < envList.size(); ++i)
-		{
-			env[i] = new char[(envList[i].size() + 1)];
-			std::copy(envList[i].begin(), envList[i].end(), env[i]);
-			env[i][envList[i].size()] = '\0';
-		}
-		env[envList.size()] = NULL;
-		execve(_binary.c_str(), arg, env);
+		
+		execve(_binary.c_str(), arg, createEnv(req, path));
 		exit(1);
 	}
-	if (req.method == "POST")
-	{
+	if (!req.body.empty() && req.method == "POST")
 		write(pipeIn[1], _body.c_str(), _body.size());
-	}
 	close(pipeOut[1]);
 	close(pipeIn[1]);
 	close(pipeIn[0]);
 
-	std::string outCgi;
-	char buffer[4096];
-	int bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
-	while ((bytesRead > 0))
-	{
-		buffer[bytesRead] = '\0';
-		outCgi += buffer;
-		bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
-	}
-	close(pipeOut[0]);
-	int status;
-	waitpid(pid, &status, 0);
-	_cgiOutput = outCgi;
-	std::cout << RED BOLD "OUTPUT CGI"  RESET << std::endl;
-	std::cout << _cgiOutput << std::endl;
+	saveCgiOutput(pipeOut, pid);
 
-
-	std::ostringstream index;
-		index 	<< "<html><head><title>" << _statusCode << " "<< _statusMsg + "</title></head>"
-				<< "<body><center><h1>Logtime Location of " << req.queryString <<  "</h1></center><hr><pre>";
-		index <<  _cgiOutput << "</body></html>";
-		_body = index.str();
-		_bodyType = "html";
 	return 200;
 }
 
@@ -152,6 +151,19 @@ int httpResponse::isCgi(HttpRequest &req, std::string path){
 	return 0;
 }
 
+
+void httpResponse::fillCgiResponse(HttpRequest &req){
+
+	std::ostringstream index;
+	index 	<< "<html><head><title>" << _statusCode << " "<< _statusMsg + "</title><style> body { background: #1a1a1a; color: white; display: flex; justify-content: center; align-items: center; height: 100g; margin: 0; font-family: sans-serif; flex-direction: column; } h1 { color: #16d705; } p { color: #ffffff; } </style></head>"
+			<< "<body><center><h1>Logtime Location of " << req.queryString <<  "</h1></center><hr><pre>";
+	index <<  _cgiOutput << "</body></html>";
+	_body = index.str();
+	_bodyType = "html";
+	fillHeaders(req.headers);
+
+}
+
 std::string httpResponse::handleResponse(HttpRequest &req){
 
 	_version = req.version;
@@ -160,7 +172,8 @@ std::string httpResponse::handleResponse(HttpRequest &req){
 	{
 		if (_statusCode != 200)
 			handleError(req);
-		return "IS CGI";
+		fillCgiResponse(req);
+		return convertFinalResponse();
 	}
 	if (req.method == "GET")
 		exeGet(req);
@@ -179,8 +192,11 @@ std::string httpResponse::handleResponse(HttpRequest &req){
 void httpResponse::fillMapError(){
 	std::ifstream inFile;
 	inFile.open(PATH_FILE_CODE);
-	// if (!inFile.is_open())
-	// 	// voir quoi faire EXIT ? Peut etre vaut mieux le faire lors du parsing du fichier de conf, pour pas le refaire a chaque Request
+	if (!inFile.is_open())
+	{
+		std::cerr << RED BOLD "Error fail to open file" RESET << std::endl;
+		exit(EXIT_FAILURE);
+	}
 	std::string line;
 	while(std::getline(inFile, line))
 	{
@@ -201,8 +217,11 @@ void httpResponse::fillMapExtension(std::map<std::string, std::string> &map, std
 
 	std::ifstream inFile;
 	inFile.open(pathFile.c_str());
-	// if (!inFile.is_open())
-	// 	// voir quoi faire EXIT ? Peut etre vaut mieux le faire lors du parsing du fichier de conf, pour pas le refaire a chaque Request
+	if (!inFile.is_open())
+	{
+		std::cerr << RED BOLD "Error fail to open file" RESET << std::endl;
+		exit(EXIT_FAILURE);
+	}
 	std::string line;
 	while (std::getline(inFile, line))
 	{
@@ -222,7 +241,8 @@ void httpResponse::fillHeaders(std::map<std::string, std::string> &headers){
 	_headers["Content-Type"] = _mMimeTypes[_bodyType];
 	if (_headers["Content-Type"].empty())
 		_headers["Content-Type"] = DEFAULT_TYPE;
-	
+	if (_headers["Content-Type"].find("text/") == 0)
+		_headers["Content-Type"] += "; charset=utf-8";
 	_headers["Connection"] = headers["Connection"];
 	if (_headers["Connection"].empty())
 		_headers["Connection"] = "Keep-Alive"; // --> verif ce qu on fait dans ce cas la
@@ -240,7 +260,9 @@ int httpResponse::generateAutoIndex(std::string &path)
 	std::vector<std::string> fileName;
 	while (1)
 	{
-		readDir = readdir(currentDir); // secu ?
+		readDir = readdir(currentDir);
+		if (errno != 0)
+			return (500);
 		if (!readDir)
 			break ;
 		fileName.push_back(readDir->d_name);
