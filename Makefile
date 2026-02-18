@@ -13,7 +13,12 @@ FILES	=									\
 
 PARSING_CONFIG_FILE	=			
 
+RESPONSE_FILE =								\
+				httpResponse.cpp			\
+		
 FILES	+=	$(addprefix srcs/parsing_config_file/,$(PARSING_CONFIG_FILE))
+
+FILES	+=	$(addprefix srcs/response/,$(RESPONSE_FILE))
 
 OBJS	=	$(addprefix .obj/, $(FILES:.cpp=.o))
 
@@ -33,8 +38,9 @@ includes
 # set the -I before the path
 # the path to the header lib dir
 ALL_I_DIR_HEADER	=				\
--I includes		\
-
+-I includes							\
+-I includes/response				\
+-I includes/utils					\
 
 CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
 
