@@ -12,11 +12,15 @@
 # include <vector>
 # include <algorithm>
 # include "httpRequest.hpp"
+ #include <sys/wait.h>
+
+
+# include "Color.hpp"
 
 # define DEFAULT_TYPE "application/octet-stream"
 # define PATH_FILE_CODE "file/error_code.txt"
 # define PATH_FIlE_MIME "file/mime_types.txt"
-
+# define PATH_FILE_CGI "file/cgi_path.txt"
 class httpResponse
 {
 	public:
@@ -31,7 +35,11 @@ class httpResponse
 		std::string _body;
 		std::map<int, std::string> _mErrorMsg;
 		std::string _bodyType;
+		std::string _cgiPath;
+		std::string _binary;
+		std::string _cgiOutput;
 		std::map<std::string, std::string> _mMimeTypes;
+		std::map<std::string, std::string> _mCgiTypes;
 
 	public:
 		std::string handleResponse(HttpRequest &req);
@@ -40,7 +48,7 @@ class httpResponse
 		void fillHeaders(std::map<std::string, std::string> &headers);
 		int fillBody(std::string &path, HttpRequest &req);
 		void fillDefaultBody();
-		void fillMimeTypes();
+		void fillMapExtension(std::map<std::string, std::string> &map, std::string pathFile);
 		void fillMapError();
 		int searchFileInDir(std::string &path, HttpRequest &req);
 		int generateAutoIndex(std::string &path);
@@ -54,6 +62,10 @@ class httpResponse
 
 		void exeDelete(HttpRequest &req);
 		int deleteFile(std::string &path, HttpRequest &req);
+
+		int isCgi(HttpRequest &req, std::string path);
+		bool isCgiExtension(std::string currentPath);
+		int exeCgi(std::string path, HttpRequest &req);
 };
 #endif
 
@@ -103,4 +115,3 @@ class Config
 };
 
 #endif*/
-

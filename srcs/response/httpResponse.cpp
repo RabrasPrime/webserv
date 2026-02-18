@@ -3,7 +3,8 @@
 httpResponse::httpResponse()
 : _statusCode(0){
 
-	fillMimeTypes();
+	fillMapExtension(_mMimeTypes, PATH_FIlE_MIME);
+	fillMapExtension(_mCgiTypes, PATH_FILE_CGI);
 	fillMapError();
 }
 // httpResponse::httpResponse(const HttpRequest &req)
@@ -21,9 +22,146 @@ std::string httpResponse::convertFinalResponse(){
 	return resp;
 }
 
+bool httpResponse::isCgiExtension(std::string currentPath){
+	
+	std::cout << YELLOW BOLD "CURRENT PATH DANS CGI EXTENSION" RESET << currentPath << std::endl;
+	size_t end = currentPath.find_last_of(".");
+	std::string extension = currentPath.substr(end + 1);
+	std::cout << PURPLE BOLD "extension: " RESET << extension << std::endl;	
+	for (std::map<std::string, std::string>::iterator it = _mCgiTypes.begin(); it != _mCgiTypes.end(); ++it)
+	{
+		std::cout << GREEN BOLD "MAP FIRST: " RESET << (*it).first << std::endl;
+		if (extension == (*it).first)
+		{
+			_binary = (*it).second;
+			std::cout << BLUE BOLD "IS CGI FIRST" RESET << std::endl;
+			return true;
+		}
+	}
+	return false;
+}
+
+int httpResponse::exeCgi(std::string path, HttpRequest &req){
+	
+	int pipeOut[2], pipeIn[2];
+
+	std::cout << "path ::" << path << std::endl;
+	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
+		return 500;
+	pid_t pid = fork();
+	if (pid < 0)
+		return 500;
+	else if (pid == 0)
+	{
+		if (dup2(pipeIn[0], STDIN_FILENO) == -1)
+			exit(EXIT_FAILURE);
+		if (dup2(pipeOut[1], STDOUT_FILENO) == -1)
+			exit(EXIT_FAILURE);
+		close(pipeIn[1]);
+		close(pipeIn[0]);
+		close(pipeOut[0]);
+		close(pipeOut[1]);
+		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(path.c_str()), NULL};
+		std::vector<std::string> envList;
+		envList.push_back("REQUEST_METHOD=" + req.method);
+		envList.push_back("QUERY_STRING=" + req.queryString);
+		std::stringstream ss;
+		ss << _body.size();
+		envList.push_back("CONTENT_LENGTH=" + ss.str());
+		envList.push_back("CONTENT_TYPE=" + req.body);
+		envList.push_back("PATH_INFO=" + path);
+		envList.push_back("SCRIPT_NAME=" + path);
+		envList.push_back("SERVER_PROTOCOL=" + req.version);
+		envList.push_back("REDIRECT_STATUS=200");
+		char **env = new char*[envList.size() + 1];
+		for (size_t i = 0; i < envList.size(); ++i)
+		{
+			env[i] = new char[(envList[i].size() + 1)];
+			std::copy(envList[i].begin(), envList[i].end(), env[i]);
+			env[i][envList[i].size()] = '\0';
+		}
+		env[envList.size()] = NULL;
+		execve(_binary.c_str(), arg, env);
+		exit(1);
+	}
+	if (req.method == "POST")
+	{
+		write(pipeIn[1], _body.c_str(), _body.size());
+	}
+	close(pipeOut[1]);
+	close(pipeIn[1]);
+	close(pipeIn[0]);
+
+	std::string outCgi;
+	char buffer[4096];
+	int bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
+	while ((bytesRead > 0))
+	{
+		buffer[bytesRead] = '\0';
+		outCgi += buffer;
+		bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
+	}
+	close(pipeOut[0]);
+	int status;
+	waitpid(pid, &status, 0);
+	_cgiOutput = outCgi;
+	std::cout << RED BOLD "OUTPUT CGI"  RESET << std::endl;
+	std::cout << _cgiOutput << std::endl;
+
+
+	std::ostringstream index;
+		index 	<< "<html><head><title>" << _statusCode << " "<< _statusMsg + "</title></head>"
+				<< "<body><center><h1>Logtime Location of " << req.queryString <<  "</h1></center><hr><pre>";
+		index <<  _cgiOutput << "</body></html>";
+		_body = index.str();
+		_bodyType = "html";
+	return 200;
+}
+
+int httpResponse::isCgi(HttpRequest &req, std::string path){
+
+	size_t end = path.find_first_of("?");
+	_cgiPath = path.substr(0, end);
+	
+	size_t pos = 0, nextSection = 0;
+	std::string currentPath = req.root;
+	while (pos < _cgiPath.size())
+	{
+		nextSection = _cgiPath.find('/', pos + 1);
+		std::string section = _cgiPath.substr(pos, nextSection - pos);
+		currentPath += section;
+		struct stat s;
+		if (stat(currentPath.c_str(), &s) == 0)
+		{
+			
+			if (S_ISREG(s.st_mode))
+			{
+				if (isCgiExtension(currentPath))
+				{
+					return (exeCgi(currentPath, req));
+				}
+				break ;
+			}
+		}
+		else
+			return 0;
+		if (nextSection == std::string::npos)
+			break ;
+		pos = nextSection;
+	}
+	return 0;
+}
+
 std::string httpResponse::handleResponse(HttpRequest &req){
 
 	_version = req.version;
+	_statusCode = isCgi(req, req.path);
+	if (_statusCode != 0)
+	{
+		if (_statusCode != 200)
+			handleError(req);
+		return "IS CGI";
+	}
 	if (req.method == "GET")
 		exeGet(req);
 	else if (req.method == "POST")
@@ -42,15 +180,15 @@ void httpResponse::fillMapError(){
 	std::ifstream inFile;
 	inFile.open(PATH_FILE_CODE);
 	// if (!inFile.is_open())
-	// 	// voir quoi faire EXIT ?
+	// 	// voir quoi faire EXIT ? Peut etre vaut mieux le faire lors du parsing du fichier de conf, pour pas le refaire a chaque Request
 	std::string line;
 	while(std::getline(inFile, line))
 	{
 		if (line.empty())
-			continue;
-		std::string::size_type endCode = line.find_first_of(" ");
+			continue ;
+		size_t endCode = line.find_first_of(" ");
 		std::string errorCode = line.substr(0, endCode);
-		std::string::size_type startMsg = line.find_first_not_of(" ", endCode);
+		size_t startMsg = line.find_first_not_of(" ", endCode);
 		std::string errorMsg = line.substr(startMsg);
 		std::stringstream ss(errorCode);
 		int value;
@@ -59,22 +197,22 @@ void httpResponse::fillMapError(){
 	}
 }
 
-void httpResponse::fillMimeTypes(){
+void httpResponse::fillMapExtension(std::map<std::string, std::string> &map, std::string pathFile){
 
 	std::ifstream inFile;
-	inFile.open(PATH_FIlE_MIME);
+	inFile.open(pathFile.c_str());
 	// if (!inFile.is_open())
-	// 	// voir quoi faire EXIT ?
+	// 	// voir quoi faire EXIT ? Peut etre vaut mieux le faire lors du parsing du fichier de conf, pour pas le refaire a chaque Request
 	std::string line;
 	while (std::getline(inFile, line))
 	{
 		if (line.empty())
 			continue ;
-		std::string::size_type endExtension = line.find_first_of(" ");
+		size_t endExtension = line.find_first_of(" ");
 		std::string extensionType = line.substr(0, endExtension);
-		std::string::size_type startContent = line.find_first_not_of(" ", endExtension);
+		size_t startContent = line.find_first_not_of(" ", endExtension);
 		std::string contentType = line.substr(startContent);
-		_mMimeTypes[extensionType] = contentType;
+		map[extensionType] = contentType;
 	}
 	inFile.close();
 }
@@ -230,7 +368,7 @@ void httpResponse::fillDefaultBody(){
 	{
 		std::ostringstream index;
 		index 	<< "<html><head><title>" << _statusCode << " "<< _statusMsg + "</title></head>"
-				<< "<center><h1>Index of " << _statusCode << " " << _statusMsg << "</h1></center><hr><pre>";
+				<< "<center><h1>Index of " << _statusCode << " " << _statusMsg << "</h1></center><hr><pre></html>";
 		_body = index.str();
 		_bodyType = "html";
 	}

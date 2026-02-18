@@ -17,6 +17,8 @@ struct HttpRequest
 	std::vector<std::string>	indexes; 
 	bool autoIndex;
 	size_t maxSize;
+	std::string 				root;
+	std::string 				queryString;
 };
 
 #endif
