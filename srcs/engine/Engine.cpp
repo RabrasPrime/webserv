@@ -28,26 +28,11 @@ Engine::~Engine()
     }
 }
 
-void Engine::init_listeners()
+static std::string make_listener_key(int host, int port)
 {
-    std::map<std::string, Listener>::iterator tmp;
-
-}
-
-void Engine::setup_epoll()
-{
-    _epoll_fd = epoll_create1(0);
-    if (_epoll_fd < 0)
-    {
-        std::cerr << "Error creating epoll fd: " << strerror(errno) << std::endl;
-        return;
-    }
-
-    for (std::map<int, Listener>::iterator it = _listeners.begin();
-         it != _listeners.end(); ++it)
-    {
-        add_to_epoll(it->first, EPOLLIN);
-    }
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%d:%d", host, port);
+    return std::string(buf);
 }
 
 static bool extract_host_port(const struct sockaddr_storage& addr, int& host, int& port)
@@ -69,11 +54,71 @@ static bool extract_host_port(const struct sockaddr_storage& addr, int& host, in
     return false;
 }
 
-static std::string make_listener_key(int host, int port)
+void Engine::init_listeners()
 {
-    char buf[64];
-    snprintf(buf, sizeof(buf), "%d:%d", host, port);
-    return std::string(buf);
+    std::map<std::string, Listener> tmp_listeners;
+
+    for (size_t i = 0; i < _servers_config.size(); i++)
+    {
+        Server& server = _servers_config[i];
+        const std::vector<struct sockaddr_storage>& addrs = server.get_addr();
+
+        for (size_t j = 0; j < addrs.size(); j++)
+        {
+            int host, port;
+            if (!extract_host_port(addrs[j], host, port))
+            {
+                std::cerr << "Unknown address family, skipping" << std::endl;
+                continue;
+            }
+            std::string key = make_listener_key(host, port);
+            if (tmp_listeners.find(key) == tmp_listeners.end())
+                tmp_listeners[key] = Listener(host, port);
+
+            tmp_listeners[key].add_server(&server);
+        }
+    }
+    for (std::map<std::string, Listener>::iterator it = tmp_listeners.begin();
+         it != tmp_listeners.end(); ++it)
+    {
+        Listener& listener = it->second;
+        if (!listener.create_socket())
+        {
+            std::cerr << "Failed to create socket for listener" << std::endl;
+            continue;
+        }
+        if (!listener.bind_socket())
+        {
+            std::cerr << "Failed to bind socket" << std::endl;
+            listener.close_socket();
+            continue;
+        }
+        if (!listener.listen_socket())
+        {
+            std::cerr << "Failed to listen on socket" << std::endl;
+            listener.close_socket();
+            continue;
+        }
+        int fd = listener.get_fd();
+        _listeners[fd] = listener;
+        _fd_types[fd] = FD_LISTENER;
+    }
+}
+
+void Engine::setup_epoll()
+{
+    _epoll_fd = epoll_create1(0);
+    if (_epoll_fd < 0)
+    {
+        std::cerr << "Error creating epoll fd: " << strerror(errno) << std::endl;
+        return;
+    }
+
+    for (std::map<int, Listener>::iterator it = _listeners.begin();
+         it != _listeners.end(); ++it)
+    {
+        add_to_epoll(it->first, EPOLLIN);
+    }
 }
 
 void Engine::stop()
