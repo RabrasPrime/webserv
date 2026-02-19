@@ -1,5 +1,6 @@
 #include "Utils.hpp"
 #include "Config.hpp"
+#include "Color.hpp"
 #include <sstream>
 
 Config::Config()
@@ -8,7 +9,9 @@ Config::Config()
 ,_auto_index(0)
 ,_cgi_enabled(0)
 ,_cgi_timeout(10)
+,_return_code(0)
 ,_is_set_root(false)
+,_is_set_alias(false)
 ,_is_set_client_max_body_size(false)
 ,_is_set_error_pages(false)
 ,_is_set_methods(false)
@@ -20,6 +23,7 @@ Config::Config()
 ,_is_set_cgi_working_dir(false)
 ,_is_set_cgi_upload_path(false)
 ,_is_set_cgi_timeout(false)
+,_is_set_return(false)
 {
 }
 Config::~Config()
@@ -31,6 +35,10 @@ Config::~Config()
 const std::string							Config::get_root() const
 {
 	return (_root);
+}
+const std::string							Config::get_alias() const
+{
+	return (_alias);
 }
 size_t										Config::get_client_max_body_size() const
 {
@@ -76,18 +84,40 @@ int											Config::get_cgi_timeout() const
 {
 	return (_cgi_timeout);
 }
+int											Config::get_return_code() const
+{
+	return (_return_code);
+}
+std::string									Config::get_return_path() const
+{
+	return (_return_path);
+}
 
 
 int		Config::set_root(const std::string& value)
 {
-	if (value.size() <= 0)
+	std::stringstream ss(value);
+	std::string path;
+	if (!(ss >> path))
 		return (1);
-	_root = value;
+	char extra;
+	if (ss >> extra)
+		return (1);
+	_root = path;
 	return (0);
 }
-
-#include "Color.hpp"
-
+int		Config::set_alias(const std::string& value)
+{
+	std::stringstream ss(value);
+	std::string path;
+	if (!(ss >> path))
+		return (1);
+	char extra;
+	if (ss >> extra)
+		return (1);
+	_alias = path;
+	return (0);
+}
 int		Config::set_client_max_body_size(const std::string& value)
 {
 	if (value.size() <= 0)
@@ -308,12 +338,32 @@ int		Config::set_cgi_timeout(const std::string& value)
 		return (1);
 	return (0);
 }
-
+int		Config::set_return(const std::string& value)
+{
+	std::stringstream ss(value);
+	int code;
+	std::string path;
+	if (!(ss >> code))
+		return (1);
+	if (ss >> path)
+	{
+		char extra;
+		if (ss >> extra)
+			return (1);
+		_return_code = code;
+		_return_path = path;
+	}
+	else
+		return (1);
+	return (0);
+}
 
 void Config::fill_config(const std::string& key, const std::string& value)
 {
 	if (key == "root")
 		set_root(value) ? print_warning("Warning","Invalid value on root !", value): (_is_set_root = true,"");
+	if (key == "alias")
+		set_alias(value) ? print_warning("Warning","Invalid value on alias !", value): (_is_set_alias = true,"");
 	if (key == "client_max_body_size")
 		set_client_max_body_size(value) ? print_warning("Warning","Invalid value on client_max_body_size !", value): (_is_set_client_max_body_size = true,"");
 	if (key == "error_pages")
@@ -336,30 +386,34 @@ void Config::fill_config(const std::string& key, const std::string& value)
 		set_cgi_upload_path(value) ? print_warning("Warning","Invalid value on cgi_upload_path !", value): (_is_set_cgi_upload_path = true,"");
 	if (key == "cgi_timeout")
 		set_cgi_timeout(value) ? print_warning("Warning","Invalid value on cgi_timeout !", value): (_is_set_cgi_timeout = true,"");
+	if (key == "return")
+		set_return(value) ? print_warning("Warning","Invalid value on return !", value): (_is_set_return = true,"");
 }
 
 std::ostream& operator<<(std::ostream& out, const Config&  config)
 {
-	out << _BLUE << "Root : " << _PURPLE << config._root << _END << std::endl;
-	out << _BLUE << "Client Max Body Size : " << _PURPLE << config._client_max_body_size << _END << std::endl;
-	out << _BLUE << "Error Pages : " << _PURPLE << std::endl;
+	out << BLUE << "Root : " << PURPLE << config._root << RESET << std::endl;
+	out << BLUE << "Alias : " << PURPLE << config._alias << RESET << std::endl;
+	out << BLUE << "Client Max Body Size : " << PURPLE << config._client_max_body_size << RESET << std::endl;
+	out << BLUE << "Error Pages : " << PURPLE << std::endl;
 	for (std::map<int, std::string>::const_iterator it = config._error_pages.begin(); it != config._error_pages.end();it++)
-		out << _BLUE << "\t" << it->first << _PURPLE << " " << it->second << _END << std::endl;
-	out << _BLUE << "Methods : " << _PURPLE << (METHOD_DELETE & config._methods ? "DELETE " : "")
+		out << BLUE << "\t" << it->first << PURPLE << " " << it->second << RESET << std::endl;
+	out << BLUE << "Methods : " << PURPLE << (METHOD_DELETE & config._methods ? "DELETE " : "")
 						<< (METHOD_GET & config._methods ? "GET " : "")
-						<< (METHOD_POST & config._methods ? "POST " : "") << _END << std::endl;
-	out << _BLUE << "Auto Index : " << _PURPLE << config._auto_index << _END << std::endl;
-	out << _BLUE << "Index : " << _PURPLE;
+						<< (METHOD_POST & config._methods ? "POST " : "") << RESET << std::endl;
+	out << BLUE << "Auto Index : " << PURPLE << config._auto_index << RESET << std::endl;
+	out << BLUE << "Index : " << PURPLE;
 	for (std::vector<std::string>::const_iterator it = config._indexes.begin(); it != config._indexes.end();it++)
 		out << *it << " ";
-	out << _END << std::endl;
-	out << _BLUE << "Upload Path : " << _PURPLE << config._upload_path << _END << std::endl;
-	out << _BLUE << "Cgi Enabled : " << _PURPLE << config._cgi_enabled << _END << std::endl;
-	out << _BLUE << "Cgi Ext : " << std::endl;
+	out << RESET << std::endl;
+	out << BLUE << "Upload Path : " << PURPLE << config._upload_path << RESET << std::endl;
+	out << BLUE << "Cgi Enabled : " << PURPLE << config._cgi_enabled << RESET << std::endl;
+	out << BLUE << "Cgi Ext : " << std::endl;
 	for (std::map<std::string, std::string>::const_iterator it = config._cgi_ext.begin();it != config._cgi_ext.end();it++)
-		out << _BLUE << "\t" << it->first << _PURPLE << " " << it->second << _END << std::endl;
-	out << _BLUE << "Cgi Working Dir : " << _PURPLE << config._cgi_working_dir << _END << std::endl;
-	out << _BLUE << "Cgi Upload Path : " << _PURPLE << config._cgi_upload_path << _END << std::endl;
-	out << _BLUE << "Cgi Timeout : " << _PURPLE << config._cgi_timeout << _END << std::endl;
+		out << BLUE << "\t" << it->first << PURPLE << " " << it->second << RESET << std::endl;
+	out << BLUE << "Cgi Working Dir : " << PURPLE << config._cgi_working_dir << RESET << std::endl;
+	out << BLUE << "Cgi Upload Path : " << PURPLE << config._cgi_upload_path << RESET << std::endl;
+	out << BLUE << "Cgi Timeout : " << PURPLE << config._cgi_timeout << RESET << std::endl;
+	out << BLUE << "Return : " << PURPLE << config._return_code << " " << config._return_path << RESET << std::endl;
 	return (out);
 }

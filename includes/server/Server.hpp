@@ -3,6 +3,8 @@
 
 #include "Location.hpp"
 #include "Config.hpp"
+
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -24,8 +26,9 @@ class Server : public Config
 		std::map<std::string, Location>			_locations;
 
 	public:
-		const std::string						get_server_name() const;
-		const std::map<std::string, Location>	get_locations() const;
+		const std::vector<struct sockaddr_storage>	get_addr() const;
+		const std::string							get_server_name() const;
+		const std::map<std::string, Location>		get_locations() const;
 
 		int		set_listen(const std::string& value);
 		int		set_server_name(const std::string& value);
