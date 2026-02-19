@@ -22,6 +22,7 @@ const Location& Location::operator=(const Location& loc)
 {
 	_path = loc._path;
 	_root = loc._root;
+	_alias = loc._alias;
 	_client_max_body_size = loc._client_max_body_size;
 	_error_pages = loc._error_pages;
 	_methods = loc._methods;
@@ -33,8 +34,11 @@ const Location& Location::operator=(const Location& loc)
 	_cgi_working_dir = loc._cgi_working_dir;
 	_cgi_upload_path = loc._cgi_upload_path;
 	_cgi_timeout = loc._cgi_timeout;
+	_return_code = loc._return_code;
+	_return_path = loc._return_path;
 
 	_is_set_root = loc._is_set_root;
+	_is_set_alias = loc._is_set_alias;
 	_is_set_client_max_body_size = loc._is_set_client_max_body_size;
 	_is_set_error_pages = loc._is_set_error_pages;
 	_is_set_methods = loc._is_set_methods;
@@ -46,6 +50,7 @@ const Location& Location::operator=(const Location& loc)
 	_is_set_cgi_working_dir = loc._is_set_cgi_working_dir;
 	_is_set_cgi_upload_path = loc._is_set_cgi_upload_path;
 	_is_set_cgi_timeout = loc._is_set_cgi_timeout;
+	_is_set_return = loc._is_set_return;
 	return (*this);
 }
 
@@ -79,6 +84,8 @@ void Location::heritage_from_server(const Server& serv)
 {
 	if (!_is_set_root)
 		_root = serv.get_root();
+	if (!_is_set_alias)
+		_alias = serv.get_alias();
 	if (!_is_set_client_max_body_size)
 		_client_max_body_size = serv.get_client_max_body_size();
 	if (!_is_set_error_pages)
@@ -101,4 +108,9 @@ void Location::heritage_from_server(const Server& serv)
 		_cgi_upload_path = serv.get_cgi_upload_path();
 	if (!_is_set_cgi_timeout)
 		_cgi_timeout = serv.get_cgi_timeout();
+	if (!_is_set_return)
+	{
+		_return_code = serv.get_return_code();
+		_return_path = serv.get_return_path();
+	}
 }

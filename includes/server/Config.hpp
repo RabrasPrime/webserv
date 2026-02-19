@@ -21,6 +21,7 @@ class Config
 
 	protected:
 		std::string							_root;
+		std::string							_alias;
 		size_t								_client_max_body_size;
 		std::map<int, std::string>			_error_pages;
 		int									_methods;
@@ -32,9 +33,12 @@ class Config
 		std::string							_cgi_working_dir;
 		std::string							_cgi_upload_path;
 		int									_cgi_timeout;
+		int									_return_code;
+		std::string							_return_path;
 
 
 		bool								_is_set_root;
+		bool								_is_set_alias;
 		bool								_is_set_client_max_body_size;
 		bool								_is_set_error_pages;
 		bool								_is_set_methods;
@@ -46,10 +50,12 @@ class Config
 		bool								_is_set_cgi_working_dir;
 		bool								_is_set_cgi_upload_path;
 		bool								_is_set_cgi_timeout;
+		bool								_is_set_return;
 
 	public:
 		// GET
 		const std::string							get_root() const;
+		const std::string							get_alias() const;
 		size_t										get_client_max_body_size() const;
 		const std::map<int, std::string>			get_error_pages() const;
 		int											get_methods() const;
@@ -61,9 +67,12 @@ class Config
 		const std::string							get_cgi_working_dir() const;
 		const std::string							get_cgi_upload_path() const;
 		int											get_cgi_timeout() const;
+		int											get_return_code() const;
+		std::string									get_return_path() const;
 
 		// SET
 		int		set_root(const std::string& value);
+		int		set_alias(const std::string& value);
 		int		set_client_max_body_size(const std::string& value);
 		int		set_error_pages(const std::string& value);
 		int		set_methods(const std::string& value);
@@ -75,6 +84,7 @@ class Config
 		int		set_cgi_working_dir(const std::string& value);
 		int		set_cgi_upload_path(const std::string& value);
 		int		set_cgi_timeout(const std::string& value);
+		int		set_return(const std::string& value);
 };
 
 #endif

@@ -10,6 +10,7 @@ int main(int ac, char **av)
 		path = "config_file/config_file";
 	if (parse(servers, path))
 		return (1);
+	std::cout << servers.front() << std::endl;
 	return (0);
 }
 
