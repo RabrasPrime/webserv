@@ -12,8 +12,8 @@
 int main()
 {
 	HttpRequest req;
-	req.method = "GET";
-	req.path = "/home/samaouch/Documents/api_local/42_location.py?samaouch";
+	req.method = "POST";
+	req.path = "/home/samaouch/Documents/api_local";
 	req.version = "HTTP/1.1";
 	req.headers["Host"] = "localhost:8080";
 	req.headers["Content-Type"] = "text/html";
@@ -32,8 +32,8 @@ int main()
 	ss << req.body.size();
 	req.headers["Content-Length"] = ss.str();
 	httpResponse resp;
-	// std::string response = resp.handleResponse(req);
-	// std::cout << std::endl << PURPLE BOLD "Final Response" RESET << std::endl << response << std::endl;
+	std::string response = resp.handleResponse(req);
+	std::cout << std::endl << PURPLE BOLD "Final Response" RESET << std::endl << response << std::endl;
 
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	struct sockaddr_in addr;

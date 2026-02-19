@@ -76,6 +76,7 @@ void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
 
 	int status;
 	waitpid(pid, &status, 0);
+	status == 0 ? _statusCode = 200 : _statusCode = 500;
 	_cgiOutput = outCgi;
 
 }
@@ -89,7 +90,13 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 	
 	pid_t pid = fork();
 	if (pid < 0)
+	{
+		close(pipeIn[1]);
+		close(pipeIn[0]);
+		close(pipeOut[0]);
+		close(pipeOut[1]);
 		return 500;
+	}
 	else if (pid == 0)
 	{
 		if (dup2(pipeIn[0], STDIN_FILENO) == -1)
@@ -102,19 +109,20 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		close(pipeOut[1]);
 
 		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(path.c_str()), NULL};
-		
-		execve(_binary.c_str(), arg, createEnv(req, path));
+		char **env = createEnv(req, path);
+		execve(_binary.c_str(), arg, env);
+		delete []env;
 		exit(1);
 	}
 	if (!req.body.empty() && req.method == "POST")
-		write(pipeIn[1], _body.c_str(), _body.size());
+		write(pipeIn[1], req.body.c_str(), req.body.size());
 	close(pipeOut[1]);
 	close(pipeIn[1]);
 	close(pipeIn[0]);
 
 	saveCgiOutput(pipeOut, pid);
 
-	return 200;
+	return _statusCode;
 }
 
 int httpResponse::isCgi(HttpRequest &req, std::string path){
@@ -152,16 +160,53 @@ int httpResponse::isCgi(HttpRequest &req, std::string path){
 }
 
 
+void httpResponse::parseCgiOutput(){
+
+	size_t sep =_cgiOutput.find("\r\n\r\n");
+	size_t sizeSpace = 4;
+	if (sep == std::string::npos)
+	{
+		sep = _cgiOutput.find("\n\n");
+		sizeSpace = 2;
+	}
+	// std::cout << "PARSE CGI OUTPUT" << std::endl;
+	if (sep != std::string::npos)
+	{
+		std::string headers = _cgiOutput.substr(0, sep);
+		std::string strContent = "Content-Type:";
+		size_t posContentType = headers.find(strContent);
+		if (posContentType != std::string::npos)
+		{
+			
+			size_t posEndContentType = headers.find("\n", posContentType + strContent.size());
+			_headers["Content-Type"] =  headers.substr(posContentType + strContent.size(), posEndContentType);
+			std::cout << BLUE BOLD "CONTENT TyPE:" RESET << _headers["Content-Type"] << std::endl;
+		}
+		std::cout << BLUE BOLD " HEADER HERE " RESET << std::endl << headers << BLUE BOLD "END HEADER" RESET << std::endl;
+		_body = _cgiOutput.substr(sep + sizeSpace);
+		// std::cout << BLUE BOLD " BODY HERE " RESET << std::endl << _body << BLUE BOLD "END BODY" RESET << std::endl;
+	}
+	else
+	{
+		// std::cout << "FILL BODY" << std::endl;
+		_body = _cgiOutput;
+	}
+}
+
 void httpResponse::fillCgiResponse(HttpRequest &req){
 
-	std::ostringstream index;
-	index 	<< "<html><head><title>" << _statusCode << " "<< _statusMsg + "</title><style> body { background: #1a1a1a; color: white; display: flex; justify-content: center; align-items: center; height: 100g; margin: 0; font-family: sans-serif; flex-direction: column; } h1 { color: #16d705; } p { color: #ffffff; } </style></head>"
-			<< "<body><center><h1>Logtime Location of " << req.queryString <<  "</h1></center><hr><pre>";
-	index <<  _cgiOutput << "</body></html>";
-	_body = index.str();
-	_bodyType = "html";
-	fillHeaders(req.headers);
-
+	// std::cout << RED BOLD "FILL CGI RESPONSE" RESET << std::endl;
+	_statusMsg = _mErrorMsg[_statusCode];
+	(void)req;
+	parseCgiOutput();
+	_headers["Connection"] = req.headers["Connection"];
+	if (_headers["Connection"].empty())
+		_headers["Connection"] = "Keep-Alive";
+	if (_headers["Content-Type"].empty())
+		_headers["Content-Type"] = "text/html";
+	std::stringstream ss;
+	ss << _body.size();
+	_headers["Content-Length"] = ss.str();
 }
 
 std::string httpResponse::handleResponse(HttpRequest &req){
@@ -171,7 +216,10 @@ std::string httpResponse::handleResponse(HttpRequest &req){
 	if (_statusCode != 0)
 	{
 		if (_statusCode != 200)
+		{
 			handleError(req);
+			return convertFinalResponse();
+		}
 		fillCgiResponse(req);
 		return convertFinalResponse();
 	}
