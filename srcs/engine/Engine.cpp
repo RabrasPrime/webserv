@@ -28,6 +28,54 @@ Engine::~Engine()
     }
 }
 
+void Engine::init_listeners()
+{
+    std::map<std::string, Listener>::iterator tmp;
+
+}
+
+void Engine::setup_epoll()
+{
+    _epoll_fd = epoll_create1(0);
+    if (_epoll_fd < 0)
+    {
+        std::cerr << "Error creating epoll fd: " << strerror(errno) << std::endl;
+        return;
+    }
+
+    for (std::map<int, Listener>::iterator it = _listeners.begin();
+         it != _listeners.end(); ++it)
+    {
+        add_to_epoll(it->first, EPOLLIN);
+    }
+}
+
+static bool extract_host_port(const struct sockaddr_storage& addr, int& host, int& port)
+{
+    if (addr.ss_family == AF_INET)
+    {
+        const struct sockaddr_in* a = reinterpret_cast<const struct sockaddr_in*>(&addr);
+        host = ntohl(a->sin_addr.s_addr);
+        port = ntohs(a->sin_port);
+        return true;
+    }
+    else if (addr.ss_family == AF_INET6)
+    {
+        host = 0;
+        const struct sockaddr_in6* a = reinterpret_cast<const struct sockaddr_in6*>(&addr);
+        port = ntohs(a->sin6_port);
+        return true;
+    }
+    return false;
+}
+
+static std::string make_listener_key(int host, int port)
+{
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%d:%d", host, port);
+    return std::string(buf);
+}
+
 void Engine::stop()
 {
     _is_running = false;
@@ -46,11 +94,12 @@ bool Engine::is_running() const
     return _is_running;
 }
 
+
 void Engine::handle_new_connection(int listener_fd)
 {
     Listener& listener = _listeners[listener_fd];
-
     int client_fd = listener.accept_connection();
+
     if (client_fd < 0)
         return;
     Server* server = listener.get_servers().empty() ? NULL : listener.get_servers()[0];
@@ -79,6 +128,8 @@ void Engine::handle_client_read(int client_fd)
         handle_client_disconnect(client_fd);
         return;
     }
+
+    //Sammy, c'est ta partie, pour l'instant j'ai mis une commande random de gemini pour l'instant
     client.get_write_buffer() = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
     modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 }
