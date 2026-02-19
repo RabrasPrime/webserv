@@ -6,6 +6,7 @@
 #include <cstring>
 #include <string>
 #include <netdb.h>
+#include <iomanip>
 
 Server::Server()
 {
@@ -28,24 +29,44 @@ const std::vector<struct sockaddr_storage>	Server::get_addr() const
 {
 	return (_addr);
 }
+void print_ipv4(const struct sockaddr_in* addr)
+{
+	unsigned char* str = (unsigned char*)&(addr->sin_addr.s_addr);
+	std::cout << (int)str[0] << "." << (int)str[1] << "." << (int)str[2] << "." << (int)str[3];
+}
+void print_ipv6(const struct sockaddr_in6* addr)
+{
+	const unsigned char* p = addr->sin6_addr.s6_addr;
+
+    for (int i = 0; i < 16; i += 2) {
+        std::cout << std::hex << std::setw(1) 
+                  << ((p[i] << 8) | p[i+1]);
+        if (i < 14) {
+            std::cout << ":";
+        }
+    }
+    std::cout << std::dec;
+}
 std::ostream& operator<<(std::ostream& out, const Server& serv)
 {
 	out << "Addr : " << std::endl;
 	for (std::vector<struct sockaddr_storage>::const_iterator it = serv._addr.begin();it != serv._addr.end(); it++)
 	{
-		char ip_str[INET6_ADDRSTRLEN];
 		int port;
 		if (it->ss_family == AF_INET) {
 			const struct sockaddr_in* addr4 = (const struct sockaddr_in*)&(*it);
-			inet_ntop(AF_INET, &(addr4->sin_addr), ip_str, INET_ADDRSTRLEN);
 			port = ntohs(addr4->sin_port);
-			std::cout << "\tIPv4: " << ip_str << ":" << port << std::endl;
+			std::cout << "\tIPv4: ";
+			print_ipv4(addr4);
+			std::cout << ":" << port << std::endl;
 		} 
 		else if (it->ss_family == AF_INET6) {
 			const struct sockaddr_in6* addr6 = (const struct sockaddr_in6*)&(*it);
-			inet_ntop(AF_INET6, &(addr6->sin6_addr), ip_str, INET6_ADDRSTRLEN);
+			// inet_ntop(AF_INET6, &(addr6->sin6_addr), ip_str, INET6_ADDRSTRLEN);
 			port = ntohs(addr6->sin6_port);
-			std::cout << "\tIPv6: [" << ip_str << "]:" << port << std::endl;
+			std::cout << "\tIPv6: [";
+			print_ipv6(addr6);
+			std::cout << "]:" << port << std::endl;
 		}
 	}
 	out << BLUE << "Server Name : " << PURPLE << serv._server_name << std::endl;
