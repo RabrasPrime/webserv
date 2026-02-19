@@ -12,17 +12,17 @@ server
 	error_pages 403 ./www/site1/errors/403.html
 	error_pages 501
 	methods GET POST DELETE
-	locations /images /picture
-		root ./data/media
+	locations /images/ /picture/ /static/
+		alias ./data/media
 		methods GET POST
 		auto_index True
-	locations /api
+	locations /api/
 		methods GET POST
 		index default_page.html index.html
-	locations /upload
+	locations /upload/
 		methods POST
 		upload_path ./www/images
-	locations /cgi-bin
+	locations /cgi-bin/
 		cgi_enabled true
 		methods GET POST
 		root ./www/script/list
@@ -32,6 +32,8 @@ server
 		cgi_working_dir ./www/script/exec
 		cgi_upload_path ./www/script/tmp
 		cgi_timeout 10
+	locations /old-page/
+		return 301 /new-page
 
 server
 	listen 127.0.0.:9090
@@ -57,3 +59,5 @@ server
 	server_name abc.com 
 	methods GET
 
+return
+alias
