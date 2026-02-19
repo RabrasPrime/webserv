@@ -5,7 +5,7 @@
 #include <sstream>
 #include <cstring>
 #include <string>
-
+#include <netdb.h>
 
 Server::Server()
 {
@@ -24,18 +24,12 @@ const std::map<std::string, Location>	Server::get_locations() const
 {
 	return (_locations);
 }
+const std::vector<struct sockaddr_storage>	Server::get_addr() const
+{
+	return (_addr);
+}
 std::ostream& operator<<(std::ostream& out, const Server& serv)
 {
-	// out << BLUE << "Host : " << PURPLE
-	// 					<< ((serv._host >> 24) & 255)
-	// 					<< "."
-	// 					<< ((serv._host >> 16) & 255)
-	// 					<< "."
-	// 					<< ((serv._host >> 8) & 255)
-	// 					<< "."
-	// 					<< (serv._host & 255)
-	// 					<< std::endl;
-	// out << BLUE << "Port : " << PURPLE << serv._port << std::endl;
 	out << "Addr : " << std::endl;
 	for (std::vector<struct sockaddr_storage>::const_iterator it = serv._addr.begin();it != serv._addr.end(); it++)
 	{
@@ -71,7 +65,6 @@ int is_valid_octet_addr(int value)
 	return (1);
 }
 
-
 int		Server::set_listen(const std::string& value)
 {
 	struct sockaddr_storage storage;
@@ -85,31 +78,34 @@ int		Server::set_listen(const std::string& value)
 		{
 			std::string host(value.substr(0, pos));
 			std::stringstream ss(&value[pos + 1]);
-			int port;
+			std::string port;
 			if (!(ss >> port))
 				return (1);
 			char extra;
-			if (ss >> extra || port < 1)
+			if (ss >> extra)
 				return (1);
-			struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
-			addr4->sin_family = AF_INET;
-			addr4->sin_port = htons(port);
-			if (!inet_pton(AF_INET, host.c_str(), &addr4->sin_addr))
+
+			struct addrinfo hints,*res;
+			memset(&hints, 0, sizeof(hints));
+			hints.ai_family = AF_INET;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_flags = AI_NUMERICHOST;
+			if (getaddrinfo(host.c_str(), port.c_str(), &hints, &res))
 				return (1);
-			//pushback
+			memcpy(&storage, res->ai_addr, res->ai_addrlen);
 		}
 		else
 		{
 			std::string host(value);
-			struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
-			addr4->sin_family = AF_INET;
-			addr4->sin_port = htons(80);//default
-			if (!inet_pton(AF_INET, host.c_str(), &addr4->sin_addr))
+			struct addrinfo hints,*res;
+			memset(&hints, 0, sizeof(hints));
+			hints.ai_family = AF_INET;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_flags = AI_NUMERICHOST;
+			if (getaddrinfo(host.c_str(), "80", &hints, &res))
 				return (1);
-			//pushback
-		}
-
-		
+			memcpy(&storage, res->ai_addr, res->ai_addrlen);
+		}		
 	}
 	else if (value.find(':') != std::string::npos)
 	{
@@ -121,47 +117,54 @@ int		Server::set_listen(const std::string& value)
 			if (value[pos + 1] != ':')
 				return (1);
 			std::stringstream ss(&value[pos + 2]);
-			int port;
+			std::string port;
 			if (!(ss >> port))
 				return (1);
 			char extra;
-			if (ss >> extra || port < 1)
+			if (ss >> extra)
 				return (1);
-			struct sockaddr_in6* addr6 = (struct sockaddr_in6*)&storage;
-			addr6->sin6_family = AF_INET6;
-			addr6->sin6_port = htons(port);
-			if (!inet_pton(AF_INET6, host.c_str(), &addr6->sin6_addr))
+			struct addrinfo hints,*res;
+			memset(&hints, 0, sizeof(hints));
+			hints.ai_family = AF_INET6;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_flags = AI_NUMERICHOST;
+			if (getaddrinfo(host.c_str(), port.c_str(), &hints, &res))
 				return (1);
+			memcpy(&storage, res->ai_addr, res->ai_addrlen);
 		}
 		else
 		{
 			if (value.find(' ') != std::string::npos)
 				return (1);
-			struct sockaddr_in6* addr6 = (struct sockaddr_in6*)&storage;
-			addr6->sin6_family = AF_INET6;
-			addr6->sin6_port = htons(80);//default
-			if (!inet_pton(AF_INET6, value.c_str(), &addr6->sin6_addr))
+			struct addrinfo hints,*res;
+			memset(&hints, 0, sizeof(hints));
+			hints.ai_family = AF_INET6;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_flags = AI_NUMERICHOST;
+			if (getaddrinfo(value.c_str(), "80", &hints, &res))
 				return (1);
+			memcpy(&storage, res->ai_addr, res->ai_addrlen);
 		}
 
 	}
 	else
 	{
 		//port
-		int port;
+		std::string port;
 		std::stringstream ss(value);
 		if (!(ss >> port))
 			return (1);
 		char extra;
 		if (ss >> extra)
 			return (1);
-		
-		std::string host(value);
-		struct sockaddr_in* addr4 = (struct sockaddr_in*)&storage;
-		addr4->sin_family = AF_INET;
-		addr4->sin_port = htons(port);
-		if (!inet_pton(AF_INET, "0.0.0.0", &addr4->sin_addr))
+		struct addrinfo hints,*res;
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_flags = AI_NUMERICHOST;
+		if (getaddrinfo("0.0.0.0", port.c_str(), &hints, &res))
 			return (1);
+		memcpy(&storage, res->ai_addr, res->ai_addrlen);
 	}
 	_addr.push_back(storage);
 	return (0);
