@@ -12,6 +12,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "../../includes/Client.hpp"
+
 class Listener;
 class Server;
 class Client;
@@ -105,8 +107,6 @@ void Engine::init_listeners()
     }
 }
 
-
-
 void Engine::setup_epoll()
 {
     _epoll_fd = epoll_create1(0);
@@ -121,19 +121,6 @@ void Engine::setup_epoll()
     {
         add_to_epoll(it->first, EPOLLIN);
     }
-}
-
-void Engine::stop()
-{
-    _is_running = false;
-
-    for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-        it->second.close();
-    _clients.clear();
-    for (std::map<int, Listener>::iterator it = _listeners.begin(); it != _listeners.end(); ++it)
-        it->second.close_socket();
-    _listeners.clear();
-    _fd_types.clear();
 }
 
 bool Engine::is_running() const
@@ -263,4 +250,82 @@ Server* Engine::match_server(const std::string& host_header)
             return s;
     }
     return NULL;
+}
+
+void Engine::run()
+{
+    if (_epoll_fd < 0)
+    {
+        std::cerr << "Epoll not set up, cannot run engine" << std::endl;
+        return;
+    }
+    _is_running = true;
+    struct epoll_event events[MAX_EVENTS];
+    while (_is_running)
+    {
+        int n = epoll_wait(_epoll_fd, events, MAX_EVENTS, 1000);
+        if (n < 0)
+        {
+            if (errno == EINTR)
+                continue;
+            std::cerr << "Error in epoll_wait: " << strerror(errno) << std::endl;
+            break;
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            int fd = events[i].data.fd;
+
+            if (_fd_types.find(fd) == _fd_types.end())
+            {
+                std::cerr << "Unknown fd type for fd " << fd << std::endl;
+                continue;
+            }
+            if (_fd_types[fd] == FD_LISTENER)
+            {
+                handle_new_connection(fd);
+            }
+            else if (_fd_types[fd] == FD_CLIENT)
+            {
+                if (events[i].events & (EPOLLHUP | EPOLLERR))
+                {
+                    handle_client_disconnect(fd);
+                }
+                else if (events[i].events & EPOLLIN)
+                {
+                    handle_client_read(fd);
+                }
+                else if (events[i].events & EPOLLOUT)
+                {
+                    handle_client_write(fd);
+                }
+            }
+        }
+    }
+
+    for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        if (it->second.is_timed_out() || it->second.get_status())
+        {
+            std::cout << "Client " << it->first << " timed out or closed, disconnecting" << std::endl;
+            int fd = it->first;
+            ++it;
+            handle_client_disconnect(fd);
+        }
+        else
+            ++it;
+    }
+}
+
+void Engine::stop()
+{
+    _is_running = false;
+
+    for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+        it->second.close();
+    _clients.clear();
+    for (std::map<int, Listener>::iterator it = _listeners.begin(); it != _listeners.end(); ++it)
+        it->second.close_socket();
+    _listeners.clear();
+    _fd_types.clear();
 }
