@@ -38,6 +38,19 @@ OBJS	=	$(addprefix .obj/, $(FILES:.cpp=.o))
 
 DEPS	=	$(addprefix .obj/, $(FILES:.cpp=.d))
 
+# ENGINE FILES
+ENGINE_FILES =								\
+				Engine.cpp					\
+				Listener.cpp				\
+
+FILES	+=	$(addprefix srcs/engine/,$(ENGINE_FILES))
+
+# CLIENT FILES
+CLIENT_FILES =								\
+				Client.cpp					\
+
+FILES	+=	$(addprefix srcs/client/,$(CLIENT_FILES))
+
 # path to lib folder to exec norm
 NORM_LIB = \
 lib/
@@ -56,6 +69,7 @@ ALL_I_DIR_HEADER	=				\
 -I includes/server					\
 -I includes/response				\
 -I includes/utils					\
+-I includes/engine					\
 
 CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
 
