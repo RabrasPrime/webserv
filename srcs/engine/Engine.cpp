@@ -12,7 +12,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "../../includes/Client.hpp"
+#include "Client.hpp"
+#include "Color.hpp"
 
 class Listener;
 class Server;
@@ -75,8 +76,7 @@ void Engine::init_listeners()
             }
             std::string key = make_listener_key(host, port);
             if (tmp_listeners.find(key) == tmp_listeners.end())
-                tmp_listeners[key] = Listener(host, port);
-
+                tmp_listeners[key] = Listener(host, port, addrs[j]);
             tmp_listeners[key].add_server(&server);
         }
     }
@@ -135,10 +135,15 @@ void Engine::handle_new_connection(int listener_fd)
     int client_fd = listener.accept_connection();
 
     if (client_fd < 0)
-        return;
-    Server* server = listener.get_servers().empty() ? NULL : listener.get_servers()[0];
+	{
+        return ;
+	}
 
+	std::cout << "HERE 1" << std::endl;
+    Server* server = listener.get_servers().empty() ? NULL : listener.get_servers()[0];
+	std::cout << "HERE 2" << std::endl;
     _clients[client_fd] = Client(client_fd, server);
+	std::cout << "HERE 3" << std::endl;
     _fd_types[client_fd] = FD_CLIENT;
     add_to_epoll(client_fd, EPOLLIN | EPOLLET);
 }
@@ -164,7 +169,8 @@ void Engine::handle_client_read(int client_fd)
     }
 
     //Sammy, c'est ta partie, pour l'instant j'ai mis une commande random de gemini pour l'instant
-    client.get_write_buffer() = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
+    // client.get_write_buffer() = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
+	std::cout << client.get_read_buffer() << std::endl;
     modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 }
 
@@ -274,6 +280,7 @@ void Engine::run()
 
         for (int i = 0; i < n; i++)
         {
+			std::cout << BLUE << "New data collected !" << RESET << std::endl;
             int fd = events[i].data.fd;
 
             if (_fd_types.find(fd) == _fd_types.end())
@@ -283,6 +290,7 @@ void Engine::run()
             }
             if (_fd_types[fd] == FD_LISTENER)
             {
+				std::cout << ORANGE << "Handle new connection !" << RESET << std::endl;
                 handle_new_connection(fd);
             }
             else if (_fd_types[fd] == FD_CLIENT)
@@ -293,10 +301,12 @@ void Engine::run()
                 }
                 else if (events[i].events & EPOLLIN)
                 {
+					std::cout << PURPLE << "Handle client read !" << RESET << std::endl;
                     handle_client_read(fd);
                 }
                 else if (events[i].events & EPOLLOUT)
                 {
+					std::cout << BROWN << "Handle client write !" << RESET << std::endl;
                     handle_client_write(fd);
                 }
             }

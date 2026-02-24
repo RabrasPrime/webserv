@@ -3,6 +3,7 @@
 #include "httpRequest.hpp"
 #include <sstream>
 #include <map>
+#include "Engine.hpp"
 
 int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect)
 {
@@ -98,7 +99,6 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server>& 
 	return (0);
 }
 
-
 int main(int ac, char **av)
 {
 	std::vector<Server> servers;
@@ -109,37 +109,43 @@ int main(int ac, char **av)
 		path = "config_file/config_file";
 	if (parse(servers, path))
 		return (1);
-	// std::cout << servers.front() << std::endl;
-	std::string tmp("\
-GET /images/logo.png HTTP/1.0\r\n\
-Host: localhost:8080\r\n\
-User-Agent: Mozilla/5.0 (Linux; x86_64)\r\n\
-Accept: image/png,image/*;q=0.8\r\n\
-Connection: close\r\n\
-\r\n\
-Content of body");
-
+	std::cout << servers.front() << std::endl;
+	Engine engine;
+	for (std::vector<Server>::iterator it = servers.begin(); it != servers.end();it++)
+		engine.add_server(*it);
+	engine.init_listeners();
+	engine.setup_epoll();
+	engine.run();
 // 	std::string tmp("
 // GET /images/logo.png HTTP/1.0\r\n
+// Host: localhost:8080\r\n
+// User-Agent: Mozilla/5.0 (Linux; x86_64)\r\n
 // Accept: image/png,image/*;q=0.8\r\n
+// Connection: close\r\n
 // \r\n
 // Content of body");
-	std::vector<unsigned char> vect(tmp.begin(),tmp.end());
-	std::string header;
-	std::string str;
-	for (std::vector<unsigned char>::iterator it = vect.begin();it != vect.end();it++ )
-	{
-		if (is_end_head(it, vect))
-		{
-			std::cout << RED << "End Header" << RESET << std::endl;
-			break;
-		}
-		else
-			str += *it;
-	}
-	// std::cout << str << std::endl;
-	HttpRequest req;
-	parse_header(str, req, servers);
+
+// // 	std::string tmp("
+// // GET /images/logo.png HTTP/1.0\r\n
+// // Accept: image/png,image/*;q=0.8\r\n
+// // \r\n
+// // Content of body");
+// 	std::vector<unsigned char> vect(tmp.begin(),tmp.end());
+// 	std::string header;
+// 	std::string str;
+// 	for (std::vector<unsigned char>::iterator it = vect.begin();it != vect.end();it++ )
+// 	{
+// 		if (is_end_head(it, vect))
+// 		{
+// 			std::cout << RED << "End Header" << RESET << std::endl;
+// 			break;
+// 		}
+// 		else
+// 			str += *it;
+// 	}
+// 	// std::cout << str << std::endl;
+// 	HttpRequest req;
+// 	parse_header(str, req, servers);
 }
 
 

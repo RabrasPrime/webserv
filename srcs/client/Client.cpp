@@ -10,14 +10,18 @@
 #include <cstring>
 #include <iostream>
 
+#include "Color.hpp"
+
 Client::Client() : _fd(-1), _server(NULL), _status(READING)
 {
+	std::cout << LIME << "Open1 Client" << RESET << std::endl;
 	std::memset(&_last_active_time, 0, sizeof(_last_active_time));
 	gettimeofday(&_last_active_time, NULL);
 }
 
 Client::Client(int fd, Server *server) : _fd(fd), _server(server), _status(READING)
 {
+	std::cout << GREEN << "Open1bis	 Client" << RESET << std::endl;
 	std::memset(&_last_active_time, 0, sizeof(_last_active_time));
 	gettimeofday(&_last_active_time, NULL);
 	set_non_blocking();
@@ -25,7 +29,8 @@ Client::Client(int fd, Server *server) : _fd(fd), _server(server), _status(READI
 
 Client::~Client()
 {
-	close();
+	// std::cout << RED << "Close Client" << RESET << std::endl;
+	// close();
 }
 
 ssize_t Client::read_from_socket()

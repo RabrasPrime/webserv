@@ -1,0 +1,11 @@
+server
+	listen 8082
+	listen [::]:8081
+	root ./www/monsite
+	methods GET POST DELETE
+	locations /images/ /picture/ /static/
+		alias ./data/media
+		methods GET POST
+		auto_index True
+	locations /old-page/
+		return 301 /new-page
