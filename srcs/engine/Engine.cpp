@@ -30,7 +30,7 @@ Engine::~Engine()
     }
 }
 
-static std::string make_listener_key(int host, int port)
+static std::string make_listener_key(const int host, const int port)
 {
     char buf[64];
     snprintf(buf, sizeof(buf), "%d:%d", host, port);
@@ -131,8 +131,8 @@ bool Engine::is_running() const
 
 void Engine::handle_new_connection(int listener_fd)
 {
-    Listener& listener = _listeners[listener_fd];
-    int client_fd = listener.accept_connection();
+    const Listener& listener = _listeners[listener_fd];
+    const int client_fd = listener.accept_connection();
 
     if (client_fd < 0)
         return;
@@ -143,14 +143,14 @@ void Engine::handle_new_connection(int listener_fd)
     add_to_epoll(client_fd, EPOLLIN | EPOLLET);
 }
 
-void Engine::handle_client_read(int client_fd)
+void Engine::handle_client_read(const int client_fd)
 {
-    std::map<int, Client>::iterator it = _clients.find(client_fd);
+    const std::map<int, Client>::iterator it = _clients.find(client_fd);
     if (it == _clients.end())
         return;
 
     Client& client = it->second;
-    ssize_t ret = client.read_from_socket();
+    const ssize_t ret = client.read_from_socket();
 
     if (ret == 0)
     {
@@ -168,14 +168,14 @@ void Engine::handle_client_read(int client_fd)
     modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 }
 
-void Engine::handle_client_write(int client_fd)
+void Engine::handle_client_write(const int client_fd)
 {
-    std::map<int, Client>::iterator it = _clients.find(client_fd);
+    const std::map<int, Client>::iterator it = _clients.find(client_fd);
     if (it == _clients.end())
         return;
 
     Client& client = it->second;
-    ssize_t ret = client.write_to_socket();
+    const ssize_t ret = client.write_to_socket();
 
     if (ret < 0)
     {
@@ -189,12 +189,12 @@ void Engine::handle_client_write(int client_fd)
     }
 }
 
-void Engine::handle_client_disconnect(int client_fd)
+void Engine::handle_client_disconnect(const int client_fd)
 {
     remove_from_epoll(client_fd);
     _fd_types.erase(client_fd);
 
-    std::map<int, Client>::iterator it = _clients.find(client_fd);
+    const std::map<int, Client>::iterator it = _clients.find(client_fd);
     if (it != _clients.end())
     {
         it->second.close();
@@ -202,7 +202,7 @@ void Engine::handle_client_disconnect(int client_fd)
     }
 }
 
-void Engine::add_to_epoll(int fd, uint32_t events)
+void Engine::add_to_epoll(const int fd, const uint32_t events) const
 {
     struct epoll_event ev;
     ev.events = events;
@@ -214,7 +214,7 @@ void Engine::add_to_epoll(int fd, uint32_t events)
     }
 }
 
-void Engine::modify_epoll(int fd, uint32_t events)
+void Engine::modify_epoll(const int fd, const uint32_t events) const
 {
     struct epoll_event ev;
     ev.events = events;
@@ -226,7 +226,7 @@ void Engine::modify_epoll(int fd, uint32_t events)
     }
 }
 
-void Engine::remove_from_epoll(int fd)
+void Engine::remove_from_epoll(const int fd) const
 {
     if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, fd, NULL) < 0)
     {
@@ -263,7 +263,7 @@ void Engine::run()
     struct epoll_event events[MAX_EVENTS];
     while (_is_running)
     {
-        int n = epoll_wait(_epoll_fd, events, MAX_EVENTS, 1000);
+        const int n = epoll_wait(_epoll_fd, events, MAX_EVENTS, 1000);
         if (n < 0)
         {
             if (errno == EINTR)
@@ -308,7 +308,7 @@ void Engine::run()
         if (it->second.is_timed_out() || it->second.get_status())
         {
             std::cout << "Client " << it->first << " timed out or closed, disconnecting" << std::endl;
-            int fd = it->first;
+            const int fd = it->first;
             ++it;
             handle_client_disconnect(fd);
         }

@@ -40,7 +40,7 @@ public:
 	 * It constructs the appropriate sockaddr structure based on the host and port, and attempts to bind the socket to that address. \n\n
 	 * If the bind operation is successful, it returns true. If the bind operation fails (e.g., due to the port being in use or insufficient permissions), it logs an error message and returns false.
 	 */
-	bool bind_socket();
+	bool bind_socket() const;
 
 	/**
 	 * @return True if the socket was successfully set to listen for incoming connections, false otherwise.
@@ -48,7 +48,7 @@ public:
 	 * It specifies a backlog value (e.g., 128) to indicate the maximum number of pending connections that can be queued. \n\n
 	 * If the listen operation is successful, it returns true and logs a message indicating that the listener is now listening on the specified port. If the listen operation fails, it logs an error message and returns false.
 	 */
-	bool listen_socket();
+	bool listen_socket() const;
 
 	/**
 	 * @brief Closes the listener's socket if it is currently open. \n\n
@@ -64,7 +64,7 @@ public:
 	 * It retrieves the client's address information and logs a message indicating the source of the new connection. \n\n
 	 * If the accept operation is successful, it sets the accepted client socket to non-blocking mode and returns the file descriptor of the accepted connection. If an error occurs during acceptance (e.g., if there are no pending connections or if an error occurs), it logs an error message and returns -1.
 	 */
-	int accept_connection();
+	int accept_connection() const;
 
 
 	/**
@@ -138,5 +138,5 @@ public:
 	 * Non-blocking mode allows the server to perform accept operations on the listener's socket without blocking the execution of the server, which is essential for handling multiple listeners and clients concurrently. \n\n
 	 * This method modifies the internal state of the listener by changing the socket's file descriptor to non-blocking mode using the fcntl system call. If an error occurs while setting the socket to non-blocking mode, it logs an error message.
 	 */
-	void set_non_blocking();
+	void set_non_blocking() const;
 };

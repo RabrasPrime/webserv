@@ -103,7 +103,7 @@ class Engine
 		 * The modify_epoll method modifies the events being monitored for an existing file descriptor in the epoll instance. \n\n
 		 * The remove_from_epoll method removes a file descriptor from the epoll instance, stopping all monitoring for that descriptor.
 		 */
-		void add_to_epoll(int fd, uint32_t events);
+		void add_to_epoll(int fd, uint32_t events) const;
 
 		/**
 		 *
@@ -113,7 +113,7 @@ class Engine
 		 * It updates the epoll registration for the specified file descriptor to reflect the new set of events that should trigger notifications. \n\n
 		 * If the modification fails, it logs an error message indicating the failure and the file descriptor involved.
 		 */
-		void modify_epoll(int fd, uint32_t events);
+		void modify_epoll(int fd, uint32_t events) const;
 
 		/**
 		 * @param fd The file descriptor to be removed from the epoll instance.
@@ -121,7 +121,7 @@ class Engine
 		 * It calls epoll_ctl with the EPOLL_CTL_DEL operation to remove the specified file descriptor from the epoll instance. \n\n
 		 * If the removal fails, it logs an error message indicating the failure and the file descriptor involved.
 		 */
-		void remove_from_epoll(int fd);
+		void remove_from_epoll(int fd) const;
 
 		/**
 		 * @param server The Server object to be added to the Engine's list of server configurations.
