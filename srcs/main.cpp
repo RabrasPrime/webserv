@@ -1,4 +1,103 @@
 #include "Parsing.hpp"
+#include "Color.hpp"
+#include "httpRequest.hpp"
+#include <sstream>
+#include <map>
+
+int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect)
+{
+	std::vector<unsigned char>::iterator end = vect.end();
+	if (*it == '\r'
+		&& it + 1 != end && *(it + 1) == '\n'
+		&& it + 2 != end && *(it + 2) == '\r'
+		&& it + 3 != end && *(it + 3) == '\n')
+		return (1);
+	return (0);
+}
+
+std::vector<std::string> ft_split(std::string& str, std::string split)
+{
+	std::vector<std::string> vect;
+	int index = 0;
+	size_t pos;
+	do
+	{
+		pos = str.find(split, index);
+		if (pos == std::string::npos)
+			pos = str.size();
+		std::string ligne(str.substr(index, pos - index));
+		std::cout << ligne << "    " << index << " " << pos << std::endl;
+		vect.push_back(ligne);
+		index = pos + 2;
+	} while (pos != str.size());
+	return (vect);
+}
+
+void	fill_headers(std::vector<std::string>& ligne, HttpRequest& req)
+{
+	for (std::vector<std::string>::iterator it = ligne.begin();it != ligne.end();it++)
+	{
+		std::string key;
+		std::string value;
+		size_t pos = it->find(':');
+		if (pos != std::string::npos)
+		{
+			key = it->substr(0, pos);
+			int i;
+			for (i = pos + 1;(*it)[i] && std::isspace((*it)[i]);i++)
+				;
+			value = it->substr(i, it->size());
+			req.mult.insert(std::make_pair(key, value));
+		}
+	}
+}
+
+int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server>& servers)
+{
+	(void)servers;
+	(void)req;
+	std::string first_line;
+	first_line = str.substr(0,str.find("\r\n"));
+	// std::cout << "first line >> " << first_line << std::endl;
+	std::stringstream ss(first_line);
+	std::string method;
+	std::string path;
+	std::string version;
+	if (ss >> method >> path >> version)
+	{
+		char extra;
+		if (ss >> extra)
+			return (1);
+	}
+	std::cout << "Method : " << method << std::endl;
+	std::cout << "Path : " << path << std::endl;
+	std::cout << "Version : " << version << std::endl;
+	std::string header(str.substr(str.find("\r\n") + 2, str.size()));
+	// std::cout << header << std::endl;
+	std::vector<std::string> ligne = ft_split(header, "\r\n");
+	// for (std::vector<std::string>::iterator it = ligne.begin();it != ligne.end();it++)
+	// {
+	// 	std::cout << *it << std::endl;
+	// }
+	fill_headers(ligne, req);
+	// for (std::map<std::string, std::string>::iterator it = req.mult.begin();it != req.mult.end();it++)
+	// {
+	// 	std::cout << it->first << ":" << it->second << std::endl;
+	// }
+
+	// std::pair<std::map<std::string, std::string>::iterator,std::map<std::string, std::string>::iterator> range;
+	// for (std::map<std::string, std::string>::iterator it = range.first;it != range.second;it++)
+	// {
+	// 	std::cout << it->first << " : " << it->second << std::endl;
+	// }
+	// Server server;
+	// for (std::vector<Server>::iterator it = servers.begin();it != servers.end();it++)
+	// {
+	// 	it->get_server_name();
+	// }
+	return (0);
+}
+
 
 int main(int ac, char **av)
 {
@@ -10,9 +109,55 @@ int main(int ac, char **av)
 		path = "config_file/config_file";
 	if (parse(servers, path))
 		return (1);
-	std::cout << servers.front() << std::endl;
-	return (0);
+	// std::cout << servers.front() << std::endl;
+	std::string tmp("\
+GET /images/logo.png HTTP/1.0\r\n\
+Host: localhost:8080\r\n\
+User-Agent: Mozilla/5.0 (Linux; x86_64)\r\n\
+Accept: image/png,image/*;q=0.8\r\n\
+Connection: close\r\n\
+\r\n\
+Content of body");
+
+// 	std::string tmp("
+// GET /images/logo.png HTTP/1.0\r\n
+// Accept: image/png,image/*;q=0.8\r\n
+// \r\n
+// Content of body");
+	std::vector<unsigned char> vect(tmp.begin(),tmp.end());
+	std::string header;
+	std::string str;
+	for (std::vector<unsigned char>::iterator it = vect.begin();it != vect.end();it++ )
+	{
+		if (is_end_head(it, vect))
+		{
+			std::cout << RED << "End Header" << RESET << std::endl;
+			break;
+		}
+		else
+			str += *it;
+	}
+	// std::cout << str << std::endl;
+	HttpRequest req;
+	parse_header(str, req, servers);
 }
+
+
+
+
+// int main(int ac, char **av)
+// {
+// 	std::vector<Server> servers;
+// 	std::string path;
+// 	if (ac > 1)
+// 		path = av[1];
+// 	else
+// 		path = "config_file/config_file";
+// 	if (parse(servers, path))
+// 		return (1);
+// 	std::cout << servers.front() << std::endl;
+// 	return (0);
+// }
 
 
 // #include <iostream>

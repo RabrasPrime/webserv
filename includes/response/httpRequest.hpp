@@ -8,6 +8,7 @@ struct HttpRequest
 	std::string version;
 	std::string type;
 	std::map<std::string, std::string> headers;
+	std::multimap<std::string, std::string> mult;
 	std::string body;
 
 	// dans Location
@@ -22,6 +23,4 @@ struct HttpRequest
 };
 
 #endif
-
-
 

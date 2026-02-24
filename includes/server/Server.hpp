@@ -22,12 +22,12 @@ class Server : public Config
 
 	private:
 		std::vector<struct sockaddr_storage>	_addr;
-		std::string								_server_name;
+		std::vector<std::string>				_server_name;
 		std::map<std::string, Location>			_locations;
 
 	public:
 		const std::vector<struct sockaddr_storage>	get_addr() const;
-		const std::string							get_server_name() const;
+		const std::vector<std::string>&				get_server_name() const;
 		const std::map<std::string, Location>		get_locations() const;
 
 		int		set_listen(const std::string& value);

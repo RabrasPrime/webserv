@@ -35,7 +35,7 @@ class Config
 		int									_cgi_timeout;
 		int									_return_code;
 		std::string							_return_path;
-
+		bool								_use_alias;
 
 		bool								_is_set_root;
 		bool								_is_set_alias;
@@ -51,6 +51,7 @@ class Config
 		bool								_is_set_cgi_upload_path;
 		bool								_is_set_cgi_timeout;
 		bool								_is_set_return;
+		bool								_is_set_use_alias;
 
 	public:
 		// GET
@@ -69,6 +70,8 @@ class Config
 		int											get_cgi_timeout() const;
 		int											get_return_code() const;
 		std::string									get_return_path() const;
+
+		bool										get_use_alias() const;
 
 		// SET
 		int		set_root(const std::string& value);
