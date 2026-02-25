@@ -301,19 +301,18 @@ void Engine::run()
                 }
             }
         }
-    }
-
-    for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-    {
-        if (it->second.is_timed_out() || it->second.get_status())
+        for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
         {
-            std::cout << "Client " << it->first << " timed out or closed, disconnecting" << std::endl;
-            const int fd = it->first;
-            ++it;
-            handle_client_disconnect(fd);
+            if (it->second.is_timed_out() || it->second.get_status())
+            {
+                std::cout << "Client " << it->first << " timed out or closed, disconnecting" << std::endl;
+                const int fd = it->first;
+                ++it;
+                handle_client_disconnect(fd);
+            }
+            else
+                ++it;
         }
-        else
-            ++it;
     }
 }
 
