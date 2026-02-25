@@ -66,8 +66,7 @@ bool Listener::create_socket() {
 	return true;
 }
 
-
-bool Listener::bind_socket()
+bool Listener::bind_socket() const
 {
 	// struct sockaddr_storage storage;
 
@@ -132,7 +131,7 @@ bool Listener::bind_socket()
 	return true;
 }
 
-bool Listener::listen_socket()
+bool Listener::listen_socket() const
 {
 	if (listen(_fd, BACKLOG) < 0)
 	{
@@ -177,9 +176,9 @@ bool Listener::is_valid() const
 	return _fd != -1;
 }
 
-void Listener::set_non_blocking()
+void Listener::set_non_blocking() const
 {
-	int flags = fcntl(_fd, F_GETFL, 0);
+	const int flags = fcntl(_fd, F_GETFL, 0);
 	if (flags < 0)
 	{
 		std::cerr << "Error getting socket flags" << std::endl;
@@ -191,12 +190,12 @@ void Listener::set_non_blocking()
 	}
 }
 
-int Listener::accept_connection()
+int Listener::accept_connection() const
 {
 	struct sockaddr_storage client_addr;
 	socklen_t client_len = sizeof(client_addr);
 
-	int client_fd = accept(_fd, (struct sockaddr*)&client_addr, &client_len);
+	const int client_fd = accept(_fd, reinterpret_cast<struct sockaddr*>(&client_addr), &client_len);
 	if (client_fd < 0)
 	{
 		if (errno != EAGAIN && errno != EWOULDBLOCK)
@@ -208,17 +207,17 @@ int Listener::accept_connection()
 	char client_ip[INET6_ADDRSTRLEN];
 	if (client_addr.ss_family == AF_INET)
 	{
-		struct sockaddr_in *addr = (struct sockaddr_in*)&client_addr;
+		const struct sockaddr_in *addr = reinterpret_cast<struct sockaddr_in*>(&client_addr);
 		inet_ntop(AF_INET, &addr->sin_addr, client_ip, sizeof(client_ip));
 		std::cout << "New IPv4 connection from " << client_ip << std::endl;
 	}
 	else if (client_addr.ss_family == AF_INET6)
 	{
-		struct sockaddr_in6 *addr = (struct sockaddr_in6*)&client_addr;
+		const struct sockaddr_in6 *addr = reinterpret_cast<struct sockaddr_in6*>(&client_addr);
 		inet_ntop(AF_INET6, &addr->sin6_addr, client_ip, sizeof(client_ip));
 		std::cout << "New IPv6 connection from " << client_ip << std::endl;
 	}
-	int flags = fcntl(client_fd, F_GETFL, 0);
+	const int flags = fcntl(client_fd, F_GETFL, 0);
 	fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
 
 	return client_fd;
