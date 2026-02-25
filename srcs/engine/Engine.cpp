@@ -269,6 +269,7 @@ void Engine::run()
             if (errno == EINTR)
                 continue;
             std::cerr << "Error in epoll_wait: " << strerror(errno) << std::endl;
+            stop();
             break;
         }
 
@@ -314,6 +315,7 @@ void Engine::run()
                 ++it;
         }
     }
+    stop();
 }
 
 void Engine::stop()
