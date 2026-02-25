@@ -302,18 +302,24 @@ void Engine::run()
                 }
             }
         }
-        for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+        for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); )
         {
             if (it->second.is_timed_out() || it->second.get_status())
             {
                 std::cout << "Client " << it->first << " timed out or closed, disconnecting" << std::endl;
                 const int fd = it->first;
+                remove_from_epoll(fd);
+                _fd_types.erase(fd);
+                it->second.close();
+                const std::map<int, Client>::iterator to_erase = it;
                 ++it;
-                handle_client_disconnect(fd);
+                _clients.erase(to_erase);
             }
             else
                 ++it;
         }
+
+
     }
     stop();
 }
