@@ -1,4 +1,5 @@
 #include "httpResponse.hpp"
+#include "Server.hpp"
 
 httpResponse::httpResponse()
 : _statusCode(0){
@@ -38,12 +39,26 @@ bool httpResponse::isCgiExtension(std::string currentPath){
 char** httpResponse::createEnv(HttpRequest &req, std::string path){
 
 	std::vector<std::string> envList;
-	envList.push_back("REQUEST_METHOD=" + req.method);
+
+	if (req.methods & METHOD_GET)
+		envList.push_back("REQUEST_METHOD=GET");
+	if (req.methods & METHOD_POST)
+		envList.push_back("REQUEST_METHOD=POST");
+	if (req.methods & METHOD_DELETE)
+		envList.push_back("REQUEST_METHOD=DELETE");
 	envList.push_back("QUERY_STRING=" + req.queryString);
 	std::stringstream ss;
 	ss << req.body.size();
 	envList.push_back("CONTENT_LENGTH=" + ss.str());
-	envList.push_back("CONTENT_TYPE=" + req.headers["Content-Type"]);
+	std::string tmp;
+	for (std::vector<std::string>::iterator it = req.mult["Content-Type"].begin();it != req.mult["Content-Type"].end();it++)
+	{
+		if (it + 1 != req.mult["Content-Type"].end())
+			tmp += *it + ",";
+		else
+			tmp += *it;
+	}
+	envList.push_back("CONTENT_TYPE=" + tmp);
 	envList.push_back("PATH_INFO=" + path);
 	envList.push_back("SCRIPT_NAME=" + path);
 	envList.push_back("SERVER_PROTOCOL=" + req.version);
@@ -114,7 +129,7 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		delete []env;
 		exit(1);
 	}
-	if (!req.body.empty() && req.method == "POST")
+	if (!req.body.empty() && req.method & METHOD_POST)
 		write(pipeIn[1], req.body.c_str(), req.body.size());
 	close(pipeOut[1]);
 	close(pipeIn[1]);
@@ -199,9 +214,10 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 	_statusMsg = _mErrorMsg[_statusCode];
 	(void)req;
 	parseCgiOutput();
-	_headers["Connection"] = req.headers["Connection"];
-	if (_headers["Connection"].empty())
-		_headers["Connection"] = "Keep-Alive";
+	if (req.mult["Connection"].size() == 0)
+		_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
+	else
+		_headers["Connection"] = req.mult["Connection"].front();
 	if (_headers["Content-Type"].empty())
 		_headers["Content-Type"] = "text/html";
 	std::stringstream ss;
@@ -223,11 +239,12 @@ std::string httpResponse::handleResponse(HttpRequest &req){
 		fillCgiResponse(req);
 		return convertFinalResponse();
 	}
-	if (req.method == "GET")
+	// std::cout << RED << "sdasdasda" << req.method << RESET << std::endl;
+	if (req.method & METHOD_GET)
 		exeGet(req);
-	else if (req.method == "POST")
+	else if (req.method & METHOD_POST)
 		exePost(req);
-	else if (req.method == "DELETE")
+	else if (req.method & METHOD_DELETE)
 		exeDelete(req);
 	else
 	{
@@ -284,16 +301,19 @@ void httpResponse::fillMapExtension(std::map<std::string, std::string> &map, std
 	inFile.close();
 }
 
-void httpResponse::fillHeaders(std::map<std::string, std::string> &headers){
+void httpResponse::fillHeaders(std::map<std::string, std::vector<std::string> > &mult){
 
 	_headers["Content-Type"] = _mMimeTypes[_bodyType];
 	if (_headers["Content-Type"].empty())
 		_headers["Content-Type"] = DEFAULT_TYPE;
 	if (_headers["Content-Type"].find("text/") == 0)
 		_headers["Content-Type"] += "; charset=utf-8";
-	_headers["Connection"] = headers["Connection"];
-	if (_headers["Connection"].empty())
-		_headers["Connection"] = "Keep-Alive"; // --> verif ce qu on fait dans ce cas la
+
+
+	if (mult["Connection"].size() == 0)
+		_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
+	else
+		_headers["Connection"] = mult["Connection"].front();
 	std::stringstream ss;
 	ss << _body.size();
 	_headers["Content-Length"] = ss.str();
@@ -337,6 +357,7 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 	struct stat s;
 	for (std::vector<std::string>::iterator it = req.indexes.begin(); it != req.indexes.end(); ++it)
 	{
+		std::cout << BOLD BLUE << " IT" << std::endl;
 		std::string tryPath = path + "/" + *it;
 		if (stat(tryPath.c_str(), &s) == 0)
 		{
@@ -352,33 +373,29 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 		}
 	}
 	if (req.auto_index)
+	{
+		std::cout << BOLD BLUE << " INDEX" << std::endl;
 		generateAutoIndex(path);
+	}
 	else
 		return 403;
 	return 200;
 }
 
 
-bool httpResponse::isForbiddenMethod(HttpRequest &req)
-{
-	for (std::vector<std::string>::iterator it = req.methods.begin(); it != req.methods.end(); ++it)
-	{
-		if (*it == req.method)
-			return false;
-	}
-	return true;
-}
-
 int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 
-	if (isForbiddenMethod(req))
+	if (!(req.methods & req.method))
 		return 405;
 	struct stat s;
 	if (stat(path.c_str(), &s) == -1)
 		return 404;
 	std::ifstream inFile;
 	if (S_ISDIR(s.st_mode))
-		searchFileInDir(path, req);
+	{
+		std::cout << ORANGE BOLD " IS DIR " << std::endl;
+		return(searchFileInDir(path, req));
+	}
 	else
 	{
 		inFile.open(path.c_str(), std::ios::binary);
@@ -474,12 +491,29 @@ void httpResponse::handleError(HttpRequest &req)
 	if (_statusCode == 501 || _statusCode == 405)
 	{
 		std::string allowMethods;
-		for (std::vector<std::string>::iterator it = req.methods.begin(); it != req.methods.end(); ++it)
+		// for (std::vector<std::string>::iterator it = req.methods.begin(); it != req.methods.end(); ++it)
+		// {
+		// 	if (it + 1 != req.methods.end())
+		// 		allowMethods += *it + ", ";
+		// 	else
+		// 		allowMethods += *it;
+		// }
+
+		if (req.methods & METHOD_GET)
+			allowMethods += "GET";
+		if (req.methods & METHOD_POST)
 		{
-			if (it + 1 != req.methods.end())
-				allowMethods += *it + ", ";
+			if (allowMethods.size() == 0)
+				allowMethods += "POST";
 			else
-				allowMethods += *it;
+				allowMethods += ", POST";
+		}
+		if (req.methods & METHOD_DELETE)
+		{
+			if (allowMethods.size() == 0)
+				allowMethods += "DELETE";
+			else
+				allowMethods += ", DELETE";
 		}
 		_headers["Allow"] = allowMethods; 
 	}
@@ -490,14 +524,14 @@ void httpResponse::exeGet(HttpRequest &req){
 	_statusCode = fillBody(req.path, req);
 	if (_statusCode != 200)
 		handleError(req);
-	fillHeaders(req.headers);
+	fillHeaders(req.mult);
 }
 
 void httpResponse::fillBody(HttpRequest &req)
 {
 	std::ostringstream index;
 	index << "<html><head><style>body{ background: #1a1a1a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; flex-direction: column;} h1 {font-size: 100px; color: #16d705; margin-top: -50px; } </style></head><body> <h1>";
-	if (_statusCode == 200 && req.method == "DELETE")
+	if (_statusCode == 200 && req.method & METHOD_DELETE)
 		index << " File deleted sucessfully";
 	else if (_statusCode == 200)
 		index << " File updated sucessfully";
@@ -510,7 +544,7 @@ void httpResponse::fillBody(HttpRequest &req)
 
 int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 {
-	if (isForbiddenMethod(req))
+	if (!(req.methods & req.method))
 		return 405;
 	bool fileCreated = false;
 	struct stat s;
@@ -576,12 +610,12 @@ void httpResponse::exePost(HttpRequest &req)
 	}
 	_statusMsg = _mErrorMsg[_statusCode];
 	fillBody(req);
-	fillHeaders(req.headers);
+	fillHeaders(req.mult);
 }
 
 int httpResponse::deleteFile(std::string &path, HttpRequest &req)
 {
-	if (isForbiddenMethod(req))
+	if (!(req.methods & req.method))
 		return 405;
 	size_t parentDir = path.find_last_of("/\\");
 	std::string dirPath;
@@ -616,5 +650,5 @@ void httpResponse::exeDelete(HttpRequest &req)
 	_statusCode = 200;
 	_statusMsg = _mErrorMsg[_statusCode];
 	fillBody(req);
-	fillHeaders(req.headers);
+	fillHeaders(req.mult);
 }

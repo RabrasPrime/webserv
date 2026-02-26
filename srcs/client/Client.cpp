@@ -35,12 +35,13 @@ Client::~Client()
 
 ssize_t Client::read_from_socket()
 {
-	char buffer[4096];
+	unsigned char buffer[4096];
 	ssize_t bytes_read = recv(_fd, buffer, sizeof(buffer), 0);
 
 	if (bytes_read > 0)
 	{
-		_read_buffer.append(buffer, bytes_read);
+		// _read_buffer.append(buffer, bytes_read);
+		_read.insert(_read.end(), buffer, buffer + bytes_read);
 		update();
 	}
 	else if (bytes_read == 0)
@@ -66,7 +67,8 @@ ssize_t Client::write_to_socket()
 {
 	if (_write_buffer.empty())
 		return 0;
-
+		
+	std::cout << "\n\nSend Data >>>\n" << _write_buffer.c_str();
 	ssize_t bytes_sent = send(_fd, _write_buffer.c_str(), _write_buffer.size(), MSG_NOSIGNAL);
 
 	if (bytes_sent > 0)
@@ -197,4 +199,9 @@ void Client::set_non_blocking()
 	{
 		std::cerr << "Error setting non-blocking mode for fd " << _fd << std::endl;
 	}
+}
+
+const std::vector<unsigned char>& Client::get_read()
+{
+	return _read;
 }

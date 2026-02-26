@@ -9,6 +9,7 @@
 #include "Server.hpp"
 #include <string>
 #include <sys/time.h>
+#include "httpResponse.hpp"
 
 class Server;
 
@@ -33,12 +34,17 @@ class Client
 		Server	*_server;
 
 		std::string	_read_buffer;
-		std::string	_write_buffer;
 
+		std::vector<unsigned char> _read;
+		
 		struct timeval	_last_active_time;
-
+		
 		Status _status;
+
 	public:
+		std::string	_write_buffer;
+		HttpRequest req;
+		httpResponse res;
 		Client();
 		Client(int fd, Server *server);
 		~Client();
@@ -205,4 +211,7 @@ class Client
 		 * This method uses the fcntl system call to modify the file descriptor flags for the client's socket, adding the O_NONBLOCK flag to enable non-blocking behavior. \n\n
 		 */
 		void set_non_blocking();
+
+
+		const std::vector<unsigned char>& get_read();
 };

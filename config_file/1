@@ -1,7 +1,7 @@
 server
-	listen 8082
+	listen 8080
 	listen [::]:8081
-	root ./www/monsite
+	root ./
 	methods GET POST DELETE
 	locations /images/ /picture/ /static/
 		alias ./data/media

@@ -27,7 +27,7 @@ std::vector<std::string> ft_split(std::string& str, std::string split)
 		if (pos == std::string::npos)
 			pos = str.size();
 		std::string ligne(str.substr(index, pos - index));
-		std::cout << ligne << "    " << index << " " << pos << std::endl;
+		// std::cout << ligne << "    " << index << " " << pos << std::endl;
 		vect.push_back(ligne);
 		index = pos + 2;
 	} while (pos != str.size());
@@ -48,18 +48,20 @@ void	fill_headers(std::vector<std::string>& ligne, HttpRequest& req)
 			for (i = pos + 1;(*it)[i] && std::isspace((*it)[i]);i++)
 				;
 			value = it->substr(i, it->size());
-			req.mult.insert(std::make_pair(key, value));
+			req.mult[key];
+			req.mult[key].push_back(value);
+			// req.mult.insert(std::make_pair(key, value));
 		}
 	}
 }
 
-int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server>& servers)
+int	parse_header(const std::string& str, HttpRequest& req, Server* server)
 {
-	(void)servers;
+	(void)server;
 	(void)req;
 	std::string first_line;
 	first_line = str.substr(0,str.find("\r\n"));
-	// std::cout << "first line >> " << first_line << std::endl;
+	std::cout << "first line >> " << first_line << std::endl;
 	std::stringstream ss(first_line);
 	std::string method;
 	std::string path;
@@ -71,8 +73,28 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server>& 
 			return (1);
 	}
 	std::cout << "Method : " << method << std::endl;
+	// size_t index = path.find('?') + 1;
+	// req.queryString = path.substr(index, path.size() - index);
+	// path = path.substr(0, index - 1);
 	std::cout << "Path : " << path << std::endl;
 	std::cout << "Version : " << version << std::endl;
+	std::cout << "___________Query String >" << req.queryString << std::endl;
+	// do
+	// {
+	// 	pos = path.find(index, '&');
+	// 	if (pos == std::string::npos)
+	// 		pos = path.size();
+	// 	std::string s = path.substr(index, pos - index);
+	// } while (pos != std:;string::npos);
+	
+	if (method == "GET")
+		req.method = METHOD_GET;
+	if (method == "DELETE")
+		req.method = METHOD_DELETE;
+	if (method == "POST")
+		req.method = METHOD_POST;
+	req.path = path;
+	req.version = version;
 	std::string header(str.substr(str.find("\r\n") + 2, str.size()));
 	// std::cout << header << std::endl;
 	std::vector<std::string> ligne = ft_split(header, "\r\n");
@@ -81,7 +103,57 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server>& 
 	// 	std::cout << *it << std::endl;
 	// }
 	fill_headers(ligne, req);
-	// for (std::map<std::string, std::string>::iterator it = req.mult.begin();it != req.mult.end();it++)
+	for (std::map<std::string,std::vector<std::string> >::iterator it = req.mult.begin();it != req.mult.end();it++)
+	{
+		std::cout << it->first << " : " <<  std::endl;
+		for (std::vector<std::string>::iterator itt = it->second.begin();itt != it->second.end();itt++)
+		{
+			std::cout << "\t" << *itt;
+		}
+		std::cout << std::endl;
+	}
+	//HERE remove query string
+	std::map<std::string, Location> locations = server->get_locations();
+	Location* best = NULL;
+	size_t size_match = 0;
+	for (std::map<std::string, Location>::iterator it = locations.begin(); it != locations.end(); it++)
+	{
+		std::string p = it->second.get_path();
+		if (path.compare(0, p.size(), p) == 0)
+		{
+			if (p.size() > size_match)
+			{
+				best = &it->second;
+				size_match = p.size();
+			}
+		}
+	}
+	if (!best)
+	{
+		req.error_pages = server->get_error_pages();
+		req.methods = server->get_methods();
+		req.auto_index = server->get_auto_index();
+		req.indexes = server->get_indexes();
+		req.maxSize = server->get_client_max_body_size();
+		req.path = server->get_root() + &path[1];
+	}
+	else
+	{
+		req.error_pages = best->get_error_pages();
+		req.methods = best->get_methods();
+		req.auto_index = best->get_auto_index();
+		req.indexes = best->get_indexes();
+		req.maxSize = best->get_client_max_body_size();
+
+		if (best->get_use_alias())
+		{
+			req.path = best->get_alias() + &path[best->get_path().size()];
+		}
+		else
+			req.path = best->get_root() + &path[1];
+	}
+	std::cout << "__________________Path>" << req.path << std::endl;
+	// for (std::multimap<std::string, std::string>::iterator it = req.mult.begin();it != req.mult.end();it++)
 	// {
 	// 	std::cout << it->first << ":" << it->second << std::endl;
 	// }
@@ -109,7 +181,8 @@ int main(int ac, char **av)
 		path = "config_file/config_file";
 	if (parse(servers, path))
 		return (1);
-	std::cout << servers.front() << std::endl;
+	// std::cout << servers.front() << std::endl;
+
 	Engine engine;
 	for (std::vector<Server>::iterator it = servers.begin(); it != servers.end();it++)
 		engine.add_server(*it);
@@ -125,27 +198,27 @@ int main(int ac, char **av)
 // \r\n
 // Content of body");
 
-// // 	std::string tmp("
-// // GET /images/logo.png HTTP/1.0\r\n
-// // Accept: image/png,image/*;q=0.8\r\n
-// // \r\n
-// // Content of body");
-// 	std::vector<unsigned char> vect(tmp.begin(),tmp.end());
-// 	std::string header;
-// 	std::string str;
-// 	for (std::vector<unsigned char>::iterator it = vect.begin();it != vect.end();it++ )
-// 	{
-// 		if (is_end_head(it, vect))
-// 		{
-// 			std::cout << RED << "End Header" << RESET << std::endl;
-// 			break;
-// 		}
-// 		else
-// 			str += *it;
-// 	}
-// 	// std::cout << str << std::endl;
-// 	HttpRequest req;
-// 	parse_header(str, req, servers);
+// 	std::string tmp("
+// GET /images/logo.png HTTP/1.0\r\n
+// Accept: image/png,image/*;q=0.8\r\n
+// \r\n
+// Content of body");
+	// std::vector<unsigned char> vect(tmp.begin(),tmp.end());
+	// std::string header;
+	// std::string str;
+	// for (std::vector<unsigned char>::iterator it = vect.begin();it != vect.end();it++ )
+	// {
+	// 	if (is_end_head(it, vect))
+	// 	{
+	// 		std::cout << RED << "End Header" << RESET << std::endl;
+	// 		break;
+	// 	}
+	// 	else
+	// 		str += *it;
+	// }
+	// std::cout << str << std::endl;
+	// HttpRequest req;
+	// parse_header(str, req, servers);
 }
 
 
