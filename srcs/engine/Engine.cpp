@@ -190,7 +190,7 @@ void Engine::handle_client_read(const int client_fd)
 	// std::cout << "Header : \n" << YELLOW << str << RESET << std::endl;
 	std::vector<Server> servers;
 	parse_header(str, client.req, client.get_server());
-	client._write_buffer = client.res.handleResponse(client.req);
+	client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
 	// std::cout << client.get_read_buffer() << std::endl;
     modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 }

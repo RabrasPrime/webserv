@@ -142,34 +142,44 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 
 int httpResponse::isCgi(HttpRequest &req, std::string path){
 
-	size_t end = path.find_first_of("?");
-	_cgiPath = path.substr(0, end);
+	// size_t end = path.find_first_of("?");
+	// _cgiPath = path.substr(0, end);
 	
-	size_t pos = 0, nextSection = 0;
-	std::string currentPath = req.root;
-	while (pos < _cgiPath.size())
-	{
-		nextSection = _cgiPath.find('/', pos + 1);
-		std::string section = _cgiPath.substr(pos, nextSection - pos);
-		currentPath += section;
-		struct stat s;
-		if (stat(currentPath.c_str(), &s) == 0)
-		{
+	// size_t pos = 0, nextSection = 0;
+	// std::string currentPath = req.root;
+	// while (pos < _cgiPath.size())
+	// {
+	// 	nextSection = _cgiPath.find('/', pos + 1);
+	// 	std::string section = _cgiPath.substr(pos, nextSection - pos);
+	// 	currentPath += section;
+		// struct stat s;
+		// if (stat(currentPath.c_str(), &s) == 0)
+		// {
 			
-			if (S_ISREG(s.st_mode))
-			{
-				if (isCgiExtension(currentPath))
-				{
-					return (exeCgi(currentPath, req));
-				}
-				break ;
-			}
+		// 	if (S_ISREG(s.st_mode))
+		// 	{
+		// 		if (isCgiExtension(currentPath))
+		// 		{
+		// 			return (exeCgi(currentPath, req));
+		// 		}
+		// 		break ;
+		// 	}
+		// }
+		// else
+		// 	return 0;
+		// if (nextSection == std::string::npos)
+		// 	break ;
+		// pos = nextSection;
+	// }
+	struct stat s;
+	if (stat(path.c_str(), &s) == 0)
+	{
+		
+		if (S_ISREG(s.st_mode))
+		{
+			if (isCgiExtension(path))
+				return (exeCgi(path, req));
 		}
-		else
-			return 0;
-		if (nextSection == std::string::npos)
-			break ;
-		pos = nextSection;
 	}
 	return 0;
 }
@@ -212,7 +222,6 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 
 	// std::cout << RED BOLD "FILL CGI RESPONSE" RESET << std::endl;
 	_statusMsg = _mErrorMsg[_statusCode];
-	(void)req;
 	parseCgiOutput();
 	if (req.mult["Connection"].size() == 0)
 		_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
@@ -225,9 +234,15 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 	_headers["Content-Length"] = ss.str();
 }
 
-std::string httpResponse::handleResponse(HttpRequest &req){
+std::string httpResponse::handleResponse(HttpRequest &req, int code){
 
 	_version = req.version;
+	if (code != 0)
+	{
+		_statusCode = code;
+		handleError(req);
+		return convertFinalResponse();
+	}
 	_statusCode = isCgi(req, req.path);
 	if (_statusCode != 0)
 	{
@@ -309,8 +324,8 @@ void httpResponse::fillHeaders(std::map<std::string, std::vector<std::string> > 
 	if (_headers["Content-Type"].find("text/") == 0)
 		_headers["Content-Type"] += "; charset=utf-8";
 
-
-	if (mult["Connection"].size() == 0)
+	size_t pos = _version.find('.');
+	if (mult["Connection"].size() == 0 && _version[pos + 1] == '1')
 		_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
 	else
 		_headers["Connection"] = mult["Connection"].front();
@@ -484,7 +499,13 @@ void httpResponse::handleError(HttpRequest &req)
 	if (_statusCode == 500)
 		_headers["Connection"] = "close"; // --> verif ce qu on fait dans ce cas la
 	else
-		_headers["Connection"] = "Keep-Alive"; // --> verif ce qu on fait dans ce cas la
+	{
+		size_t pos = req.version.find('.');
+		if (req.mult["Connection"].size() == 0 && req.version[pos + 1] == '1')
+			_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
+		else
+			_headers["Connection"] = req.mult["Connection"].front();
+	}
 	std::stringstream ss;
 	ss << _body.size();
 	_headers["Content-Length"] = ss.str();

@@ -43,7 +43,7 @@ class httpResponse
 		std::map<std::string, std::string> _mCgiTypes;
 
 	public:
-		std::string handleResponse(HttpRequest &req);
+		std::string handleResponse(HttpRequest &req, int code);
 		std::string convertFinalResponse();
 		
 		void fillHeaders(std::map<std::string, std::vector<std::string> > &mult);

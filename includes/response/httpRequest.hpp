@@ -14,6 +14,7 @@ struct HttpRequest
 	// dans Location
 	std::map<int, std::string>	error_pages;
 	int							methods;
+	int							ErrorCode;
 	bool						auto_index;
 	std::vector<std::string>	indexes;
 	size_t						maxSize;
