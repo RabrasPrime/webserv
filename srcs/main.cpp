@@ -140,17 +140,24 @@ int	parse_header(const std::string& str, HttpRequest& req, Server* server)
 		req.indexes = server->get_indexes();
 		req.maxSize = server->get_client_max_body_size();
 		req.path = server->get_root() + &path[1];
+		req.cgi_ext = server->get_cgi_ext();
 	}
 	else
 	{
+		std::cout << "Found Best ____________" << std::endl;
+
 		req.error_pages = best->get_error_pages();
 		req.methods = best->get_methods();
 		req.auto_index = best->get_auto_index();
 		req.indexes = best->get_indexes();
 		req.maxSize = best->get_client_max_body_size();
+		req.cgi_ext = best->get_cgi_ext();
+
+		std::cout << *best << std::endl;
 
 		if (best->get_use_alias())
 		{
+			std::cout << RED BOLD "USE ALIAS" RESET << std::endl;
 			req.path = best->get_alias() + &path[best->get_path().size()];
 		}
 		else

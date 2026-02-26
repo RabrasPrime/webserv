@@ -213,5 +213,5 @@ class Client
 		void set_non_blocking();
 
 
-		const std::vector<unsigned char>& get_read();
+		std::vector<unsigned char>& get_read();
 };

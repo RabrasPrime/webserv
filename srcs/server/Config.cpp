@@ -125,6 +125,7 @@ int		Config::set_alias(const std::string& value)
 	_alias = path;
 	_use_alias = true;
 	_is_set_use_alias = true;
+	std::cout << "SET ALIAS" << std::endl;
 	return (0);
 }
 int		Config::set_client_max_body_size(const std::string& value)
@@ -288,10 +289,11 @@ int		Config::set_cgi_ext(const std::string& value)
 	list.pop_back();
 	for (std::vector<std::string>::iterator it = list.begin();it != list.end();it++)
 	{
-		if ((*it)[0] == '.')
-		{
-			(*it) = &(*it)[1];
-		}
+		// if ((*it)[0] == '.')
+		// {
+		// 	(*it) = &(*it)[1];
+		// }
+		std::cout << "ADD CGI EXT > " << *it << "   " << path << std::endl;
 		if (path != "off")
 			_cgi_ext[*it] = path;
 		else
@@ -403,6 +405,7 @@ std::ostream& operator<<(std::ostream& out, const Config&  config)
 {
 	out << BLUE << "Root : " << PURPLE << config._root << RESET << std::endl;
 	out << BLUE << "Alias : " << PURPLE << config._alias << RESET << std::endl;
+	out << BLUE << "Use Alias : " << PURPLE << config._use_alias << RESET << std::endl;
 	out << BLUE << "Client Max Body Size : " << PURPLE << config._client_max_body_size << RESET << std::endl;
 	out << BLUE << "Error Pages : " << PURPLE << std::endl;
 	for (std::map<int, std::string>::const_iterator it = config._error_pages.begin(); it != config._error_pages.end();it++)

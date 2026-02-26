@@ -12,10 +12,10 @@ server
 	locations /cgi-bin/
 		cgi_enabled true
 		methods GET POST
-		root ./
-		cgi_ext .py /usr/bin/python3
+		alias ./
 		cgi_ext .sh /bin/bash
 		cgi_ext .py off
+		cgi_ext .py /usr/bin/python3
 		cgi_working_dir ./
 		cgi_upload_path ./
 		cgi_timeout 10

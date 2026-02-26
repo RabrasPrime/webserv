@@ -53,6 +53,7 @@ const Location& Location::operator=(const Location& loc)
 	_is_set_cgi_upload_path = loc._is_set_cgi_upload_path;
 	_is_set_cgi_timeout = loc._is_set_cgi_timeout;
 	_is_set_return = loc._is_set_return;
+	_is_set_use_alias = loc._is_set_use_alias;
 	return (*this);
 }
 

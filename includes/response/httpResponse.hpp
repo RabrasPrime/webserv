@@ -43,6 +43,8 @@ class httpResponse
 		std::map<std::string, std::string> _mCgiTypes;
 
 	public:
+		
+
 		std::string handleResponse(HttpRequest &req, int code);
 		std::string convertFinalResponse();
 		
@@ -66,7 +68,7 @@ class httpResponse
 		int deleteFile(std::string &path, HttpRequest &req);
 
 		int isCgi(HttpRequest &req, std::string path);
-		bool isCgiExtension(std::string currentPath);
+		bool isCgiExtension(std::string currentPath, HttpRequest &req);
 		int exeCgi(std::string path, HttpRequest &req);
 		char** createEnv(HttpRequest &req, std::string path);
 		void saveCgiOutput(int *pipeOut, pid_t pid);

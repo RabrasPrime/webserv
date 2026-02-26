@@ -140,11 +140,8 @@ void Engine::handle_new_connection(int listener_fd)
         return ;
 	}
 
-	std::cout << "HERE 1" << std::endl;
     Server* server = listener.get_servers().empty() ? NULL : listener.get_servers()[0];
-	std::cout << "HERE 2" << std::endl;
     _clients[client_fd] = Client(client_fd, server);
-	std::cout << "HERE 3" << std::endl;
     _fd_types[client_fd] = FD_CLIENT;
     add_to_epoll(client_fd, EPOLLIN | EPOLLET);
 }
@@ -166,33 +163,87 @@ void Engine::handle_client_read(const int client_fd)
         handle_client_disconnect(client_fd);
         return;
     }
-    if (ret < 0)
-    {
-        handle_client_disconnect(client_fd);
-        return;
-    }
+    // if (ret < 0)
+    // {
+    //     handle_client_disconnect(client_fd);
+    //     return;
+    // }
 
     //Sammy, c'est ta partie, pour l'instant j'ai mis une commande random de gemini pour l'instant
     // client.get_write_buffer() = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
 
-	std::string str;
-	std::vector<unsigned char> vect = client.get_read();
-	for (std::vector<unsigned char>::iterator it = vect.begin();it != vect.end();it++ )
+	std::cout << "Client end head > " << client.req.end_head << std::endl;
+	if (!client.req.end_head)
 	{
-		if (is_end_head(it, vect))
+		std::string header;
+		std::vector<unsigned char>& vect = client.get_read();
+		std::vector<unsigned char>::iterator it;
+		for (it = vect.begin();it != vect.end();it++ )
 		{
-			std::cout << RED << "Found Header" << RESET << std::endl;
-			break;
+			if (is_end_head(it, vect))
+			{
+				client.req.end_head = 1;
+				std::cout << RED << "Found Header -> Parse Header " << RESET << std::endl;
+				parse_header(header, client.req, client.get_server());
+				if (it + 4 != vect.end())
+					std::cout << RED BOLD "_________________________HAVE A BODY" RESET << std::endl;
+				vect.erase(vect.begin(),it + 4);
+				std::cout << "Size >>> " << vect.size() << std::endl;
+				break;
+			} 
+			else
+				header += *it;
+		}
+		if (it == vect.end())
+			return;
+		std::cout << "Header : \n" << YELLOW << header << RESET << std::endl;
+		if (client.req.mult.find("Content-Length") != client.req.mult.end())
+		{
+			if (client.req.mult["Content-Length"].size() > 2)
+			{
+				client._write_buffer = client.res.handleResponse(client.req, 400);
+				client.write_to_socket();
+				handle_client_disconnect(client_fd);
+				return ;
+			}
+			std::stringstream ss(client.req.mult["Content-Length"].front());
+			int ContentLength;
+			if (!(ss >> ContentLength))
+			{
+				client._write_buffer = client.res.handleResponse(client.req, 400);
+				client.write_to_socket();
+				handle_client_disconnect(client_fd);
+			}
+			client.req.ContentLength = ContentLength;
+
+			if (client.get_read().size() != client.req.ContentLength)
+			{
+				std::cout << PURPLE BOLD "Need to read more" RESET << std::endl;
+				return ;
+			}
+			else
+			{
+				client.req.body = vect;
+				client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
+				modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+			}
 		}
 		else
-			str += *it;
+		{
+			client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
+			modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+		}
 	}
-	// std::cout << "Header : \n" << YELLOW << str << RESET << std::endl;
-	std::vector<Server> servers;
-	parse_header(str, client.req, client.get_server());
-	client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
-	// std::cout << client.get_read_buffer() << std::endl;
-    modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+	else
+	{
+		if (client.get_read().size() != client.req.ContentLength)
+		{
+			std::cout << PURPLE BOLD "Need to read more" RESET << std::endl;
+			return ;
+		}
+		client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
+		modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+	}
 }
 
 void Engine::handle_client_write(const int client_fd)
@@ -203,6 +254,11 @@ void Engine::handle_client_write(const int client_fd)
 
     Client& client = it->second;
     const ssize_t ret = client.write_to_socket();
+
+	client._write_buffer.clear();
+	client.req.end_head = 0;
+	client.req = HttpRequest();
+	client.res = httpResponse();
 
     if (ret < 0)
     {

@@ -6,6 +6,10 @@ httpResponse::httpResponse()
 
 	fillMapExtension(_mMimeTypes, PATH_FIlE_MIME);
 	fillMapExtension(_mCgiTypes, PATH_FILE_CGI);
+	for (std::map<std::string,std::string>::iterator it = _mCgiTypes.begin();it != _mCgiTypes.end();it++)
+	{
+		std::cout << "first >" << it->first << "<      second >" << it->second << "<" << std::endl;
+	}
 	fillMapError();
 }
 
@@ -21,12 +25,15 @@ std::string httpResponse::convertFinalResponse(){
 	return resp;
 }
 
-bool httpResponse::isCgiExtension(std::string currentPath){
-	
+bool httpResponse::isCgiExtension(std::string currentPath, HttpRequest &req){
+	(void)req;
 	size_t end = currentPath.find_last_of(".");
-	std::string extension = currentPath.substr(end + 1);
-	for (std::map<std::string, std::string>::iterator it = _mCgiTypes.begin(); it != _mCgiTypes.end(); ++it)
+	std::string extension = currentPath.substr(end);
+
+	std::cout << "ext > " << extension << "    size  > " << req.cgi_ext.size() << std::endl;
+	for (std::map<std::string, std::string>::iterator it = req.cgi_ext.begin(); it != req.cgi_ext.end(); ++it)
 	{
+		std::cout << "(*it).first >> " << (*it).first  << std::endl;
 		if (extension == (*it).first)
 		{
 			_binary = (*it).second;
@@ -135,7 +142,7 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		exit(1);
 	}
 	if (!req.body.empty() && req.method & METHOD_POST)
-		write(pipeIn[1], req.body.c_str(), req.body.size());
+		write(pipeIn[1], reinterpret_cast<char*>(&req.body), req.body.size());
 	close(pipeOut[1]);
 	close(pipeIn[1]);
 	close(pipeIn[0]);
@@ -179,15 +186,16 @@ int httpResponse::isCgi(HttpRequest &req, std::string path){
 	struct stat s;
 	if (stat(path.c_str(), &s) == 0)
 	{
-		
+		std::cout << "1" << std::endl;
 		if (S_ISREG(s.st_mode))
 		{	
+			std::cout << "2" << std::endl;
 			std::ifstream inFile;
 			inFile.open(path.c_str(), std::ios::binary);
 			if (!inFile.is_open())
 				return 403;
 			inFile.close();
-			if (isCgiExtension(path))
+			if (isCgiExtension(path, req))
 				return (exeCgi(path, req));
 		}
 	}
@@ -249,14 +257,15 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 	_version = req.version;
 	_statusCode = 0;
 	(void)code;
-	// if (code != 0)
-	// {
-	// 	_statusCode = code;
-	// 	handleError(req);
-	// 	return convertFinalResponse();
-	// }
+	if (code != 0)
+	{
+		_statusCode = code;
+		handleError(req);
+		return convertFinalResponse();
+	}
+	std::cout << BLUE BOLD "HANDLE RESPONSE BEFORE   > " << _statusCode << RESET << std::endl;
 	_statusCode = isCgi(req, req.path);
-	std::cout << BLUE BOLD "HANDLE RESPONSE" RESET << std::endl;
+	std::cout << BLUE BOLD "HANDLE RESPONSE AFTER    > " << _statusCode << RESET << std::endl;
 	if (_statusCode != 0)
 	{
 		if (_statusCode != 200)
@@ -612,7 +621,7 @@ int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 	outFile.open(path.c_str(), std::ios::binary | std::ios::trunc);
 	if (!outFile.is_open())
 		return 500;
-	outFile.write(req.body.c_str(), req.body.size());
+	outFile.write(reinterpret_cast<char*>(&req.body[0]), req.body.size());
 	if (!outFile.good())
 	{
 		outFile.close();

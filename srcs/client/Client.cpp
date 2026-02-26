@@ -14,6 +14,10 @@
 
 Client::Client() : _fd(-1), _server(NULL), _status(READING)
 {
+	// std::memset(&req,0,sizeof(req));
+	// std::memset(&res,0,sizeof(res));
+	req = HttpRequest();
+	res = httpResponse();
 	std::cout << LIME << "Open1 Client" << RESET << std::endl;
 	std::memset(&_last_active_time, 0, sizeof(_last_active_time));
 	gettimeofday(&_last_active_time, NULL);
@@ -21,6 +25,8 @@ Client::Client() : _fd(-1), _server(NULL), _status(READING)
 
 Client::Client(int fd, Server *server) : _fd(fd), _server(server), _status(READING)
 {
+	req = HttpRequest();
+	res = httpResponse();
 	std::cout << GREEN << "Open1bis	 Client" << RESET << std::endl;
 	std::memset(&_last_active_time, 0, sizeof(_last_active_time));
 	gettimeofday(&_last_active_time, NULL);
@@ -29,38 +35,58 @@ Client::Client(int fd, Server *server) : _fd(fd), _server(server), _status(READI
 
 Client::~Client()
 {
-	// std::cout << RED << "Close Client" << RESET << std::endl;
+	std::cout << RED << "Close Client" << RESET << std::endl;
 	// close();
 }
 
 ssize_t Client::read_from_socket()
 {
-	unsigned char buffer[4096];
+	unsigned char buffer[10];
 	ssize_t bytes_read = recv(_fd, buffer, sizeof(buffer), 0);
-
-	if (bytes_read > 0)
+	while (bytes_read > 0 || errno == EINTR)
 	{
-		// _read_buffer.append(buffer, bytes_read);
+		std::cout << LIME "READ" RESET << std::endl;
 		_read.insert(_read.end(), buffer, buffer + bytes_read);
 		update();
+		bytes_read = recv(_fd, buffer, sizeof(buffer), 0);
 	}
-	else if (bytes_read == 0)
-	{
-		std::cout << "Client closed connection (fd " << _fd << ")" << std::endl;
+	if ((errno != EAGAIN && errno != EWOULDBLOCK) || bytes_read == 0)
 		return 0;
-	}
-	else
-	{
-		if (errno != EAGAIN && errno != EWOULDBLOCK)
-		{
-			std::cerr << "Error reading from socket fd " << _fd << ": "
-			          << std::strerror(errno) << std::endl;
-			return -1;
-		}
-		return 0;
-	}
+	return 1;
+	
 
-	return bytes_read;
+
+
+
+
+
+
+	// unsigned char buffer[10];
+	// ssize_t bytes_read = recv(_fd, buffer, sizeof(buffer), 0);
+
+	// if (bytes_read > 0)
+	// {
+	// 	// _read_buffer.append(buffer, bytes_read);
+	// 	_read.insert(_read.end(), buffer, buffer + bytes_read);
+	// 	update();
+	// }
+	// else if (bytes_read == 0)
+	// {
+	// 	std::cout << "Client closed connection (fd " << _fd << ")" << std::endl;
+	// 	return 0;
+	// }
+	// else
+	// {
+	// 	if (errno != EAGAIN && errno != EWOULDBLOCK)
+	// 	{
+	// 		std::cerr << "Error reading from socket fd " << _fd << ": "
+	// 		          << std::strerror(errno) << std::endl;
+	// 		return -1;
+	// 	}
+	// 	return 0;
+	// }
+
+	// return bytes_read;
 }
 
 ssize_t Client::write_to_socket()
@@ -201,7 +227,7 @@ void Client::set_non_blocking()
 	}
 }
 
-const std::vector<unsigned char>& Client::get_read()
+std::vector<unsigned char>& Client::get_read()
 {
 	return _read;
 }
