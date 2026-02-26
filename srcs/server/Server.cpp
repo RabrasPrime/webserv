@@ -17,7 +17,7 @@ Server::~Server()
 
 }
 
-const std::string						Server::get_server_name() const
+const std::vector<std::string>&			Server::get_server_name() const
 {
 	return (_server_name);
 }
@@ -69,7 +69,9 @@ std::ostream& operator<<(std::ostream& out, const Server& serv)
 			std::cout << "]:" << port << std::endl;
 		}
 	}
-	out << BLUE << "Server Name : " << PURPLE << serv._server_name << std::endl;
+	out << BLUE << "Server Name : ";// << PURPLE << serv._server_name << std::endl;
+	for (std::vector<std::string>::const_iterator it = serv._server_name.begin(); it != serv._server_name.end();it++)
+		std::cout << "\t" << *it << std::endl;
 	out << static_cast<Config>(serv);
 
 	for (std::map<std::string, Location>::const_iterator it = serv._locations.begin();it != serv._locations.end();it++)
@@ -194,7 +196,12 @@ int		Server::set_server_name(const std::string& value)
 {
 	if (value.size() <= 0)
 		return (1);
-	_server_name = value;
+	std::stringstream ss(value);
+	std::string str;
+	while (ss >> str)
+	{
+		_server_name.push_back(str);
+	}
 	return (0);
 }
 

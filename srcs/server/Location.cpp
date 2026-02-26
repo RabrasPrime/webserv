@@ -37,6 +37,8 @@ const Location& Location::operator=(const Location& loc)
 	_return_code = loc._return_code;
 	_return_path = loc._return_path;
 
+	_use_alias = loc._use_alias;
+
 	_is_set_root = loc._is_set_root;
 	_is_set_alias = loc._is_set_alias;
 	_is_set_client_max_body_size = loc._is_set_client_max_body_size;
@@ -113,4 +115,6 @@ void Location::heritage_from_server(const Server& serv)
 		_return_code = serv.get_return_code();
 		_return_path = serv.get_return_path();
 	}
+	if (!_is_set_use_alias)
+		_use_alias = serv.get_use_alias();
 }

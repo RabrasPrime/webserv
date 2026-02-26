@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <netinet/in.h>
 
 class Server;
 
@@ -17,13 +18,14 @@ private:
 	int _fd;
 	int _port;
 	int _host;
+	struct sockaddr_storage addr;
 	std::vector<Server*> _servers;
 
 	static const int BACKLOG = 128;
 
 public:
 	Listener();
-	Listener(int host, int port);
+	Listener(int host, int port, struct sockaddr_storage addrs);
 	~Listener();
 
 	/**

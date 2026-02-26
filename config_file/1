@@ -1,0 +1,21 @@
+server
+	listen 8080
+	listen [::]:8081
+	root ./
+	methods GET POST DELETE
+	locations /images/ /picture/ /static/
+		alias ./data/media
+		methods GET POST
+		auto_index True
+	locations /old-page/
+		return 301 /new-page
+	locations /cgi-bin/
+		cgi_enabled true
+		methods GET POST
+		root ./
+		cgi_ext .py /usr/bin/python3
+		cgi_ext .sh /bin/bash
+		cgi_ext .py off
+		cgi_working_dir ./
+		cgi_upload_path ./
+		cgi_timeout 10

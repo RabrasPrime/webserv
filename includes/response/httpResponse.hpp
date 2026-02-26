@@ -43,10 +43,10 @@ class httpResponse
 		std::map<std::string, std::string> _mCgiTypes;
 
 	public:
-		std::string handleResponse(HttpRequest &req);
+		std::string handleResponse(HttpRequest &req, int code);
 		std::string convertFinalResponse();
 		
-		void fillHeaders(std::map<std::string, std::string> &headers);
+		void fillHeaders(std::map<std::string, std::vector<std::string> > &mult);
 		int fillBody(std::string &path, HttpRequest &req);
 		void fillDefaultBody();
 		void fillMapError();
@@ -57,7 +57,6 @@ class httpResponse
 		void exeGet(HttpRequest &req);
 		int searchFileInDir(std::string &path, HttpRequest &req);
 		int generateAutoIndex(std::string &path);
-		bool isForbiddenMethod(HttpRequest &req);
 
 		void exePost(HttpRequest &req);
 		int isFileExist(std::string &path, HttpRequest &req);

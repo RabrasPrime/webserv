@@ -10,6 +10,7 @@ Config::Config()
 ,_cgi_enabled(0)
 ,_cgi_timeout(10)
 ,_return_code(0)
+,_use_alias(false)
 ,_is_set_root(false)
 ,_is_set_alias(false)
 ,_is_set_client_max_body_size(false)
@@ -24,6 +25,7 @@ Config::Config()
 ,_is_set_cgi_upload_path(false)
 ,_is_set_cgi_timeout(false)
 ,_is_set_return(false)
+,_is_set_use_alias(false)
 {
 }
 Config::~Config()
@@ -92,7 +94,10 @@ std::string									Config::get_return_path() const
 {
 	return (_return_path);
 }
-
+bool										Config::get_use_alias() const
+{
+	return (_use_alias);
+}
 
 int		Config::set_root(const std::string& value)
 {
@@ -104,6 +109,8 @@ int		Config::set_root(const std::string& value)
 	if (ss >> extra)
 		return (1);
 	_root = path;
+	_use_alias = false;
+	_is_set_use_alias = true;
 	return (0);
 }
 int		Config::set_alias(const std::string& value)
@@ -116,6 +123,8 @@ int		Config::set_alias(const std::string& value)
 	if (ss >> extra)
 		return (1);
 	_alias = path;
+	_use_alias = true;
+	_is_set_use_alias = true;
 	return (0);
 }
 int		Config::set_client_max_body_size(const std::string& value)

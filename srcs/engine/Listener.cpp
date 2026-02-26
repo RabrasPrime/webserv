@@ -13,35 +13,49 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <algorithm>
 
 const	int	Listener::BACKLOG;
 
 Listener::Listener() : _fd(-1), _port(0), _host(0) {}
 
-Listener::Listener(const int host, const int port) : _fd(-1), _port(port), _host(host) {}
+Listener::Listener(int host, int port, struct sockaddr_storage addrs) : _fd(-1), _port(port), _host(host), addr(addrs) {}
 
 Listener::~Listener() {
-	close_socket();
+	// std::cout << "Close socket >"<<_fd<<std::endl;
+	// close_socket();
 }
 
 
 
 bool Listener::create_socket() {
-	_fd = socket(AF_INET6, SOCK_STREAM, 0);
-	if (_fd < 0) {
-		std::cerr << "Error creating IPv6 socket, falling back to IPv4" << std::endl;
-		_fd = socket(AF_INET, SOCK_STREAM, 0);
-		if (_fd < 0) {
-			std::cerr << "Error creating socket" << std::endl;
-			return false;
-		}
-	} else {
-		const int no = 0;
-		if (setsockopt(_fd, IPPROTO_IPV6, IPV6_V6ONLY, &no, sizeof(no)) < 0) {
-			std::cerr << "Warning: Could not disable IPV6_V6ONLY, IPv4 may not work" << std::endl;
-		}
+	if (addr.ss_family == AF_INET6)
+	{
+		_fd = socket(AF_INET6, SOCK_STREAM, 0);
 	}
-	const int opt = 1;
+	else
+	{
+		_fd = socket(AF_INET, SOCK_STREAM, 0);
+	}
+	if (_fd < 0)
+	{
+		std::cerr << "Error creating socket" << std::endl;
+		return false;
+	}
+	// if (_fd < 0) {
+	// 	std::cerr << "Error creating IPv6 socket, falling back to IPv4" << std::endl;
+	// 	_fd = socket(AF_INET, SOCK_STREAM, 0);
+	// 	if (_fd < 0) {
+	// 		std::cerr << "Error creating socket" << std::endl;
+	// 		return false;
+	// 	}
+	// } else {
+	// 	int no = 0;
+	// 	if (setsockopt(_fd, IPPROTO_IPV6, IPV6_V6ONLY, &no, sizeof(no)) < 0) {
+	// 		std::cerr << "Warning: Could not disable IPV6_V6ONLY, IPv4 may not work" << std::endl;
+	// 	}
+	// }
+	int opt = 1;
 	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 		std::cerr << "Error setting SO_REUSEADDR" << std::endl;
 		close_socket();
@@ -54,52 +68,64 @@ bool Listener::create_socket() {
 
 bool Listener::bind_socket() const
 {
-	struct sockaddr_storage storage;
+	// struct sockaddr_storage storage;
 
-	std::memset(&storage, 0, sizeof(storage));
-	int domain;
-	socklen_t len = sizeof(domain);
-	if (getsockopt(_fd, SOL_SOCKET, SO_DOMAIN, &domain, &len) < 0) {
-		std::cerr << "Error getting socket domain" << std::endl;
-		return false;
-	}
+	// std::memset(&storage, 0, sizeof(storage));
+	// int domain;
+	// socklen_t len = sizeof(domain);
+	// if (getsockopt(_fd, SOL_SOCKET, SO_DOMAIN, &domain, &len) < 0) {
+	// 	std::cerr << "Error getting socket domain" << std::endl;
+	// 	return false;
+	// }
+	
 
-	if (domain == AF_INET6)
+	if (addr.ss_family == AF_INET6)
 	{
-		struct sockaddr_in6 *addr6 = static_cast<struct sockaddr_in6*>(
-			static_cast<void*>(&storage)
-		);
-		addr6->sin6_family = AF_INET6;
-		addr6->sin6_port = htons(_port);
-
-		if (_host == 0)
+		struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)&addr;
+		if (bind(_fd, (struct sockaddr *)addr6, sizeof(struct sockaddr_in6)) < 0)
 		{
-			addr6->sin6_addr = in6addr_any;
-		}
-		else
-		{
-			addr6->sin6_addr = in6addr_any;
-		}
-
-		if (bind(_fd, reinterpret_cast<struct sockaddr*>(addr6), sizeof(*addr6)) < 0) {
 			std::cerr << "Error binding IPv6 socket on port " << _port << std::endl;
+			std::cerr << "Erreur lors du bind: " << strerror(errno) << std::endl;
 			return false;
 		}
+		// struct sockaddr_in6 *addr6 = static_cast<struct sockaddr_in6*>(
+		// 	static_cast<void*>(&storage)
+		// );
+		// addr6->sin6_family = AF_INET6;
+		// addr6->sin6_port = htons(_port);
+
+		// if (_host == 0) {
+		// 	addr6->sin6_addr = in6addr_any;
+		// } else {
+		// 	addr6->sin6_addr = in6addr_any;
+		// }
+
+		// if (bind(_fd, reinterpret_cast<struct sockaddr*>(addr6), sizeof(*addr6)) < 0) {
+		// 	std::cerr << "Error binding IPv6 socket on port " << _port << std::endl;
+		// 	return false;
+		// }
 	}
 	else
 	{
-		struct sockaddr_in *addr4 = static_cast<struct sockaddr_in*>(
-			static_cast<void*>(&storage)
-		);
-		addr4->sin_family = AF_INET;
-		addr4->sin_port = htons(_port);
-		addr4->sin_addr.s_addr = htonl(_host);
-
-		if (bind(_fd, reinterpret_cast<struct sockaddr*>(addr4), sizeof(*addr4)) < 0)
+		struct sockaddr_in *addr4 = (struct sockaddr_in *)&addr;
+		if (bind(_fd, (struct sockaddr *)addr4, sizeof(struct sockaddr_in)) < 0)
 		{
 			std::cerr << "Error binding IPv4 socket on port " << _port << std::endl;
+			std::cerr << "Erreur lors du bind: " << strerror(errno) << std::endl;
 			return false;
 		}
+		// struct sockaddr_in *addr4 = static_cast<struct sockaddr_in*>(
+		// 	static_cast<void*>(&storage)
+		// );
+		// addr4->sin_family = AF_INET;
+		// addr4->sin_port = htons(_port);
+		// addr4->sin_addr.s_addr = htonl(_host);
+
+		// if (bind(_fd, reinterpret_cast<struct sockaddr*>(addr4), sizeof(*addr4)) < 0)
+		// {
+		// 	std::cerr << "Error binding IPv4 socket on port " << _port << std::endl;
+		// 	return false;
+		// }
 	}
 
 	return true;
@@ -223,7 +249,8 @@ Server* Listener::match_server(const std::string& host_header) const
 
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		if (_servers[i]->get_server_name() == host_header)
+		std::vector<std::string> tmp = _servers[i]->get_server_name();
+		if (_servers[i]->get_server_name().end() != std::find(tmp.begin(),tmp.end(),host_header))
 		{
 			return _servers[i];
 		}
