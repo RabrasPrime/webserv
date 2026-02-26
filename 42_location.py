@@ -228,7 +228,7 @@ def main():
 
     	
 
-    query_string = os.environ.get("QUERY_STRING", "Inconnu")
+    query_string = os.environ.get("QUERY_STRING", FT_LOGIN)
 
 
     print("Content-Type: text/html; charset=utf-8")

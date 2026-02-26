@@ -46,7 +46,8 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 		envList.push_back("REQUEST_METHOD=POST");
 	if (req.methods & METHOD_DELETE)
 		envList.push_back("REQUEST_METHOD=DELETE");
-	envList.push_back("QUERY_STRING=" + req.queryString);
+	for (std::vector<std::string>::iterator it = req.env.begin(); it != req.env.end(); ++it)
+		envList.push_back(*it);
 	std::stringstream ss;
 	ss << req.body.size();
 	envList.push_back("CONTENT_LENGTH=" + ss.str());
@@ -91,7 +92,11 @@ void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
 
 	int status;
 	waitpid(pid, &status, 0);
-	status == 0 ? _statusCode = 200 : _statusCode = 500;
+	int code = WEXITSTATUS(status);
+	code == 0 ? _statusCode = 200 : _statusCode = 500;
+
+	std::cout << BOLD GREEN << "STATUS CODE"  << _statusCode  << std::endl << "STATUS" RESET << code << std::endl;
+
 	_cgiOutput = outCgi;
 
 }
@@ -176,7 +181,12 @@ int httpResponse::isCgi(HttpRequest &req, std::string path){
 	{
 		
 		if (S_ISREG(s.st_mode))
-		{
+		{	
+			std::ifstream inFile;
+			inFile.open(path.c_str(), std::ios::binary);
+			if (!inFile.is_open())
+				return 403;
+			inFile.close();
 			if (isCgiExtension(path))
 				return (exeCgi(path, req));
 		}
@@ -237,13 +247,16 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 std::string httpResponse::handleResponse(HttpRequest &req, int code){
 
 	_version = req.version;
-	if (code != 0)
-	{
-		_statusCode = code;
-		handleError(req);
-		return convertFinalResponse();
-	}
+	_statusCode = 0;
+	(void)code;
+	// if (code != 0)
+	// {
+	// 	_statusCode = code;
+	// 	handleError(req);
+	// 	return convertFinalResponse();
+	// }
 	_statusCode = isCgi(req, req.path);
+	std::cout << BLUE BOLD "HANDLE RESPONSE" RESET << std::endl;
 	if (_statusCode != 0)
 	{
 		if (_statusCode != 200)
@@ -282,7 +295,7 @@ void httpResponse::fillMapError(){
 	{
 		if (line.empty())
 			continue ;
-		size_t endCode = line.find_first_of(" ");
+		size_t endCode = line.find(" ");
 		std::string errorCode = line.substr(0, endCode);
 		size_t startMsg = line.find_first_not_of(" ", endCode);
 		std::string errorMsg = line.substr(startMsg);
@@ -307,7 +320,7 @@ void httpResponse::fillMapExtension(std::map<std::string, std::string> &map, std
 	{
 		if (line.empty())
 			continue ;
-		size_t endExtension = line.find_first_of(" ");
+		size_t endExtension = line.find(" ");
 		std::string extensionType = line.substr(0, endExtension);
 		size_t startContent = line.find_first_not_of(" ", endExtension);
 		std::string contentType = line.substr(startContent);
@@ -383,7 +396,7 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 			std::ostringstream oss;
 			oss << inFile.rdbuf();
 			_body = oss.str();
-			_bodyType = tryPath.substr(tryPath.find_first_of(".") + 1);
+			_bodyType = tryPath.substr(tryPath.find_last_of(".") + 1);
 			return 200;
 		}
 	}
@@ -419,7 +432,7 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 		std::ostringstream oss;
 		oss << inFile.rdbuf();
 		_body = oss.str();
-		_bodyType = path.substr(path.find_first_of(".") + 1);
+		_bodyType = path.substr(path.find_last_of(".") + 1, path.size());
 	}
 	return 200;	
 }
@@ -479,7 +492,7 @@ void httpResponse::fillDefaultBody(){
 		std::ostringstream oss;
 		oss << inFile.rdbuf();
 		_body = oss.str();
-		_bodyType = pathErrFile.substr(pathErrFile.find_first_of(".") + 1);
+		_bodyType = pathErrFile.substr(pathErrFile.find_last_of(".") + 1);
 	}
 }
 

@@ -3,7 +3,7 @@ DBG ?= 1
 FULL_NAME ?= 1
 
 CXX = c++
-CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -MMD -DDEBUG_VALUE=${DEBUG_VALUE}
+CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -g3 -MMD -DDEBUG_VALUE=${DEBUG_VALUE}
 SHELL = /bin/bash
 
 EXECFLAGS = 

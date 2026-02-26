@@ -73,19 +73,23 @@ int	parse_header(const std::string& str, HttpRequest& req, Server* server)
 			return (1);
 	}
 	std::cout << "Method : " << method << std::endl;
-	// size_t index = path.find('?') + 1;
-	// req.queryString = path.substr(index, path.size() - index);
-	// path = path.substr(0, index - 1);
+	size_t index = path.find('?') + 1;
+	req.queryString = path.substr(index, path.size() - index);
 	std::cout << "Path : " << path << std::endl;
 	std::cout << "Version : " << version << std::endl;
 	std::cout << "___________Query String >" << req.queryString << std::endl;
-	// do
-	// {
-	// 	pos = path.find(index, '&');
-	// 	if (pos == std::string::npos)
-	// 		pos = path.size();
-	// 	std::string s = path.substr(index, pos - index);
-	// } while (pos != std:;string::npos);
+
+	size_t pos;
+	do
+	{
+		pos = path.find(index, '&');
+		if (pos == std::string::npos)
+			pos = path.size();
+		std::string s = path.substr(index, pos - index);
+		req.env.push_back(s);
+		index = pos + 1;
+	} while (pos != path.size());
+	path = path.substr(0, path.find('?'));
 	
 	if (method == "GET")
 		req.method = METHOD_GET;

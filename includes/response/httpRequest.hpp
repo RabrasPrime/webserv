@@ -7,6 +7,7 @@ struct HttpRequest
 	std::string path;
 	std::string version;
 	std::string type;
+	std::vector<std::string> env;
 	std::map<std::string, std::string> headers;
 	std::map<std::string, std::vector<std::string> > mult;
 	std::string body;
