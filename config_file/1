@@ -4,7 +4,7 @@ server
 	root ./
 	methods GET POST DELETE
 	locations /images/ /picture/ /static/
-		alias ./data/media
+		alias ./file/img
 		methods GET POST
 		auto_index True
 	locations /old-page/
@@ -14,8 +14,10 @@ server
 		methods GET POST
 		alias ./
 		cgi_ext .sh /bin/bash
-		cgi_ext .py off
+		cgi_ext .php off
 		cgi_ext .py /usr/bin/python3
 		cgi_working_dir ./
 		cgi_upload_path ./
 		cgi_timeout 10
+	locations /srcs/
+		auto_index true

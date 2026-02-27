@@ -3,10 +3,12 @@
 
 struct HttpRequest
 {
+	bool		location_match;
 	size_t		ContentLength;
 	int			end_head;
 
 	int 		method;
+	std::string raw_path;
 	std::string path;
 	std::string version;
 	std::string type;

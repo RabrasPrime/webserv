@@ -73,22 +73,28 @@ int	parse_header(const std::string& str, HttpRequest& req, Server* server)
 			return (1);
 	}
 	std::cout << "Method : " << method << std::endl;
-	size_t index = path.find('?') + 1;
-	req.queryString = path.substr(index, path.size() - index);
+	size_t index = path.find('?');
+	if (index != std::string::npos)
+	{
+		index++;
+		req.queryString = path.substr(index, path.size() - index);
+
+		size_t pos;
+		do
+		{
+			pos = path.find(index, '&');
+			if (pos == std::string::npos)
+				pos = path.size();
+			std::string s = path.substr(index, pos - index);
+			req.env.push_back(s);
+			index = pos + 1;
+		} while (pos != path.size());
+	}
 	std::cout << "Path : " << path << std::endl;
+	req.raw_path = path;
 	std::cout << "Version : " << version << std::endl;
 	std::cout << "___________Query String >" << req.queryString << std::endl;
 
-	size_t pos;
-	do
-	{
-		pos = path.find(index, '&');
-		if (pos == std::string::npos)
-			pos = path.size();
-		std::string s = path.substr(index, pos - index);
-		req.env.push_back(s);
-		index = pos + 1;
-	} while (pos != path.size());
 	path = path.substr(0, path.find('?'));
 	
 	if (method == "GET")
@@ -134,6 +140,7 @@ int	parse_header(const std::string& str, HttpRequest& req, Server* server)
 	}
 	if (!best)
 	{
+		req.location_match = 0;
 		req.error_pages = server->get_error_pages();
 		req.methods = server->get_methods();
 		req.auto_index = server->get_auto_index();
@@ -146,6 +153,7 @@ int	parse_header(const std::string& str, HttpRequest& req, Server* server)
 	{
 		std::cout << "Found Best ____________" << std::endl;
 
+		req.location_match = 1;
 		req.error_pages = best->get_error_pages();
 		req.methods = best->get_methods();
 		req.auto_index = best->get_auto_index();

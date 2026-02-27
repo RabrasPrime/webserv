@@ -365,17 +365,20 @@ int httpResponse::generateAutoIndex(std::string &path)
 	std::vector<std::string> fileName;
 	while (1)
 	{
+		errno = 0;
 		readDir = readdir(currentDir);
+		std::cout << "ERRNO >" << errno << std::endl;
 		if (errno != 0)
 			return (500);
 		if (!readDir)
 			break ;
+		std::cout << "ReadDir result >" << readDir->d_name << std::endl;
 		fileName.push_back(readDir->d_name);
 	}
 	closedir(currentDir);
 	std::sort(fileName.begin(), fileName.end());
 	std::ostringstream index;
-	index	<< "<html><head><title>Index of " << path << "</title</head><body>"
+	index	<< "<html><head><title>Index of " << path << "</title></head><body>"
 			<< "<h1>Index of " << path << "</h1><hr><pre>";
 	for (std::vector<std::string>::iterator it = fileName.begin(); it != fileName.end(); ++it)
 	{
@@ -409,10 +412,11 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 			return 200;
 		}
 	}
+	std::cout << BOLD BLUE << " INDEX > " << req.auto_index << std::endl;
 	if (req.auto_index)
 	{
-		std::cout << BOLD BLUE << " INDEX" << std::endl;
-		generateAutoIndex(path);
+		std::cout << PURPLE "GENERATE AUTOIDNEX" RESET << std::endl;
+		return (generateAutoIndex(path));
 	}
 	else
 		return 403;
@@ -431,6 +435,10 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 	if (S_ISDIR(s.st_mode))
 	{
 		std::cout << ORANGE BOLD " IS DIR " << std::endl;
+		if (req.path[req.path.size() - 1] != '/')
+		{
+			return 301;
+		}
 		return(searchFileInDir(path, req));
 	}
 	else
@@ -475,10 +483,10 @@ std::string httpResponse::setPathError()
 		case 501:
 			pathErrFile = "file/error_page/error_page_501.html";
 			break;
-		default:
-			_statusCode = 500;
-			pathErrFile = "file/error_page 500";
-			_statusMsg = _mErrorMsg[500];
+		// default:
+		// 	_statusCode = 500;
+		// 	pathErrFile = "file/error_page 500";
+		// 	_statusMsg = _mErrorMsg[500];
 	}
 	return pathErrFile;
 }
@@ -487,9 +495,11 @@ void httpResponse::fillDefaultBody(){
 
 	std::string pathErrFile = setPathError();
 	std::ifstream inFile;
-	inFile.open(pathErrFile.c_str(), std::ios::binary);
-	if (!inFile.is_open())
+	if (!pathErrFile.empty())
+		inFile.open(pathErrFile.c_str(), std::ios::binary);
+	if (pathErrFile.empty() || !inFile.is_open())
 	{
+		std::cout << "Specific file not found take default file >" << _statusCode << std::endl;
 		std::ostringstream index;
 		index 	<< "<html><head><title>" << _statusCode << " "<< _statusMsg + "</title></head>"
 				<< "<center><h1>Index of " << _statusCode << " " << _statusMsg << "</h1></center><hr><pre></html>";
@@ -513,7 +523,12 @@ void httpResponse::handleError(HttpRequest &req)
 		_statusCode = 500;
 		_statusMsg = "Internal Server Error";
 	}
+	std::cout << "ERROR CODE > " << _statusCode << std::endl;
 	fillDefaultBody();
+	if (_statusCode == 301)
+	{
+		_headers["Location"] = req.raw_path + '/' + req.queryString;
+	}
 
 	_headers["Content-Type"] = _mMimeTypes[_bodyType];
 	if (_headers["Content-Type"].empty())
@@ -565,6 +580,7 @@ void httpResponse::handleError(HttpRequest &req)
 void httpResponse::exeGet(HttpRequest &req){
 
 	_statusCode = fillBody(req.path, req);
+	std::cout << RED BOLD "ERROR CODE OUT FILL BODY >" << _statusCode << RESET << std::endl; 
 	if (_statusCode != 200)
 		handleError(req);
 	fillHeaders(req.mult);
