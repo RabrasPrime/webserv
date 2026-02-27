@@ -1,8 +1,11 @@
 #ifndef HTTPREQUEST_HPP
 # define HTTPREQUEST_HPP
 
+#include "Location.hpp"
+
 struct HttpRequest
 {
+	const Location* loc;
 	bool		location_match;
 	size_t		ContentLength;
 	int			end_head;

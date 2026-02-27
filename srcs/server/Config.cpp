@@ -98,6 +98,10 @@ bool										Config::get_use_alias() const
 {
 	return (_use_alias);
 }
+bool										Config::get_is_set_return() const
+{
+	return (_is_set_return);
+}
 
 int		Config::set_root(const std::string& value)
 {

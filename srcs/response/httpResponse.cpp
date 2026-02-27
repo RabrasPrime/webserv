@@ -253,10 +253,15 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 }
 
 std::string httpResponse::handleResponse(HttpRequest &req, int code){
-
 	_version = req.version;
 	_statusCode = 0;
-	(void)code;
+	// (void)code;
+	std::cout << ORANGE BOLD "is set return >" << req.loc->get_is_set_return() << RESET << std::endl;
+	if (req.loc->get_is_set_return())
+	{
+		std::cout << RED "GOING TO REDIRECT" << RESET << std::endl;
+		code = 301;
+	}
 	if (code != 0)
 	{
 		_statusCode = code;
@@ -527,7 +532,10 @@ void httpResponse::handleError(HttpRequest &req)
 	fillDefaultBody();
 	if (_statusCode == 301)
 	{
-		_headers["Location"] = req.raw_path + '/' + req.queryString;
+		if (req.loc->get_is_set_return())
+			_headers["Location"] = req.loc->get_return_path();
+		else
+			_headers["Location"] = req.raw_path + '/' + req.queryString;
 	}
 
 	_headers["Content-Type"] = _mMimeTypes[_bodyType];

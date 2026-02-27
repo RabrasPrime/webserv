@@ -1,5 +1,12 @@
 server
 	listen 8080
-	root ./
+	root ./www/
+	methods GET
 	locations /
 		return 301 /Home
+	locations /Home
+		alias ./www/html/Home.html
+	locations /img/
+		alias ./www/static/
+	locations /css/
+		

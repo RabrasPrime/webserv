@@ -72,6 +72,7 @@ class Config
 		std::string									get_return_path() const;
 
 		bool										get_use_alias() const;
+		bool										get_is_set_return() const;
 
 		// SET
 		int		set_root(const std::string& value);
