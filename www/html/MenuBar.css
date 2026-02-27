@@ -1,0 +1,60 @@
+#PageHome #HomeMenuBar
+{
+	background-color: rgba(255,255,255,.6);
+}
+#PageDart #DartMenuBar
+{
+	background-color: rgba(255,255,255,.6);
+}
+#PageScore #ScoreMenuBar
+{
+	background-color: rgba(255,255,255,.6);
+}
+#PageAccount #AccountMenuBar
+{
+	background-color: rgba(255,255,255,.6);
+}
+.MenuBarFixed
+{
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	z-index: 1000;
+	padding: 15px;
+}
+.MenuBar
+{
+	background-color: rgba(70,70,70,.5);
+	width: 500px;
+	max-width: 80%;
+	border-radius: 20px;
+	height: 70px;
+	padding: 5px;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+}
+.MenuBarButton
+{
+	height: 50px;
+	background-color: rgba(255,255,255,.1);
+	border-radius: 25px;
+	padding: 10px;
+	justify-content: center;
+	align-items: center;
+	transition: .2s;
+}
+.MenuBarButton:hover
+{
+	height: 60px;
+	border-radius: 25px;
+	padding: 5px;
+	cursor: pointer;
+}
+.MenuBarImg
+{
+	height: 100%;
+	background-color: transparent;
+}
