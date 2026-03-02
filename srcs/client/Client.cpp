@@ -12,10 +12,8 @@
 
 #include "Color.hpp"
 
-Client::Client() : _fd(-1), _server(NULL), _status(READING)
+Client::Client() : _fd(-1), _status(READING)
 {
-	// std::memset(&req,0,sizeof(req));
-	// std::memset(&res,0,sizeof(res));
 	req = HttpRequest();
 	res = httpResponse();
 	std::cout << LIME << "Open1 Client" << RESET << std::endl;
@@ -23,7 +21,7 @@ Client::Client() : _fd(-1), _server(NULL), _status(READING)
 	gettimeofday(&_last_active_time, NULL);
 }
 
-Client::Client(int fd, Server *server) : _fd(fd), _server(server), _status(READING)
+Client::Client(int fd, std::vector<Server *> server) : _fd(fd), _server(server), _status(READING)
 {
 	req = HttpRequest();
 	res = httpResponse();
@@ -142,14 +140,14 @@ int Client::get_fd() const
 	return _fd;
 }
 
-Server* Client::get_server() const
+const std::vector<Server*> Client::get_server() const
 {
 	return _server;
 }
 
 void Client::set_server(Server* server)
 {
-	_server = server;
+	_server.push_back(server);
 }
 
 std::string& Client::get_read_buffer()

@@ -31,7 +31,7 @@ class Client
 	};
 	private:
 		int	_fd;
-		Server	*_server;
+		std::vector<Server *> _server;
 
 		std::string	_read_buffer;
 
@@ -46,7 +46,7 @@ class Client
 		HttpRequest req;
 		httpResponse res;
 		Client();
-		Client(int fd, Server *server);
+		Client(int fd, std::vector<Server *>server);
 		~Client();
 
 		/**
@@ -103,12 +103,12 @@ class Client
 		int get_fd() const;
 
 		/**
-		 * @return A pointer to the Server object that is associated with the client.
-		 * @brief This method returns a pointer to the Server object that is associated with the client. \n\n
+		 * @return A pointer to the list of Server object that can be associated with the client.
+		 * @brief This method returns a  list of Server object that can be associated with the client. \n\n
 		 * The Server object contains the configuration and logic for handling requests from the client, and it may be used to determine how to process incoming data and generate responses. \n\n
 		 * This method does not modify any internal state of the client; it simply provides access to the associated Server object for external use.
 		 */
-		Server* get_server() const;
+		const std::vector<Server*> get_server() const;
 
 		/**
 		 * @param server A pointer to the Server object to be associated with the client.

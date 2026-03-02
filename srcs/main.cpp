@@ -55,9 +55,8 @@ void	fill_headers(std::vector<std::string>& ligne, HttpRequest& req)
 	}
 }
 
-int	parse_header(const std::string& str, HttpRequest& req, Server* server)
+int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> servers)
 {
-	(void)server;
 	(void)req;
 	std::string first_line;
 	first_line = str.substr(0,str.find("\r\n"));
@@ -122,7 +121,32 @@ int	parse_header(const std::string& str, HttpRequest& req, Server* server)
 		}
 		std::cout << std::endl;
 	}
-	//HERE remove query string
+	//HERE identifier le bon server
+	Server* server = NULL;
+	for (std::vector<Server *>::iterator it = servers.begin();server == NULL && it != servers.end();it++)
+	{
+		std::vector<std::string> list_name = (*it)->get_server_name();
+		for (std::vector<std::string>::iterator itt = list_name.begin();server == NULL && itt != list_name.end();itt++)
+		{
+			if (req.mult["Host"].size() != 0 && *itt == req.mult["Host"].front())
+			{
+				server = *it;
+			}
+		}
+	}
+	if (server == NULL)
+	{
+		std::cout << RED BOLD "NULL" RESET << std::endl;
+		for (std::vector<Server *>::iterator it = servers.begin();server == NULL && it != servers.end();it++)
+		{
+			std::vector<std::string> list_name = (*it)->get_server_name();
+			if (list_name.size() == 0)
+				server = *it;
+		}
+	}
+	if (server == NULL && servers.size() != 0)
+		server = servers.front();
+	std::cout << RED BOLD "HERE" RESET << std::endl;
 	std::map<std::string, Location> locations = server->get_locations();
 	Location* best = NULL;
 	size_t size_match = 0;

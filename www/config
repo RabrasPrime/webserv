@@ -1,6 +1,7 @@
 server
 	listen 8080
 	root ./www/
+	server_name site.com
 	methods GET
 	locations /
 		return 301 /Home

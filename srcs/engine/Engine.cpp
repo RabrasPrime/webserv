@@ -139,14 +139,15 @@ void Engine::handle_new_connection(int listener_fd)
 	{
         return ;
 	}
-
-    Server* server = listener.get_servers().empty() ? NULL : listener.get_servers()[0];
-    _clients[client_fd] = Client(client_fd, server);
+ 
+	std::vector<Server *> ListServer = listener.get_servers();
+    // Server* server = listener.get_servers().empty() ? NULL : listener.get_servers()[0];
+    _clients[client_fd] = Client(client_fd, ListServer);
     _fd_types[client_fd] = FD_CLIENT;
     add_to_epoll(client_fd, EPOLLIN | EPOLLET);
 }
 
-int	parse_header(const std::string& str, HttpRequest& req, Server* server);
+int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> server);
 int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
 
 void Engine::handle_client_read(const int client_fd)
