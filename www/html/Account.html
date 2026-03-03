@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="css/Global.css">
+	<link rel="stylesheet" href="css/Account.css">
+	<link rel="stylesheet" href="css/MenuBar.css">
+	<title>Home</title>
+</head>
+<body id="PageAccount">
+	<div class="MenuBarFixed">
+		<div class="MenuBar">
+			<a href="/Home" class="MenuBarButton" id="PageHomeBar">
+				<img class="MenuBarImg" src="img/icn/Home.svg">
+				<span class="MenuBarSpan">Home</span>
+			</a>
+			<a href="/Dart" class="MenuBarButton" id="PageDartBar">
+				<img class="MenuBarImg" src="img/icn/Dart.svg">
+				<span class="MenuBarSpan">Dart</span>
+			</a>
+			<a href="/Score" class="MenuBarButton" id="PageScoreBar">
+				<img class="MenuBarImg" src="img/icn/Score.svg">
+				<span class="MenuBarSpan">Score</span>
+			</a>
+			<a href="/Account" class="MenuBarButton" id="PageAccountBar">
+				<img class="MenuBarImg" src="img/icn/Account.svg">
+				<span class="MenuBarSpan">Account</span>
+			</a>
+		</div>
+	</div>
+		<div class="AccountCard">
+			<div class="TabGroup">
+				<button class="TabBtn active" onclick="showLogin()">Connexion</button>
+				<button class="TabBtn" onclick="showSignup()">Subscribe</button>
+			</div>
+			<form id="LoginForm" class="AccountForm">
+				<div class="InputGroup">
+					<input type="text" placeholder="Username" required>
+				</div>
+				<div class="InputGroup">
+					<input type="password" placeholder="Password" required>
+				</div>
+				<button type="submit" class="SubmitButton">Login</button>
+			</form>
+			<form id="SignupForm" class="AccountForm" style="display:none;">
+				<div class="InputGroup">
+					<input type="text" placeholder="Username" required>
+				</div>
+				<div class="InputGroup">
+					<input type="email" placeholder="E-mail" required>
+				</div>
+				<div class="InputGroup">
+					<input type="password" placeholder="Password" required>
+				</div>
+				<button type="submit" class="SubmitButton">Join us</button>
+			</form>
+		</div>
+	<script>
+    function showLogin()
+	{
+        document.getElementById('LoginForm').style.display = 'block';
+        document.getElementById('SignupForm').style.display = 'none';
+        document.querySelectorAll('.TabBtn')[0].classList.add('active');
+        document.querySelectorAll('.TabBtn')[1].classList.remove('active');
+    }
+    function showSignup() {
+        document.getElementById('LoginForm').style.display = 'none';
+        document.getElementById('SignupForm').style.display = 'block';
+        
+        document.querySelectorAll('.TabBtn')[1].classList.add('active');
+        document.querySelectorAll('.TabBtn')[0].classList.remove('active');
+    }
+	</script>
+</body>
+</html>
