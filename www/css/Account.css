@@ -1,11 +1,7 @@
 #PageAccount
 {
     background-color: black;
-    margin: 0;
-    padding: 0;
     display: flex;
-    justify-content: center;
-    align-items: center;
     font-family: 'Segoe UI', sans-serif;
 }
 
@@ -15,9 +11,20 @@
     border: 10px solid rgba(255, 0, 0, 0.3);
     border-radius: 60px;
     padding: 10px;
-    width: 80%;
+    width: 100%;
+    height: auto; 
     max-width:  640px;
+    justify-content: center;
     text-align: center;
+}
+
+.Content
+{
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    align-items: center;
 }
 
 .InputGroup
