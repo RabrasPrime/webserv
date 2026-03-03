@@ -4,7 +4,7 @@ server
 	root ./
 	methods GET POST DELETE
 	locations /images/ /picture/ /static/
-		alias ./file/img
+		alias ./img
 		methods GET POST
 		auto_index True
 	locations /old-page/
