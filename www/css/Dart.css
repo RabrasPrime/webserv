@@ -51,15 +51,14 @@ body
 }
 .GameModeParamParticipant
 {
-	width: 50%;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	width: 35%;
 }
 .AddPlayerButton
 {
-	width: 50%;
 	font-size: 20px;
 	border-radius: 10px;
 	padding: 5px;
@@ -75,4 +74,112 @@ body
 .ListPlayerParam
 {
 	list-style: none;
+}
+.SettingsGameMode
+{
+	display: flex;
+	flex-direction: column;
+	width: 65%;
+}
+.ParamLigne
+{
+	display: flex;
+	margin: 10px;
+	background-color: rgba(255, 0, 0, 0.5);
+	border-radius: 10px;
+}
+.ParamType
+{
+	flex:1;
+	justify-content: center;
+	display: flex;
+	align-items: center;
+	font-size: 20px;
+	padding: 10px 0px 10px 0px;
+}
+.ParamChoice
+{
+	flex:1;
+}
+.GameChoiceList
+{
+	list-style: none;
+	padding: 10px;
+	display: flex;
+	justify-content: left;
+	align-items: center;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+}
+.GameChoiceList li
+{
+	display: flex;
+	justify-content: left;
+	align-items: center;
+	padding: 2px;
+	width: 100%;
+}
+.GameChoiceList li label
+{
+	padding: 5px;
+}
+.GameChoiceList li input
+{
+	appearance: none;
+	border-radius: 0px;
+	padding: 10px;
+	background-color: rgba(20,20,20,.5);
+	border: 1px solid transparent;
+}
+.GameChoiceList li input:hover
+{
+	cursor: pointer;
+	border: 1px solid black;
+}
+.GameChoiceList li input:checked
+{
+	background-color: rgb(114, 196, 8);
+}
+.StartScoreChoice
+{
+	background-color: royalblue;
+	height: 100%;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.StartScoreChoice input
+{
+	width: 50%;
+	height: 30px;
+	font-size: 20px;
+	border-radius: 5px;
+	padding: 5px;
+	text-align: center;
+	margin: 0;
+}
+.StartScoreChoice input::-webkit-inner-spin-button,
+.StartScoreChoice input::-webkit-outer-spin-button { 
+	-webkit-appearance: none;
+	margin:0;
+}
+.StartScoreChoice button
+{
+	margin: 3px;
+	background-color: green;
+	width: 30px;
+	height: 30px;
+	font-size: 20px;
+	border-radius: 10px;
+	transition: .3s;
+	border: 5px solid green;
+	overflow: hidden;
+}
+.StartScoreChoice button:hover
+{
+	cursor: pointer;
+	background-color: rgb(0, 216, 0);
+	transition: .3s;
 }

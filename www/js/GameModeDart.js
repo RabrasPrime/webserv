@@ -1,19 +1,20 @@
-async function getModePage(mode)
+function ChangeGameMode(mode)
 {
-	try {
-        const response = await fetch('http://localhost:8080/cgi/GetModePage.py?Mode=' + mode);
-        const html = await response.text();
-        console.log("Contenu recup > " + html);
-		if (response.ok)
-			document.getElementsByClassName("GameModeParam")[0].textContent = html;
-    } catch (error) {
-        console.error("Impossible de charger le contenu :", error);
-    }
+	elems = document.getElementsByClassName('AllMode')
+	for (elem of elems)
+	{
+		elem.style.display = 'none'
+	}
+	elems = document.getElementsByClassName(mode)
+	for (elem of elems)
+	{
+		elem.style.display = 'flex'
+	}
 }
 
-function LoadMode(mode)
+function ChangeStartScore(value)
 {
-	document.getElementsByClassName("GameModeAll")[0].style.display = 'none'
-	document.getElementsByClassName("GameModeParam")[0].style.display = 'flex'
-	getModePage(mode)
+	input = document.getElementsByClassName('StartScoreInput')[0]
+	if (parseInt(input.value) > 100 || value > 0)
+		input.value = parseInt(input.value) + value
 }

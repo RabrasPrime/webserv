@@ -256,11 +256,14 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 	_version = req.version;
 	_statusCode = 0;
 	// (void)code;
-	std::cout << ORANGE BOLD "is set return >" << req.loc->get_is_set_return() << RESET << std::endl;
-	if (req.loc->get_is_set_return())
+	if (req.loc)
 	{
-		std::cout << RED "GOING TO REDIRECT" << RESET << std::endl;
-		code = 301;
+		std::cout << ORANGE BOLD "is set return >" << req.loc->get_is_set_return() << RESET << std::endl;
+		if (req.loc->get_is_set_return())
+		{
+			std::cout << RED "GOING TO REDIRECT" << RESET << std::endl;
+			code = 301;
+		}
 	}
 	if (code != 0)
 	{

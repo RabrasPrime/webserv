@@ -47,9 +47,53 @@
 			<ul class="ListPlayerParam">
 			</ul>
 		</div>
-		<div>
-			Settings
+		<div class="SettingsGameMode">
+			<div class="ParamLigne">
+				<div class="ParamType">Mode</div>
+				<div class="ParamChoice">
+					<ul class="ListParamGameMode GameChoiceList">
+						<li><input value="Classic" onclick="ChangeGameMode('ClassicMode')" checked type="radio" name="GameModeInput"> <label>Classic</label></li>
+						<li><input value="Cricket" onclick="ChangeGameMode('CricketMode')" type="radio" name="GameModeInput"> <label>Cricket</label></li>
+						<li><input value="WorldTour" onclick="ChangeGameMode('WorldTourMode')" type="radio" name="GameModeInput"> <label>Tour du Monde</label></li>
+						<li><input value="Killer" onclick="ChangeGameMode('KillercMode')" type="radio" name="GameModeInput"> <label>Killer</label></li>
+					</ul>
+				</div>
+			</div>
+			<div class="ParamLigne AllMode ClassicMode">
+				<div class="ParamType">Score de Depart</div>
+				<div class="ParamChoice">
+					<div  class="StartScoreChoice">
+						<button onclick="ChangeStartScore(-100)">-</button>
+						<input class="StartScoreInput" oninput="if (this.value <= 0) this.value = 1" type="number" min="1" value="301" step="100">
+						<button onclick="ChangeStartScore(100)">+</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode ClassicMode">
+				<div class="ParamType">Entree</div>
+				<div class="ParamChoice">
+					<ul class="CheckInType GameChoiceList">
+						<li><input checked type="radio" name="CheckInTypeInput"> <label>Simple</label></li>
+						<li><input type="radio" name="CheckInTypeInput"> <label>Double</label></li>
+						<li><input type="radio" name="CheckInTypeInput"> <label>Triple</label></li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode ClassicMode">
+				<div class="ParamType">Sortie</div>
+				<div class="ParamChoice">
+					<ul class="CheckOutType GameChoiceList">
+						<li><input checked type="radio" name="CheckOutTypeInput"> <label>Simple</label></li>
+						<li><input type="radio" name="CheckOutTypeInput"> <label>Double</label></li>
+						<li><input type="radio" name="CheckOutTypeInput"> <label>Triple</label></li>
+					</ul>
+				</div>
+			</div>
 		</div>
 	</div>
 </body>
 </html>
+
+<!-- document.querySelector('input[name="GameModeInput"]:checked').value -->
