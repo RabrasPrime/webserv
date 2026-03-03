@@ -1,0 +1,78 @@
+body
+{
+	display: flex;
+}
+.GameModeAll
+{
+	width: 100%;
+	height: 100%;
+	/* display: flex; */
+	display: none;
+	flex-direction: column;
+}
+.GameModTitle
+{
+	text-align: center;
+	padding: 10px;
+	font-size: 35px;
+	color: white;
+}
+.ListGameMode
+{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+.ListGameMode button
+{
+	height: 120px;
+	margin: 10px;
+	font-size: 30px;
+	padding: 10px;
+	background-color: green;
+	width: 80%;
+	border-radius: 30px;
+	transition: .3s;
+}
+.ListGameMode button:hover
+{
+	cursor: pointer;
+	font-size: 40px;
+	transition: .3s;
+	border: 10px darkgreen solid;
+}
+
+.GameModeParam
+{
+	width: 100%;
+	height: 100%;
+	display: flex;
+}
+.GameModeParamParticipant
+{
+	width: 50%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+.AddPlayerButton
+{
+	width: 50%;
+	font-size: 20px;
+	border-radius: 10px;
+	padding: 5px;
+	margin: 20px;
+	border: 2px solid transparent;
+}
+.AddPlayerButton:hover
+{
+	cursor: pointer;
+	border: 2px solid grey;
+	transition: .2s;
+}
+.ListPlayerParam
+{
+	list-style: none;
+}

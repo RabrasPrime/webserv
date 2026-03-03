@@ -88,15 +88,21 @@
 {
 	.MenuBarFixed
 	{
-		position: fixed;
+		position: relative;
 		bottom: 0;
 		height: 100%;
-		width: auto;
+		max-width: 120px;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		z-index: 1000;
 		padding: 0px;
+		transition: .5s;
+	}
+	.MenuBarFixed:hover
+	{
+		transition: .5s;
+		max-width: 250px;
 	}
 	.MenuBar
 	{
@@ -117,6 +123,7 @@
 		margin:25px;
 		display: flex;
 		width: 100%;
+		margin-left: 0px;
 	}
 	.MenuBarButton:hover
 	{
@@ -132,9 +139,9 @@
 		opacity: 0;
 		transition: .2s;
 	}
-	.MenuBar:hover
+	.MenuBar:hover .MenuBarButton
 	{
-		align-items: left;
+		justify-content: left;
 	}
 	.MenuBar:hover .MenuBarSpan
 	{

@@ -20,6 +20,11 @@ button
 	border: none;
 	padding: 0;
 }
+input
+{
+	border: none;
+	padding: 0;
+}
 a
 {
 	color:black;
