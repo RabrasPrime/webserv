@@ -11,6 +11,8 @@ server
 		alias ./www/html/Home.html
 	locations /Dart
 		alias ./www/html/Dart.html
+	locations /Account
+		alias ./www/html/Account.html
 
 	locations /img/
 		alias ./www/static/

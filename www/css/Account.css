@@ -1,0 +1,97 @@
+#PageAccount
+{
+    background-color: black;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.AccountCard
+{
+    background: #ffffff1a; 
+    border: 10px solid rgba(255, 0, 0, 0.3);
+    border-radius: 60px;
+    padding: 10px;
+    width: 80%;
+    max-width:  640px;
+    text-align: center;
+}
+
+.InputGroup
+{
+    margin-bottom: 15px;
+}
+
+.InputGroup input
+{
+    margin: 20px;
+    width: 80%;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 10px solid rgba(255, 0, 0, 0.3);
+    border-radius: 30px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.InputGroup input::placeholder
+{
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.SubmitButton:hover
+{
+    color: white;
+    background-color: rgb(84, 228, 27);
+    opacity: 1;
+}
+
+.SubmitButton
+{
+    margin:20px;
+    width: 50%;
+    padding: 12px;
+    background-color: #ffffffa8;
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 60px;
+    font-size: 25px;
+    opacity: 0.5;
+}
+
+.TabGroup
+{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 60px;
+    gap: 20px;
+}
+
+.TabBtn
+{
+    margin: 20px;
+    background: none;
+    border: none;
+    color: rgb(255, 255, 255);
+    padding: 8px;
+    cursor: pointer;
+    opacity: 0.25;
+    font-size: 25px;
+    font-weight: bold;
+    border-bottom: 2px solid transparent;
+}
+
+.TabBtn.active
+{
+    opacity: 1;
+    color: green;
+    border-bottom: 2px solid red;
+}
