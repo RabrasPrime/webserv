@@ -2,6 +2,7 @@
 
 #include <map>
 #include <vector>
+#include <csignal>
 #include <sys/epoll.h>
 #include "Server.hpp"
 #include "Listener.hpp"
@@ -23,6 +24,7 @@ class Engine
 
 		std::map<int, Client> _clients;
 		std::map<int, Listener> _listeners;
+		static Engine* _instance;
 
 		enum FdType
 		{
@@ -44,6 +46,15 @@ class Engine
 		 * If any step fails during initialization, the method will clean up resources and return without starting the server.
 		 */
 		void  init_listeners();
+
+		/**
+		 * @param server The Server object to be added to the engine's configuration.
+		 * @brief This method adds a new Server configuration to the engine's list of server configurations. \n\n
+		 * The provided Server object will be stored in the _servers_config vector, allowing the engine to reference it when handling incoming requests and matching them to the appropriate server configuration. \n\n
+		 * This method modifies the internal state of the engine by updating the list of server configurations.
+		 */
+		static void signal_handler(int sign);
+
 		/**
 		 * @brief Sets up the epoll instance for monitoring file descriptors. \n\n
 		 * This method creates an epoll instance and stores its file descriptor in the _epoll_fd member variable.\n\n
