@@ -2,12 +2,23 @@ server
 	listen 8080
 	root ./www/
 	server_name site.com
+
 	methods GET
 	locations /
 		return 301 /Home
+
 	locations /Home
 		alias ./www/html/Home.html
+	locations /Dart
+		alias ./www/html/Dart.html
+
 	locations /img/
 		alias ./www/static/
 	locations /css/
+	locations /js/
+	locations /cgi/
+		cgi_enabled true
+		methods GET
+		cgi_ext .py /usr/bin/python3
+
 		
