@@ -146,6 +146,7 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
 	}
 	if (server == NULL && servers.size() != 0)
 		server = servers.front();
+	req.tartgetServ = server;
 	std::cout << RED BOLD "HERE" RESET << std::endl;
 	std::map<std::string, Location> locations = server->get_locations();
 	Location* best = NULL;

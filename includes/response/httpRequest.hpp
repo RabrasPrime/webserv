@@ -20,7 +20,7 @@ struct HttpRequest
 	std::map<std::string, std::vector<std::string> > mult;
 	// std::string body;
 	std::vector<unsigned char> body;
-
+	Server *tartgetServ; 
 	// dans Location
 	std::map<int, std::string>			error_pages;
 	int									methods;

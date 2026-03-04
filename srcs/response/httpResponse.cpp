@@ -321,6 +321,7 @@ void httpResponse::fillMapError(){
 		if (ss >> value)
 			_mErrorMsg[value] = errorMsg;
 	}
+	inFile.close();
 }
 
 void httpResponse::fillMapExtension(std::map<std::string, std::string> &map, std::string pathFile){
@@ -359,7 +360,6 @@ void httpResponse::fillHeaders(std::map<std::string, std::vector<std::string> > 
 		_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
 	else
 		_headers["Connection"] = mult["Connection"].front();
-	// _headers["Connection"] = "close";
 	std::stringstream ss;
 	ss << _body.size();
 	_headers["Content-Length"] = ss.str();
@@ -418,6 +418,7 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 			oss << inFile.rdbuf();
 			_body = oss.str();
 			_bodyType = tryPath.substr(tryPath.find_last_of(".") + 1);
+			inFile.close();
 			return 200;
 		}
 	}
@@ -458,6 +459,7 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 		std::ostringstream oss;
 		oss << inFile.rdbuf();
 		_body = oss.str();
+		inFile.close();
 		_bodyType = path.substr(path.find_last_of(".") + 1, path.size());
 	}
 	return 200;	
@@ -521,6 +523,7 @@ void httpResponse::fillDefaultBody(){
 		oss << inFile.rdbuf();
 		_body = oss.str();
 		_bodyType = pathErrFile.substr(pathErrFile.find_last_of(".") + 1);
+		inFile.close();
 	}
 }
 
@@ -676,18 +679,95 @@ void httpResponse::exePost(HttpRequest &req)
 	if (req.raw_path == "/signup")
 	{
 		std::cout << PURPLE BOLD << &req.body[0] << RESET << std::endl;
-		_statusCode = 200;
+		User newUser;
+
+		std::string body(req.body.begin(), req.body.end());
+		std::map<std::string, std::string> parsed = parseUser(body);
+		newUser.email = parsed["email"];
+		newUser.password = parsed["password"];
+		newUser.UserName = parsed["username"];
+		newUser.defeat = 0;
+		newUser.victory = 0;
+		req.tartgetServ->setNewUser(newUser);
+		std::cout << GREEN BOLD << "New User subscrib: " << newUser.UserName << RESET << std::endl;
+		std::cout << GREEN BOLD << "mail: " << newUser.email << RESET << std::endl;
+		std::cout << GREEN BOLD << "password: " << newUser.password << RESET << std::endl;
+		fillSignBody(req, newUser);
+		fillHeaders(req.mult);
+		if (_statusCode == 0)
+			_statusCode = 200;
+		if (_statusCode != 200)
+			handleError(req);
 	}
 	else
-		_statusCode = isFileExist(req.path, req);
-	if (_statusCode != 200 && _statusCode != 201)
 	{
-		handleError(req);
+		_statusCode = isFileExist(req.path, req);
+		if (_statusCode != 200 && _statusCode != 201)
+		{
+			handleError(req);
+			return ;
+		}
+		_statusMsg = _mErrorMsg[_statusCode];
+		fillBody(req);
+		fillHeaders(req.mult);
+	}
+}
+
+void httpResponse::fillSignBody(HttpRequest &req, User &newUser)
+{
+	(void)req;
+	std::ifstream inFile;
+	std::stringstream ss;
+	inFile.open("www/html/Connected.html");
+	if (!inFile.is_open())
+	{
+		_statusCode = 500;
 		return ;
 	}
-	_statusMsg = _mErrorMsg[_statusCode];
-	fillBody(req);
-	fillHeaders(req.mult);
+	ss << inFile.rdbuf();
+	std::string strHtml = ss.str();
+	ss.str("");
+	replaceData(strHtml, "{{USERNAME}}", newUser.UserName);
+	replaceData(strHtml, "{{EMAIL}}", newUser.email);
+	ss << newUser.victory;
+	replaceData(strHtml, "{{VICTORY}}", ss.str());
+	ss.str("");
+	ss << newUser.defeat;
+	replaceData(strHtml, "{{DEFEAT}}", ss.str());
+	ss.str("");
+	ss << newUser.defeat + newUser.victory;
+	replaceData(strHtml, "{{TOTAL}}", ss.str());
+	_body = strHtml;
+	_bodyType = "html";
+	inFile.close();
+	std::cout << PURPLE BOLD "BODY : " << _body << RESET << std::endl;
+}
+
+void httpResponse::replaceData(std::string &str, const std::string &from, const std::string &to)
+{
+	size_t pos = str.find(from);
+	if (pos != std::string::npos)
+		str.replace(pos, from.length(), to);
+}
+
+std::map<std::string, std::string> httpResponse::parseUser(std::string const &body)
+{
+
+	std::map<std::string, std::string> res;
+	std::stringstream ss(body);
+	std::string data;
+
+	while(std::getline(ss, data, '&'))
+	{
+		size_t pos = data.find('=');
+		if (pos != std::string::npos)
+		{
+			std::string key = data.substr(0, pos);
+			std::string value = data.substr(pos + 1);
+			res[key] = value;
+		}
+	}
+	return res;
 }
 
 int httpResponse::deleteFile(std::string &path, HttpRequest &req)

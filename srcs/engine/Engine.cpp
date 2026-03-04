@@ -236,6 +236,7 @@ void Engine::handle_client_read(const int client_fd)
 			else
 			{
 				client.req.body = vect;
+                vect.clear();
 				client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
 				modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 			}

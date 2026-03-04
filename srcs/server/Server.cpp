@@ -205,6 +205,11 @@ int		Server::set_server_name(const std::string& value)
 	return (0);
 }
 
+void Server::setNewUser(User &newUser)
+{
+	_userData[newUser.email] = newUser;
+}
+
 int Server::fill_server_config(std::ifstream& file, std::string& line)
 {
 	int read = 0;
