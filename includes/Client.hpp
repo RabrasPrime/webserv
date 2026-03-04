@@ -1,7 +1,6 @@
 //
 // Created by tjooris on 2/16/26.
 //
-
 #pragma once
 
 #include <stdio.h>

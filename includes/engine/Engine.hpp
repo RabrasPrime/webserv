@@ -53,7 +53,7 @@ class Engine
 		 * The provided Server object will be stored in the _servers_config vector, allowing the engine to reference it when handling incoming requests and matching them to the appropriate server configuration. \n\n
 		 * This method modifies the internal state of the engine by updating the list of server configurations.
 		 */
-		static void signal_handler(int sign);
+		static void signal_handler(int sig);
 
 		/**
 		 * @brief Sets up the epoll instance for monitoring file descriptors. \n\n

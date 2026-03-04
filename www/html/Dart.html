@@ -6,7 +6,7 @@
 	<link rel="stylesheet" href="css/Global.css">
 	<link rel="stylesheet" href="css/MenuBar.css">
 	<link rel="stylesheet" href="css/Dart.css">
-	<script src="js/GameModeDart.js"></script>
+	<script src="js/GameModeDart.js" defer></script>
 	<title>Home</title>
 </head>
 <body id="PageDart">
@@ -30,23 +30,33 @@
 			</a>
 		</div>
 	</div>
-	<!-- <div class="GameModeAll">
-		<div class="GameModTitle">
-			Choix du mode de jeu
-		</div>
-		<div class="ListGameMode">
-			<button onclick="LoadMode('Classic')">Classic</button>
-			<button onclick="LoadMode('Cricket')">Cricket</button>
-			<button onclick="LoadMode('Tour du Monde')">Tour du Monde</button>
-			<button onclick="LoadMode('Killer')">Killer</button>
-		</div>
-	</div> -->
 	<div class="GameModeParam">
 		<div class="GameModeParamParticipant">
-			<button class="AddPlayerButton" onclick="AddPlayer()">Add a Player</button>
-			<ul class="ListPlayerParam">
+			<button class="AddPlayerButton" onclick="AskPlayerName()">Add a Player</button>
+			<ul class="ListPlayerUl">
+				<li>
+					<button onclick="RemoveThis(this.parent)">x</button>
+					<div>Player_1</div>
+					<input type="checkbox" value="Player_1">
+				</li>
+				<li>
+					<button onclick="RemoveThis(this.parent)">x</button>
+					<div>Player_2</div>
+					<input type="checkbox" value="Player_2">
+				</li>
+				<li>
+					<button onclick="RemoveThis(this.parent)">x</button>
+					<div>Player_3</div>
+					<input type="checkbox" value="Player_3">
+				</li>
+				<li>
+					<button onclick="RemoveThis(this.parent)">x</button>
+					<div>Player_4</div>
+					<input type="checkbox" value="Player_4">
+				</li>
 			</ul>
 		</div>
+
 		<div class="SettingsGameMode">
 			<div class="ParamLigne">
 				<div class="ParamType">Mode</div>
@@ -59,13 +69,36 @@
 					</ul>
 				</div>
 			</div>
-			<div class="ParamLigne AllMode ClassicMode">
-				<div class="ParamType">Score de Depart</div>
+
+			<div class="ParamLigne AllMode ClassicMode CricketMode WorldTourMode KillercMode">
+				<div class="ParamType">Manche</div>
 				<div class="ParamChoice">
 					<div  class="StartScoreChoice">
-						<button onclick="ChangeStartScore(-100)">-</button>
-						<input class="StartScoreInput" oninput="if (this.value <= 0) this.value = 1" type="number" min="1" value="301" step="100">
-						<button onclick="ChangeStartScore(100)">+</button>
+						<button onclick="ChangeScore(-1,'NbLegInput')">-</button>
+						<input class="NbLegInput" oninput="if (this.value <= 0) this.value = 1" type="number" min="1" value="1" step="1">
+						<button onclick="ChangeScore(1,'NbLegInput')">+</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode ClassicMode CricketMode WorldTourMode KillercMode" >
+				<div class="ParamType">Set</div>
+				<div class="ParamChoice">
+					<div  class="StartScoreChoice">
+						<button onclick="ChangeScore(-1,'NbSetInput')">-</button>
+						<input class="NbSetInput" oninput="if (this.value <= 0) this.value = 1" type="number" min="1" value="1" step="1">
+						<button onclick="ChangeScore(1,'NbSetInput')">+</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode ClassicMode">
+				<div class="ParamType">Score</div>
+				<div class="ParamChoice">
+					<div  class="StartScoreChoice">
+						<button onclick="ChangeScore(-100,'StartScoreInput')">-</button>
+						<input class="StartScoreInput" oninput="if (this.value <= 0) this.value = 1" type="number" min="1" value="501" step="100">
+						<button onclick="ChangeScore(100,'StartScoreInput')">+</button>
 					</div>
 				</div>
 			</div>
@@ -74,9 +107,9 @@
 				<div class="ParamType">Entree</div>
 				<div class="ParamChoice">
 					<ul class="CheckInType GameChoiceList">
-						<li><input checked type="radio" name="CheckInTypeInput"> <label>Simple</label></li>
-						<li><input type="radio" name="CheckInTypeInput"> <label>Double</label></li>
-						<li><input type="radio" name="CheckInTypeInput"> <label>Triple</label></li>
+						<li><input checked type="radio" name="CheckInTypeInput" value="Simple"> <label>Simple</label></li>
+						<li><input type="radio" name="CheckInTypeInput" value="Double"> <label>Double</label></li>
+						<li><input type="radio" name="CheckInTypeInput" value="Triple"> <label>Triple</label></li>
 					</ul>
 				</div>
 			</div>
@@ -85,12 +118,98 @@
 				<div class="ParamType">Sortie</div>
 				<div class="ParamChoice">
 					<ul class="CheckOutType GameChoiceList">
-						<li><input checked type="radio" name="CheckOutTypeInput"> <label>Simple</label></li>
-						<li><input type="radio" name="CheckOutTypeInput"> <label>Double</label></li>
-						<li><input type="radio" name="CheckOutTypeInput"> <label>Triple</label></li>
+						<li><input type="radio" name="CheckOutTypeInput" value="Simple"> <label>Simple</label></li>
+						<li><input checked type="radio" name="CheckOutTypeInput" value="Double"> <label>Double</label></li>
+						<li><input type="radio" name="CheckOutTypeInput" value="Triple"> <label>Triple</label></li>
 					</ul>
 				</div>
 			</div>
+
+			<div class="ParamLigne AllMode CricketMode">
+				<div class="ParamType">Mode de Point</div>
+				<div class="ParamChoice">
+					<ul class="PointModeList GameChoiceList">
+						<li><input type="radio" name="PointModeInput"> <label>No Score</label></li>
+						<li><input type="radio" name="PointModeInput"> <label>Classic</label></li>
+						<li><input checked type="radio" name="PointModeInput"> <label>Cut-Throat</label></li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode CricketMode">
+				<div class="ParamType">Numero</div>
+				<div class="ParamChoice">
+					<ul class="NumeroChoiceList GameChoiceList">
+						<li><input checked type="radio" name="NumeroChoiceInput"> <label>Classic</label></li>
+						<li><input type="radio" name="NumeroChoiceInput"> <label>Random</label></li>
+						<li><input type="radio" name="NumeroChoiceInput"> <label>Au choix</label></li>
+						<li><input type="radio" name="NumeroChoiceInput"> <label>First Hit</label></li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode WorldTourMode">
+				<div class="ParamType">Ordre</div>
+				<div class="ParamChoice">
+					<ul class="OrderWorldTourList GameChoiceList">
+						<li><input checked type="radio" name="OrderWorldTourInput"> <label>Ascendant</label></li>
+						<li><input type="radio" name="OrderWorldTourInput"> <label>Descendant</label></li>
+						<li><input type="radio" name="OrderWorldTourInput"> <label>Random</label></li>
+						<li><input type="radio" name="OrderWorldTourInput"> <label>Sans ordre</label></li>
+						<li><input type="radio" name="OrderWorldTourInput"> <label>Horaire</label></li>
+						<li><input type="radio" name="OrderWorldTourInput"> <label>Anti Horaire</label></li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode WorldTourMode">
+				<div class="ParamType">Precision</div>
+				<div class="ParamChoice">
+					<ul class="PrecisionList GameChoiceList">
+						<li><input onclick="RadioCheckBox('AimVersion',this)" type="checkbox" name="AimVersion"> <label>Close Center Only</label></li>
+						<li><input onclick="RadioCheckBox('AimVersion',this)" type="checkbox" name="AimVersion"> <label>Only Double</label></li>
+						<li><input onclick="RadioCheckBox('AimVersion',this)" type="checkbox" name="AimVersion"> <label>Only Triple</label></li>
+						<li><input onclick="RadioCheckBox('AimVersion',this)" type="checkbox" name="AimVersion"> <label>Double and Triple</label></li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode WorldTourMode">
+				<div class="ParamType">Variante</div>
+				<div class="ParamChoice">
+					<ul class="VarianteWorldTourList GameChoiceList">
+						<li><input type="checkbox"> <label>Busting</label></li>
+						<li><input type="checkbox"> <label>Skipping</label></li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode KillercMode">
+				<div class="ParamType">Vie</div>
+				<div class="ParamChoice">
+					<div  class="StartScoreChoice">
+						<button onclick="ChangeScore(-1,'NbLifeInput')">-</button>
+						<input class="NbLifeInput" oninput="if (this.value <= 0) this.value = 1" type="number" min="1" value="3" step="1">
+						<button onclick="ChangeScore(1,'NbLifeInput')">+</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="ParamLigne AllMode KillercMode">
+				<div class="ParamType">Variante</div>
+				<div class="ParamChoice">
+					<ul class="VarianteWorldTourList GameChoiceList">
+						<li><input type="checkbox"> <label>Killer Double</label></li>
+						<li><input type="checkbox"> <label>Killer Triple</label></li>
+						<li><input type="checkbox"> <label>Vol de Vie</label></li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="ButtonPlayParent">
+				<button onclick="PlayGame()" class="ButtonPlay">Play</button>
+			</div>
+			
 		</div>
 	</div>
 </body>
