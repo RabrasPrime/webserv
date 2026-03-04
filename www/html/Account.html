@@ -35,24 +35,24 @@
 				<button class="TabBtn active" onclick="showLogin()">Connexion</button>
 				<button class="TabBtn" onclick="showSignup()">Subscribe</button>
 			</div>
-			<form id="LoginForm" class="AccountForm">
+			<form id="SigninForm" method="POST" action="/signin" class="AccountForm">
 				<div class="InputGroup">
-					<input type="text" placeholder="Username" required>
+					<input type="text" name="username" placeholder="Username" required>
 				</div>
 				<div class="InputGroup">
-					<input type="password" placeholder="Password" required>
+					<input type="password" name="password" placeholder="Password" required>
 				</div>
 				<button type="submit" class="SubmitButton">Login</button>
 			</form>
-			<form id="SignupForm" class="AccountForm" style="display:none;">
+			<form id="SignupForm" class="AccountForm" method="POST" action="/signup" style="display:none;">
 				<div class="InputGroup">
-					<input type="text" placeholder="Username" required>
+					<input type="text" name="username" placeholder="Username" required>
 				</div>
 				<div class="InputGroup">
-					<input type="email" placeholder="E-mail" required>
+					<input type="email" name="email" placeholder="E-mail" required>
 				</div>
 				<div class="InputGroup">
-					<input type="password" placeholder="Password" required>
+					<input type="password" name="password" placeholder="Password" required>
 				</div>
 				<button type="submit" class="SubmitButton">Join us</button>
 			</form>
@@ -61,13 +61,13 @@
 	<script>
     function showLogin()
 	{
-        document.getElementById('LoginForm').style.display = 'block';
+        document.getElementById('SigninForm').style.display = 'block';
         document.getElementById('SignupForm').style.display = 'none';
         document.querySelectorAll('.TabBtn')[0].classList.add('active');
         document.querySelectorAll('.TabBtn')[1].classList.remove('active');
     }
     function showSignup() {
-        document.getElementById('LoginForm').style.display = 'none';
+        document.getElementById('SigninForm').style.display = 'none';
         document.getElementById('SignupForm').style.display = 'block';
         
         document.querySelectorAll('.TabBtn')[1].classList.add('active');
@@ -76,3 +76,4 @@
 	</script>
 </body>
 </html>
+

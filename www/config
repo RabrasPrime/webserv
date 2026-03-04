@@ -3,7 +3,7 @@ server
 	root ./www/
 	server_name site.com
 
-	methods GET
+	methods GET POST
 	locations /
 		return 301 /Home
 
@@ -12,6 +12,7 @@ server
 	locations /Dart
 		alias ./www/html/Dart.html
 	locations /Account
+		methods GET
 		alias ./www/html/Account.html
 
 	locations /img/

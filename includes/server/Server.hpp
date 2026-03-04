@@ -10,6 +10,13 @@
 
 class Location;
 
+struct User
+{
+	std::string UserName;
+	std::string email;
+	std::string password;
+};
+
 class Server : public Config
 {
 	public:
@@ -24,6 +31,7 @@ class Server : public Config
 		std::vector<struct sockaddr_storage>	_addr;
 		std::vector<std::string>				_server_name;
 		std::map<std::string, Location>			_locations;
+		std::map<std::string, User> _userData;
 
 	public:
 		const std::vector<struct sockaddr_storage>	get_addr() const;
@@ -36,3 +44,4 @@ class Server : public Config
 
 
 #endif
+

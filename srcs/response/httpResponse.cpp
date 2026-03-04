@@ -281,7 +281,7 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		fillCgiResponse(req);
 		return convertFinalResponse();
 	}
-	// std::cout << RED << "sdasdasda" << req.method << RESET << std::endl;
+	std::cout << RED << "sdasdasda" << req.method << RESET << std::endl;
 	if (req.method & METHOD_GET)
 		exeGet(req);
 	else if (req.method & METHOD_POST)
