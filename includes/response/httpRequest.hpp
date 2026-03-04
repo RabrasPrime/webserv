@@ -5,7 +5,7 @@
 
 struct HttpRequest
 {
-	const Location* loc;
+	Location* loc;
 	bool		location_match;
 	size_t		ContentLength;
 	int			end_head;

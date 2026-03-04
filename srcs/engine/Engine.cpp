@@ -32,6 +32,13 @@ Engine::~Engine()
     }
 }
 
+void Engine::signal_handler(int sig)
+{
+	(void)sig;
+	if (_instance)
+		_instance->_is_running = false;
+}
+
 static std::string make_listener_key(const int host, const int port)
 {
     char buf[64];
