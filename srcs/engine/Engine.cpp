@@ -20,6 +20,8 @@ class Listener;
 class Server;
 class Client;
 
+Engine* Engine::_instance = NULL;
+
 Engine::Engine() : _epoll_fd(-1), _is_running(false) {}
 
 Engine::~Engine()
@@ -36,7 +38,9 @@ void Engine::signal_handler(int sig)
 {
 	(void)sig;
 	if (_instance)
-		_instance->_is_running = false;
+		std::cout << "INSTANCE" << std::endl;
+	// if (_instance)
+	// 	_instance->_is_running = false;
 }
 
 static std::string make_listener_key(const int host, const int port)
