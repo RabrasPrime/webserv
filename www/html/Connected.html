@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="css/Global.css">
+	<link rel="stylesheet" href="css/Connected.css">
+	<link rel="stylesheet" href="css/MenuBar.css">
+	<title>Connected</title>
+</head>
+<body id="PageConnected">
+	<div class="MenuBarFixed">
+		<div class="MenuBar">
+			<a href="/Home" class="MenuBarButton" id="PageHomeBar">
+				<img class="MenuBarImg" src="img/icn/Home.svg">
+				<span class="MenuBarSpan">Home</span>
+			</a>
+			<a href="/Dart" class="MenuBarButton" id="PageDartBar">
+				<img class="MenuBarImg" src="img/icn/Dart.svg">
+				<span class="MenuBarSpan">Dart</span>
+			</a>
+			<a href="/Score" class="MenuBarButton" id="PageScoreBar">
+				<img class="MenuBarImg" src="img/icn/Score.svg">
+				<span class="MenuBarSpan">Score</span>
+			</a>
+			<a href="/Account" class="MenuBarButton" id="PageAccountBar">
+				<img class="MenuBarImg" src="img/icn/Account.svg">
+				<span class="MenuBarSpan">Account</span>
+			</a>
+		</div>
+	</div>
+	<div class="ProfilCard">
+		<h1 class="Title">Welcome to your Profil <span class="name">{{USERNAME}}!</span></h1>
+		<p class="mail">Email : {{EMAIL}}</p>
+		<table>
+			<tr>
+				<th>Game</th>
+				<th class="victory">Victory</th>
+				<th class="defeat">Defeat</th>
+			</tr>
+			<tr>
+				<td>{{TOTAL}}</td>
+				<td class="victory">{{VICTORY}}</td>
+				<td class="defeat">{{DEFEAT}}</td>
+			</tr>
+		</table>
+		<button type="submit" class="logoutButton">logout</button>
+	</div>
+</body>
+</html>

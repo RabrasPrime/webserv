@@ -63,6 +63,9 @@ class httpResponse
 		void exePost(HttpRequest &req);
 		int isFileExist(std::string &path, HttpRequest &req);
 		void fillBody(HttpRequest &req);
+		void fillSignBody(HttpRequest &req, User &newUser);
+		std::map<std::string, std::string> parseUser(std::string const &body);
+		void replaceData(std::string &str, const std::string &from, const std::string &to);
 
 		void exeDelete(HttpRequest &req);
 		int deleteFile(std::string &path, HttpRequest &req);

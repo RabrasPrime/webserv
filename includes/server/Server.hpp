@@ -15,6 +15,8 @@ struct User
 	std::string UserName;
 	std::string email;
 	std::string password;
+	int victory;
+	int defeat;
 };
 
 class Server : public Config
@@ -40,6 +42,7 @@ class Server : public Config
 
 		int		set_listen(const std::string& value);
 		int		set_server_name(const std::string& value);
+		void	setNewUser(User &newUser);
 };
 
 

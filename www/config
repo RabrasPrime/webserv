@@ -15,7 +15,11 @@ server
 		methods GET
 		alias ./www/html/Account.html
 	locations /signup
+		methods GET
+		alias ././www/html/Connected.html
 	locations /signin
+		methods GET
+		alias ././www/html/Connected.html
 
 	locations /img/
 		alias ./www/static/
