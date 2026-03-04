@@ -14,6 +14,8 @@ server
 	locations /Account
 		methods GET
 		alias ./www/html/Account.html
+	locations /signup
+	locations /signin
 
 	locations /img/
 		alias ./www/static/

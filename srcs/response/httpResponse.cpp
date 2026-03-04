@@ -359,6 +359,7 @@ void httpResponse::fillHeaders(std::map<std::string, std::vector<std::string> > 
 		_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
 	else
 		_headers["Connection"] = mult["Connection"].front();
+	// _headers["Connection"] = "close";
 	std::stringstream ss;
 	ss << _body.size();
 	_headers["Content-Length"] = ss.str();
@@ -672,7 +673,13 @@ void httpResponse::exePost(HttpRequest &req)
 		handleError(req);
 		return ;
 	}
-	_statusCode = isFileExist(req.path, req);
+	if (req.raw_path == "/signup")
+	{
+		std::cout << PURPLE BOLD << &req.body[0] << RESET << std::endl;
+		_statusCode = 200;
+	}
+	else
+		_statusCode = isFileExist(req.path, req);
 	if (_statusCode != 200 && _statusCode != 201)
 	{
 		handleError(req);
