@@ -35,24 +35,20 @@
 			<button class="AddPlayerButton" onclick="AskPlayerName()">Add a Player</button>
 			<ul class="ListPlayerUl">
 				<li>
-					<button onclick="RemoveThis(this.parent)">x</button>
 					<div>Player_1</div>
-					<input type="checkbox" value="Player_1">
+					<input class="InputPlayerName" type="checkbox" value="Player_1">
 				</li>
 				<li>
-					<button onclick="RemoveThis(this.parent)">x</button>
 					<div>Player_2</div>
-					<input type="checkbox" value="Player_2">
+					<input class="InputPlayerName" type="checkbox" value="Player_2">
 				</li>
 				<li>
-					<button onclick="RemoveThis(this.parent)">x</button>
 					<div>Player_3</div>
-					<input type="checkbox" value="Player_3">
+					<input class="InputPlayerName" type="checkbox" value="Player_3">
 				</li>
 				<li>
-					<button onclick="RemoveThis(this.parent)">x</button>
 					<div>Player_4</div>
-					<input type="checkbox" value="Player_4">
+					<input class="InputPlayerName" type="checkbox" value="Player_4">
 				</li>
 			</ul>
 		</div>
@@ -210,6 +206,16 @@
 				<button onclick="PlayGame()" class="ButtonPlay">Play</button>
 			</div>
 			
+		</div>
+	</div>
+	<div class="FixedGameAll">
+		<div class="CrossGameAll">
+			<button onclick="document.getElementsByClassName('FixedGameAll')[0].style.display='none'">
+				<img src="img/png/cross.png">
+			</button>
+		</div>
+		<div class="GameAllDiv">
+
 		</div>
 	</div>
 </body>

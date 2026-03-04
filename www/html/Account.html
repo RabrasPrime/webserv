@@ -61,14 +61,14 @@
 	<script>
     function showLogin()
 	{
-        document.getElementById('SigninForm').style.display = 'block';
+        document.getElementById('SigninForm').style.display = 'flex';
         document.getElementById('SignupForm').style.display = 'none';
         document.querySelectorAll('.TabBtn')[0].classList.add('active');
         document.querySelectorAll('.TabBtn')[1].classList.remove('active');
     }
     function showSignup() {
         document.getElementById('SigninForm').style.display = 'none';
-        document.getElementById('SignupForm').style.display = 'block';
+        document.getElementById('SignupForm').style.display = 'flex';
         
         document.querySelectorAll('.TabBtn')[1].classList.add('active');
         document.querySelectorAll('.TabBtn')[0].classList.remove('active');

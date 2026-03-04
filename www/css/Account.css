@@ -15,15 +15,22 @@
     max-width:  640px;
     justify-content: center;
     text-align: center;
+	height: 100%;
+	margin: 10px;
+	display: flex;
+	flex-direction: column;
+	max-width: 550px;
+	max-height: 550px;
 }
 
 .Content
 {
     display: flex;
     justify-content: center;
-    height: 100%;
-    width: 100%;
+    /* height: 100%;
+    width: 100%; */
     align-items: center;
+	flex: 1;
 }
 
 .InputGroup
@@ -33,7 +40,7 @@
 
 .InputGroup input
 {
-    margin: 20px;
+    /* margin: 20px; */
     width: 80%;
     padding: 20px;
     background: rgba(255, 255, 255, 0.05);
@@ -59,7 +66,7 @@
 
 .SubmitButton
 {
-    margin:20px;
+    /* margin:20px; */
     width: 50%;
     padding: 12px;
     background-color: #ffffffa8;
@@ -68,7 +75,7 @@
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
-    margin-top: 60px;
+    /* margin-top: 60px; */
     font-size: 25px;
     opacity: 0.5;
 }
@@ -77,13 +84,13 @@
 {
     display: flex;
     justify-content: center;
-    margin-bottom: 60px;
+    /* margin-bottom: 60px; */
     gap: 20px;
 }
 
 .TabBtn
 {
-    margin: 20px;
+    /* margin: 20px; */
     background: none;
     border: none;
     color: rgb(255, 255, 255);
@@ -100,4 +107,12 @@
     opacity: 1;
     color: green;
     border-bottom: 2px solid red;
+}
+.AccountForm
+{
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
 }

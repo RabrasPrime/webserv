@@ -40,8 +40,9 @@ function AskPlayerName()
 	PlayerUl.innerHTML +=
 `
 <li>
+	<button onclick="RemoveThis(this.parentElement)">x</button>
 	<div>${PlayerName}</div>
-	<input type="checkbox" value="${PlayerName}">
+	<input class="InputPlayerName" type="checkbox" value="${PlayerName}">
 </li>
 `
 }
@@ -54,6 +55,7 @@ function PlayGame()
 	StartScore = document.querySelector('.StartScoreInput').value
 	CheckInType = document.querySelector('input[name="CheckInTypeInput"]:checked').value
 	CheckOutType = document.querySelector('input[name="CheckOutTypeInput"]:checked').value
+	Players = document.querySelectorAll('.InputPlayerName:checked')
 	console.clear()
 	console.log("GameMode > " + GameMode)
 	console.log("NbLeg > " + NbLeg)
@@ -63,9 +65,11 @@ function PlayGame()
 		console.log("StartScore > " + StartScore)
 		console.log("CheckInType > " + CheckInType)
 		console.log("CheckOutType > " + CheckOutType)
+		document.getElementsByClassName('FixedGameAll')[0].style.display='flex'
 	}
 }
 
 function RemoveThis(self)
 {
+	self.remove()
 }

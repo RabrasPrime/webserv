@@ -169,6 +169,7 @@ void Engine::handle_client_read(const int client_fd)
 
     Client& client = it->second;
     const ssize_t ret = client.read_from_socket();
+	std::cout << RED BOLD << &client.get_read()[0] << RESET << std::endl;
 
     if (ret == 0)
     {

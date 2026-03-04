@@ -676,7 +676,8 @@ void httpResponse::exePost(HttpRequest &req)
 	if (req.raw_path == "/signup")
 	{
 		std::cout << PURPLE BOLD << &req.body[0] << RESET << std::endl;
-		_statusCode = 200;
+		_statusCode = 302;
+		_headers["Location"] = "/";
 	}
 	else
 		_statusCode = isFileExist(req.path, req);
