@@ -17,10 +17,12 @@
 # include "Color.hpp"
 
 
+
 # define DEFAULT_TYPE "application/octet-stream"
 # define PATH_FILE_CODE "file/error_code.txt"
 # define PATH_FIlE_MIME "file/mime_types.txt"
 # define PATH_FILE_CGI "file/cgi_path.txt"
+# define PATH_SIGNIN "www/html/Connected.html"
 
 class httpResponse
 {
@@ -58,12 +60,13 @@ class httpResponse
 
 		void exeGet(HttpRequest &req);
 		int searchFileInDir(std::string &path, HttpRequest &req);
+		std::string getUserValue(HttpRequest &req, std::string const &key);
 		int generateAutoIndex(std::string &path);
 
 		void exePost(HttpRequest &req);
 		int isFileExist(std::string &path, HttpRequest &req);
 		void fillBody(HttpRequest &req);
-		void fillSignBody(HttpRequest &req, User &newUser);
+		void fillSignBody(User &newUser);
 		std::map<std::string, std::string> parseUser(std::string const &body);
 		void replaceData(std::string &str, const std::string &from, const std::string &to);
 
@@ -80,4 +83,3 @@ class httpResponse
 };
 
 #endif
-

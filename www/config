@@ -16,11 +16,14 @@ server
 		alias ./www/html/Account.html
 	locations /signup
 		methods GET
-		alias ././www/html/Connected.html
+		alias ./www/html/Connected.html
 	locations /signin
 		methods GET
-		alias ././www/html/Connected.html
-
+		alias ./www/html/Connected.html
+	locations /logout
+		methods GET
+		alias ./www/html/Account.html
+	
 	locations /img/
 		alias ./www/static/
 	locations /css/
