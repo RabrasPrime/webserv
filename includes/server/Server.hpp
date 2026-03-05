@@ -38,11 +38,15 @@ class Server : public Config
 	public:
 		const std::vector<struct sockaddr_storage>	get_addr() const;
 		const std::vector<std::string>&				get_server_name() const;
+		const std::map<std::string, Location>		get_locations() const;
+		User&   getUser(std::string &username);
+		bool userExist(const std::string &username);
 		const std::map<std::string, Location>& get_locations() const;
 
 		int		set_listen(const std::string& value);
 		int		set_server_name(const std::string& value);
 		void	setNewUser(User &newUser);
+		
 };
 
 

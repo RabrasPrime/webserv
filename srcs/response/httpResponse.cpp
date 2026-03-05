@@ -6,10 +6,6 @@ httpResponse::httpResponse()
 
 	fillMapExtension(_mMimeTypes, PATH_FIlE_MIME);
 	fillMapExtension(_mCgiTypes, PATH_FILE_CGI);
-	for (std::map<std::string,std::string>::iterator it = _mCgiTypes.begin();it != _mCgiTypes.end();it++)
-	{
-		std::cout << "first >" << it->first << "<      second >" << it->second << "<" << std::endl;
-	}
 	fillMapError();
 }
 
@@ -26,14 +22,11 @@ std::string httpResponse::convertFinalResponse(){
 }
 
 bool httpResponse::isCgiExtension(std::string currentPath, HttpRequest &req){
-	(void)req;
 	size_t end = currentPath.find_last_of(".");
 	std::string extension = currentPath.substr(end);
 
-	std::cout << "ext > " << extension << "    size  > " << req.cgi_ext.size() << std::endl;
 	for (std::map<std::string, std::string>::iterator it = req.cgi_ext.begin(); it != req.cgi_ext.end(); ++it)
 	{
-		std::cout << "(*it).first >> " << (*it).first  << std::endl;
 		if (extension == (*it).first)
 		{
 			_binary = (*it).second;
@@ -101,11 +94,7 @@ void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
 	waitpid(pid, &status, 0);
 	int code = WEXITSTATUS(status);
 	code == 0 ? _statusCode = 200 : _statusCode = 500;
-
-	std::cout << BOLD GREEN << "STATUS CODE"  << _statusCode  << std::endl << "STATUS" RESET << code << std::endl;
-
 	_cgiOutput = outCgi;
-
 }
 
 int httpResponse::exeCgi(std::string path, HttpRequest &req){
@@ -154,42 +143,11 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 
 int httpResponse::isCgi(HttpRequest &req, std::string path){
 
-	// size_t end = path.find_first_of("?");
-	// _cgiPath = path.substr(0, end);
-	
-	// size_t pos = 0, nextSection = 0;
-	// std::string currentPath = req.root;
-	// while (pos < _cgiPath.size())
-	// {
-	// 	nextSection = _cgiPath.find('/', pos + 1);
-	// 	std::string section = _cgiPath.substr(pos, nextSection - pos);
-	// 	currentPath += section;
-		// struct stat s;
-		// if (stat(currentPath.c_str(), &s) == 0)
-		// {
-			
-		// 	if (S_ISREG(s.st_mode))
-		// 	{
-		// 		if (isCgiExtension(currentPath))
-		// 		{
-		// 			return (exeCgi(currentPath, req));
-		// 		}
-		// 		break ;
-		// 	}
-		// }
-		// else
-		// 	return 0;
-		// if (nextSection == std::string::npos)
-		// 	break ;
-		// pos = nextSection;
-	// }
 	struct stat s;
 	if (stat(path.c_str(), &s) == 0)
 	{
-		std::cout << "1" << std::endl;
 		if (S_ISREG(s.st_mode))
 		{	
-			std::cout << "2" << std::endl;
 			std::ifstream inFile;
 			inFile.open(path.c_str(), std::ios::binary);
 			if (!inFile.is_open())
@@ -212,7 +170,6 @@ void httpResponse::parseCgiOutput(){
 		sep = _cgiOutput.find("\n\n");
 		sizeSpace = 2;
 	}
-	// std::cout << "PARSE CGI OUTPUT" << std::endl;
 	if (sep != std::string::npos)
 	{
 		std::string headers = _cgiOutput.substr(0, sep);
@@ -223,26 +180,23 @@ void httpResponse::parseCgiOutput(){
 			
 			size_t posEndContentType = headers.find("\n", posContentType + strContent.size());
 			_headers["Content-Type"] =  headers.substr(posContentType + strContent.size(), posEndContentType);
-			std::cout << BLUE BOLD "CONTENT TyPE:" RESET << _headers["Content-Type"] << std::endl;
 		}
-		std::cout << BLUE BOLD " HEADER HERE " RESET << std::endl << headers << BLUE BOLD "END HEADER" RESET << std::endl;
 		_body = _cgiOutput.substr(sep + sizeSpace);
-		// std::cout << BLUE BOLD " BODY HERE " RESET << std::endl << _body << BLUE BOLD "END BODY" RESET << std::endl;
 	}
 	else
-	{
-		// std::cout << "FILL BODY" << std::endl;
 		_body = _cgiOutput;
-	}
 }
 
 void httpResponse::fillCgiResponse(HttpRequest &req){
 
-	// std::cout << RED BOLD "FILL CGI RESPONSE" RESET << std::endl;
 	_statusMsg = _mErrorMsg[_statusCode];
 	parseCgiOutput();
-	if (req.mult["Connection"].size() == 0)
-		_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
+
+	size_t pos = _version.find('.');
+	if (req.mult["Connection"].size() == 0 && _version[pos + 1] == '1')
+		_headers["Connection"] = "Keep-Alive";
+	else if (req.mult["Connection"].size() == 0 && _version[pos + 1] == '0')
+		_headers["Connection"] = "close";
 	else
 		_headers["Connection"] = req.mult["Connection"].front();
 	if (_headers["Content-Type"].empty())
@@ -253,17 +207,13 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 }
 
 std::string httpResponse::handleResponse(HttpRequest &req, int code){
+
 	_version = req.version;
 	_statusCode = 0;
-	// (void)code;
 	if (req.loc)
 	{
-		std::cout << ORANGE BOLD "is set return >" << req.loc->get_is_set_return() << RESET << std::endl;
 		if (req.loc->get_is_set_return())
-		{
-			std::cout << RED "GOING TO REDIRECT" << RESET << std::endl;
 			code = 301;
-		}
 	}
 	if (code != 0)
 	{
@@ -271,9 +221,7 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		handleError(req);
 		return convertFinalResponse();
 	}
-	std::cout << BLUE BOLD "HANDLE RESPONSE BEFORE   > " << _statusCode << RESET << std::endl;
 	_statusCode = isCgi(req, req.path);
-	std::cout << BLUE BOLD "HANDLE RESPONSE AFTER    > " << _statusCode << RESET << std::endl;
 	if (_statusCode != 0)
 	{
 		if (_statusCode != 200)
@@ -284,7 +232,6 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		fillCgiResponse(req);
 		return convertFinalResponse();
 	}
-	std::cout << RED << "sdasdasda" << req.method << RESET << std::endl;
 	if (req.method & METHOD_GET)
 		exeGet(req);
 	else if (req.method & METHOD_POST)
@@ -357,7 +304,9 @@ void httpResponse::fillHeaders(std::map<std::string, std::vector<std::string> > 
 
 	size_t pos = _version.find('.');
 	if (mult["Connection"].size() == 0 && _version[pos + 1] == '1')
-		_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
+		_headers["Connection"] = "Keep-Alive";
+	else if (mult["Connection"].size() == 0 && _version[pos + 1] == '0')
+		_headers["Connection"] = "close";
 	else
 		_headers["Connection"] = mult["Connection"].front();
 	std::stringstream ss;
@@ -376,12 +325,10 @@ int httpResponse::generateAutoIndex(std::string &path)
 	{
 		errno = 0;
 		readDir = readdir(currentDir);
-		std::cout << "ERRNO >" << errno << std::endl;
 		if (errno != 0)
 			return (500);
 		if (!readDir)
 			break ;
-		std::cout << "ReadDir result >" << readDir->d_name << std::endl;
 		fileName.push_back(readDir->d_name);
 	}
 	closedir(currentDir);
@@ -406,7 +353,6 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 	struct stat s;
 	for (std::vector<std::string>::iterator it = req.indexes.begin(); it != req.indexes.end(); ++it)
 	{
-		std::cout << BOLD BLUE << " IT" << std::endl;
 		std::string tryPath = path + "/" + *it;
 		if (stat(tryPath.c_str(), &s) == 0)
 		{
@@ -422,12 +368,8 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 			return 200;
 		}
 	}
-	std::cout << BOLD BLUE << " INDEX > " << req.auto_index << std::endl;
 	if (req.auto_index)
-	{
-		std::cout << PURPLE "GENERATE AUTOIDNEX" RESET << std::endl;
 		return (generateAutoIndex(path));
-	}
 	else
 		return 403;
 	return 200;
@@ -444,11 +386,8 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 	std::ifstream inFile;
 	if (S_ISDIR(s.st_mode))
 	{
-		std::cout << ORANGE BOLD " IS DIR " << std::endl;
 		if (req.path[req.path.size() - 1] != '/')
-		{
 			return 301;
-		}
 		return(searchFileInDir(path, req));
 	}
 	else
@@ -470,6 +409,9 @@ std::string httpResponse::setPathError()
 	std::string pathErrFile;
 	switch (_statusCode)
 	{
+		case 401:
+			pathErrFile = "file/error_page/error_page_401.html";
+			break ;
 		case 403:
 			pathErrFile = "file/error_page/error_page_403.html";
 			break ;
@@ -494,10 +436,6 @@ std::string httpResponse::setPathError()
 		case 501:
 			pathErrFile = "file/error_page/error_page_501.html";
 			break;
-		// default:
-		// 	_statusCode = 500;
-		// 	pathErrFile = "file/error_page 500";
-		// 	_statusMsg = _mErrorMsg[500];
 	}
 	return pathErrFile;
 }
@@ -510,7 +448,6 @@ void httpResponse::fillDefaultBody(){
 		inFile.open(pathErrFile.c_str(), std::ios::binary);
 	if (pathErrFile.empty() || !inFile.is_open())
 	{
-		std::cout << "Specific file not found take default file >" << _statusCode << std::endl;
 		std::ostringstream index;
 		index 	<< "<html><head><title>" << _statusCode << " "<< _statusMsg + "</title></head>"
 				<< "<center><h1>Index of " << _statusCode << " " << _statusMsg << "</h1></center><hr><pre></html>";
@@ -535,7 +472,6 @@ void httpResponse::handleError(HttpRequest &req)
 		_statusCode = 500;
 		_statusMsg = "Internal Server Error";
 	}
-	std::cout << "ERROR CODE > " << _statusCode << std::endl;
 	fillDefaultBody();
 	if (_statusCode == 301)
 	{
@@ -554,7 +490,9 @@ void httpResponse::handleError(HttpRequest &req)
 	{
 		size_t pos = req.version.find('.');
 		if (req.mult["Connection"].size() == 0 && req.version[pos + 1] == '1')
-			_headers["Connection"] = "Keep-Alive"; //a modif selon la version http
+			_headers["Connection"] = "Keep-Alive";
+		else if (req.mult["Connection"].size() == 0 && _version[pos + 1] == '0')
+			_headers["Connection"] = "close";
 		else
 			_headers["Connection"] = req.mult["Connection"].front();
 	}
@@ -564,13 +502,6 @@ void httpResponse::handleError(HttpRequest &req)
 	if (_statusCode == 501 || _statusCode == 405)
 	{
 		std::string allowMethods;
-		// for (std::vector<std::string>::iterator it = req.methods.begin(); it != req.methods.end(); ++it)
-		// {
-		// 	if (it + 1 != req.methods.end())
-		// 		allowMethods += *it + ", ";
-		// 	else
-		// 		allowMethods += *it;
-		// }
 
 		if (req.methods & METHOD_GET)
 			allowMethods += "GET";
@@ -592,10 +523,36 @@ void httpResponse::handleError(HttpRequest &req)
 	}
 }
 
+std::string httpResponse::getUserValue(HttpRequest &req, std::string const &key)
+{
+	if (req.mult.count("Cookie") == 0 || req.mult["Cookie"].empty())
+		return "";
+	std::string searchKey = key + "=";
+	size_t start = req.mult["Cookie"].front().find(searchKey);
+	if (start == std::string::npos)
+		return "";
+	start += searchKey.length();
+	size_t end = req.mult["Cookie"].front().find(';', start);
+	if (end == std::string::npos)
+		return req.mult["Cookie"].front().substr(start);
+	return req.mult["Cookie"].front().substr(start, end);
+}
+
 void httpResponse::exeGet(HttpRequest &req){
 
+	if (req.raw_path == "/Account")
+	{
+		std::string username = getUserValue(req, "user_session");
+		if (!username.empty() && req.tartgetServ->userExist(username))
+		{
+			User &user = req.tartgetServ->getUser(username);
+			_statusCode = 200;
+			fillSignBody(user);
+			fillHeaders(req.mult);
+			return ;
+		}
+	}
 	_statusCode = fillBody(req.path, req);
-	std::cout << RED BOLD "ERROR CODE OUT FILL BODY >" << _statusCode << RESET << std::endl; 
 	if (_statusCode != 200)
 		handleError(req);
 	fillHeaders(req.mult);
@@ -670,7 +627,7 @@ void httpResponse::exePost(HttpRequest &req)
 		handleError(req);
 		return ;
 	}
-	if (req.body.size() == 0)
+	if (req.body.size() == 0 && req.raw_path != "/logout")
 	{
 		_statusCode = 411;
 		handleError(req);
@@ -678,7 +635,6 @@ void httpResponse::exePost(HttpRequest &req)
 	}
 	if (req.raw_path == "/signup")
 	{
-		std::cout << PURPLE BOLD << &req.body[0] << RESET << std::endl;
 		User newUser;
 
 		std::string body(req.body.begin(), req.body.end());
@@ -689,15 +645,49 @@ void httpResponse::exePost(HttpRequest &req)
 		newUser.defeat = 0;
 		newUser.victory = 0;
 		req.tartgetServ->setNewUser(newUser);
-		std::cout << GREEN BOLD << "New User subscrib: " << newUser.UserName << RESET << std::endl;
-		std::cout << GREEN BOLD << "mail: " << newUser.email << RESET << std::endl;
-		std::cout << GREEN BOLD << "password: " << newUser.password << RESET << std::endl;
-		fillSignBody(req, newUser);
+		_headers["Set-Cookie"] = "user_session=" + newUser.UserName + "; Path=/; HttpOnly";
+		fillSignBody(newUser);
 		fillHeaders(req.mult);
 		if (_statusCode == 0)
 			_statusCode = 200;
 		if (_statusCode != 200)
 			handleError(req);
+	}
+	else if (req.raw_path == "/logout")
+	{
+		_headers["Set-Cookie"] = "user_session=; Path=/; Max-Age=0; HttpOnly";
+		_statusCode = 303;
+		_headers["Location"] = "/Account";
+		_body = "";
+		fillHeaders(req.mult);
+	}
+	else if (req.raw_path == "/signin")
+	{
+		std::string body(req.body.begin(), req.body.end());
+		std::map<std::string, std::string> parsed = parseUser(body);
+		std::string username = parsed["username"];
+		std::string password = parsed["password"];
+		if (req.tartgetServ->userExist(username))
+		{
+			User &user = req.tartgetServ->getUser(username);
+			if (user.password == password)
+			{
+				_headers["Set-Cookie"] = "user_session=" + user.UserName + "; Path=/; HttpOnly";
+				_statusCode = 200;
+				fillSignBody(user);
+			}
+			else
+			{
+				_statusCode = 401;
+				handleError(req);
+			}
+		}
+		else
+		{
+			_statusCode = 401;
+			handleError(req);
+		}
+		fillHeaders(req.mult);
 	}
 	else
 	{
@@ -713,12 +703,11 @@ void httpResponse::exePost(HttpRequest &req)
 	}
 }
 
-void httpResponse::fillSignBody(HttpRequest &req, User &newUser)
+void httpResponse::fillSignBody(User &newUser)
 {
-	(void)req;
 	std::ifstream inFile;
 	std::stringstream ss;
-	inFile.open("www/html/Connected.html");
+	inFile.open(PATH_SIGNIN);
 	if (!inFile.is_open())
 	{
 		_statusCode = 500;
@@ -728,6 +717,9 @@ void httpResponse::fillSignBody(HttpRequest &req, User &newUser)
 	std::string strHtml = ss.str();
 	ss.str("");
 	replaceData(strHtml, "{{USERNAME}}", newUser.UserName);
+	size_t pos = newUser.email.find("%40");
+	if (pos != std::string::npos)
+		newUser.email.replace(pos, 3, "@");
 	replaceData(strHtml, "{{EMAIL}}", newUser.email);
 	ss << newUser.victory;
 	replaceData(strHtml, "{{VICTORY}}", ss.str());
@@ -740,7 +732,6 @@ void httpResponse::fillSignBody(HttpRequest &req, User &newUser)
 	_body = strHtml;
 	_bodyType = "html";
 	inFile.close();
-	std::cout << PURPLE BOLD "BODY : " << _body << RESET << std::endl;
 }
 
 void httpResponse::replaceData(std::string &str, const std::string &from, const std::string &to)

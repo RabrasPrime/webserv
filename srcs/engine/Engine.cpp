@@ -162,6 +162,20 @@ void Engine::handle_new_connection(int listener_fd)
 int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> server);
 int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
 
+std::string extractCookie(const std::string &cookie, const std::string &key)
+{
+    std::string toFind = key + "=";
+    size_t start = cookie.find(toFind);
+
+    if (start == std::string::npos)
+        return "";
+    start += toFind.length();
+    size_t end = cookie.find(';', start);
+    if (end == std::string::npos)
+        return cookie.substr(start);
+    return cookie.substr(start, end - start);
+}
+
 void Engine::handle_client_read(const int client_fd)
 {
     const std::map<int, Client>::iterator it = _clients.find(client_fd);
@@ -215,6 +229,9 @@ void Engine::handle_client_read(const int client_fd)
 		}
 		if (it == vect.end())
 			return;
+        if (client.req.mult.count("Cookie") > 0 && !client.req.mult["Cookie"].empty())
+            std::string user = extractCookie(client.req.mult["Cookie"].front(), "user_id");
+    
 		std::cout << "Header : \n" << YELLOW << header << RESET << std::endl;
 		if (client.req.mult.find("Content-Length") != client.req.mult.end())
 		{

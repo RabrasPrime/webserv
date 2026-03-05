@@ -30,11 +30,26 @@ const std::vector<struct sockaddr_storage>	Server::get_addr() const
 {
 	return (_addr);
 }
+
+User& Server::getUser(std::string &username)
+{
+	return _userData[username];
+}
+
+bool Server::userExist(const std::string &username)
+{
+	// std::cout << "DEBUG: Cherche l'user [" << username << "]" << std::endl;
+	// if (_userData.find(username) != _userData.end())
+	// std::cout << YELLOW BOLD "USER FOUND_________________________________________________________{" << _userData[username].UserName << "}" RESET << std::endl;
+	return _userData.find(username) != _userData.end();
+}
+
 void print_ipv4(const struct sockaddr_in* addr)
 {
 	unsigned char* str = (unsigned char*)&(addr->sin_addr.s_addr);
 	std::cout << (int)str[0] << "." << (int)str[1] << "." << (int)str[2] << "." << (int)str[3];
 }
+
 void print_ipv6(const struct sockaddr_in6* addr)
 {
 	const unsigned char* p = addr->sin6_addr.s6_addr;
@@ -48,6 +63,7 @@ void print_ipv6(const struct sockaddr_in6* addr)
     }
     std::cout << std::dec;
 }
+
 std::ostream& operator<<(std::ostream& out, const Server& serv)
 {
 	out << "Addr : " << std::endl;
@@ -213,7 +229,7 @@ int		Server::set_server_name(const std::string& value)
 
 void Server::setNewUser(User &newUser)
 {
-	_userData[newUser.email] = newUser;
+	_userData[newUser.UserName] = newUser;
 }
 
 int Server::fill_server_config(std::ifstream& file, std::string& line)
