@@ -5,10 +5,8 @@
 #include "Engine.hpp"
 #include <sys/epoll.h>
 #include <unistd.h>
-#include <iostream>
 #include <cstring>
 #include <errno.h>
-#include <map>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -22,7 +20,10 @@ class Client;
 
 Engine* Engine::_instance = NULL;
 
-Engine::Engine() : _epoll_fd(-1), _is_running(false) {}
+Engine::Engine() : _epoll_fd(-1), _is_running(false)
+{
+    _instance = this;
+}
 
 Engine::~Engine()
 {
@@ -38,9 +39,9 @@ void Engine::signal_handler(int sig)
 {
 	(void)sig;
 	if (_instance)
-		std::cout << "INSTANCE" << std::endl;
-	// if (_instance)
-	// 	_instance->_is_running = false;
+		std::cout << "\nSHUTTING DOWN" << std::endl;
+	 if (_instance)
+	 	_instance->_is_running = false;
 }
 
 static std::string make_listener_key(const int host, const int port)
@@ -150,7 +151,7 @@ void Engine::handle_new_connection(int listener_fd)
 	{
         return ;
 	}
- 
+
 	std::vector<Server *> ListServer = listener.get_servers();
     // Server* server = listener.get_servers().empty() ? NULL : listener.get_servers()[0];
     _clients[client_fd] = Client(client_fd, ListServer);
@@ -183,7 +184,12 @@ void Engine::handle_client_read(const int client_fd)
 
     Client& client = it->second;
     const ssize_t ret = client.read_from_socket();
-	std::cout << RED BOLD << &client.get_read()[0] << RESET << std::endl;
+    std::vector<unsigned char>& buf = client.get_read();
+    if (!buf.empty())
+    {
+        std::string s(buf.begin(), buf.end());
+        std::cout << RED BOLD << s << RESET << std::endl;
+    }
 
     if (ret == 0)
     {
@@ -217,7 +223,7 @@ void Engine::handle_client_read(const int client_fd)
 				vect.erase(vect.begin(),it + 4);
 				std::cout << "Size >>> " << vect.size() << std::endl;
 				break;
-			} 
+			}
 			else
 				header += *it;
 		}

@@ -296,36 +296,43 @@ body
 
 .FixedGameAll
 {
-	display: flex;
+	display: none;
 	position: absolute;
 	width: 100%;
 	height: 100%;
 	background-color: rgb(20,20,20);
 	z-index: 1001;
+	flex-direction: column;
 }
 .CrossGameAll
 {
-	position:absolute;
-	top: 0;
-	right: 0;
-	height: 100px;
-	width: 100px;
+	height: 50px;
+	width: 100%;
 	display: flex;
-	justify-content: cennter;
+}
+.GameModeTitle
+{
+	flex: 1;
+	color: white;
+	font-size: 25px;
+	display: flex;
+	justify-content: center;
 	align-items: center;
 }
 .CrossGameAll button
 {
-	height: 60%;
-	width: 60%;
-	background-color: red;
-	border-radius: 10px;
+	height: 100%;
+	width: 50px;
+	padding: 5px;
+	background-color: transparent;
 }
 .CrossGameAll button img
 {
-	padding: 10px;
 	height: 100%;
 	width: 100%;
+	background-color: red;
+	padding: 8px;
+	border-radius: 10px;
 }
 .CrossGameAll a img:hover
 {
@@ -336,4 +343,134 @@ body
 	height: 100%;
 	width: 100%;
 	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+.SelectPointDoAll
+{
+	/* background-color: orange; */
+}
+.SelectPointDoAll table
+{
+	width: 100%;
+	border-spacing: 5px;
+}
+.SelectPointDoAll table tbody tr
+{
+	width: 100%;
+}
+.SelectPointDoAll table tbody tr td
+{
+	background-color: green;
+	border-radius: 3px;
+	padding: 4px;
+	font-size: 20px;
+	/* display: flex;
+	justify-content: center;
+	align-items: center; */
+	text-align: center;
+}
+.SelectPointDoAll table tbody tr td:hover
+{
+	cursor: pointer;
+}
+.PlayerListOnGame
+{
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	/* background-color: blue; */
+	overflow: auto;
+	padding: 10px;
+}
+.OnePlayerDivGame
+{
+	width: 100%;
+	display: flex;
+	padding: 10px;
+	border-radius: 5px;
+	background-color: rgba(255,255,255,.2);
+	color: white;
+	margin-bottom: 10px;
+}
+.DivLeftPlayer
+{
+	display: flex;
+	flex-direction: column;
+}
+.DivLeftPlayer div
+{
+	font-size: 20px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 5px;
+	flex: 1;
+}
+.PlayerPlayerName
+{
+}
+.PlayerPlayerScore
+{
+}
+.ScoreTourPlayerAll
+{
+	flex:1;
+	display: flex;
+	flex-direction: column;
+	padding: 5px;
+}
+.ScoreTourPlayerList
+{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+}
+.ScoreTourPlayerList div
+{
+	padding: 8px;
+	height: 35px;
+	width: 35px;
+	border-radius: 10px;
+	background-color: rgba(0,0,0,.2);
+	margin: 0px 10px 0px 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.PlayerTourScore
+{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding-top: 15px;
+}
+.FixedGameAllRelative
+{
+	position: relative;
+	height: 100%;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+
+}
+.PopUpWinPlayer
+{
+	display: none;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	justify-content: center;
+	align-items: center;
+	padding: 20px;
+}
+.TextWinnerPlayer
+{
+	background-color: green;
+	color: white;
+	padding: 25px;
+	font-size: 30px;
+	border-radius: 15px;
+	text-align: center;
 }

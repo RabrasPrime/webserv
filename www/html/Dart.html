@@ -209,16 +209,81 @@
 		</div>
 	</div>
 	<div class="FixedGameAll">
-		<div class="CrossGameAll">
-			<button onclick="document.getElementsByClassName('FixedGameAll')[0].style.display='none'">
-				<img src="img/png/cross.png">
-			</button>
-		</div>
-		<div class="GameAllDiv">
-
+		<div class="FixedGameAllRelative">
+			<div class="CrossGameAll">
+				<div class="GameModeTitle">
+					Classic
+				</div>
+				<button onclick="CloseGame()">
+					<img src="img/png/cross.png">
+				</button>
+			</div>
+			<div class="GameAllDiv">
+				<div class="PlayerListOnGame">
+				</div>
+				<div class="SelectPointDoAll">
+					<table>
+						<tbody>
+							<tr>
+								<td onclick="AddScore(25)">25</td>
+								<td onclick="AddScore(20)">20</td>
+								<td onclick="AddScore(19)">19</td>
+								<td onclick="AddScore(18)">18</td>
+								<td onclick="AddScore(17)">17</td>
+								<td onclick="AddScore(16)">16</td>
+								<td onclick="AddScore(15)">15</td>
+							</tr>
+							<tr>
+								<td onclick="AddScore(14)">14</td>
+								<td onclick="AddScore(13)">13</td>
+								<td onclick="AddScore(12)">12</td>
+								<td onclick="AddScore(14)">11</td>
+								<td onclick="AddScore(10)">10</td>
+								<td onclick="AddScore(9)">9</td>
+								<td onclick="AddScore(8)">8</td>
+							</tr>
+							<tr>
+								<td onclick="AddScore(7)">7</td>
+								<td onclick="AddScore(6)">6</td>
+								<td onclick="AddScore(5)">5</td>
+								<td onclick="AddScore(4)">4</td>
+								<td onclick="AddScore(3)">3</td>
+								<td onclick="AddScore(2)">2</td>
+								<td onclick="AddScore(1)">1</td>
+							</tr>
+							<tr>
+								<td onclick="AddScore(0)">0</td>
+								<td onclick="ChangeMultiplier(2)" colspan="2">Double</td>
+								<td onclick="ChangeMultiplier(3)" colspan="2">Triple</td>
+								<td onclick="RollBackDart()" colspan="2">Retour</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="PopUpWinPlayer">
+				<div class="TextWinnerPlayer"></div>
+			</div>
 		</div>
 	</div>
 </body>
 </html>
 
 <!-- document.querySelector('input[name="GameModeInput"]:checked').value -->
+
+<!-- 
+<div class="OnePlayerDivGame">
+	<div class="DivLeftPlayer">
+		<div class="PlayerPlayerName">Player Name</div>
+		<div class="PlayerPlayerScore">Score : 301</div>
+	</div>
+	<div class="ScoreTourPlayerAll">
+		<div class="ScoreTourPlayerList">
+			<div>60</div>
+			<div></div>
+			<div></div>
+		</div>
+		<div class="PlayerTourScore">Score du Tour</div>
+	</div>
+</div> 
+-->

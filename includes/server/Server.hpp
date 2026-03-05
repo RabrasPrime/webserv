@@ -41,6 +41,7 @@ class Server : public Config
 		const std::map<std::string, Location>		get_locations() const;
 		User&   getUser(std::string &username);
 		bool userExist(const std::string &username);
+		const std::map<std::string, Location>& get_locations() const;
 
 		int		set_listen(const std::string& value);
 		int		set_server_name(const std::string& value);
@@ -50,4 +51,3 @@ class Server : public Config
 
 
 #endif
-

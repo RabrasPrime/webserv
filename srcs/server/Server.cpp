@@ -21,10 +21,11 @@ const std::vector<std::string>&			Server::get_server_name() const
 {
 	return (_server_name);
 }
-const std::map<std::string, Location>	Server::get_locations() const
+const std::map<std::string, Location>& Server::get_locations() const
 {
-	return (_locations);
+    return (_locations);
 }
+
 const std::vector<struct sockaddr_storage>	Server::get_addr() const
 {
 	return (_addr);
@@ -54,7 +55,7 @@ void print_ipv6(const struct sockaddr_in6* addr)
 	const unsigned char* p = addr->sin6_addr.s6_addr;
 
     for (int i = 0; i < 16; i += 2) {
-        std::cout << std::hex << std::setw(1) 
+        std::cout << std::hex << std::setw(1)
                   << ((p[i] << 8) | p[i+1]);
         if (i < 14) {
             std::cout << ":";
@@ -75,7 +76,7 @@ std::ostream& operator<<(std::ostream& out, const Server& serv)
 			std::cout << "\tIPv4: ";
 			print_ipv4(addr4);
 			std::cout << ":" << port << std::endl;
-		} 
+		}
 		else if (it->ss_family == AF_INET6) {
 			const struct sockaddr_in6* addr6 = (const struct sockaddr_in6*)&(*it);
 			// inet_ntop(AF_INET6, &(addr6->sin6_addr), ip_str, INET6_ADDRSTRLEN);
@@ -107,7 +108,7 @@ int is_valid_octet_addr(int value)
 int		Server::set_listen(const std::string& value)
 {
 	struct sockaddr_storage storage;
-	std::memset(&storage, 0, sizeof(storage)); 
+	std::memset(&storage, 0, sizeof(storage));
 
 	if (value.find('.') != std::string::npos)
 	{
@@ -132,6 +133,7 @@ int		Server::set_listen(const std::string& value)
 			if (getaddrinfo(host.c_str(), port.c_str(), &hints, &res))
 				return (1);
 			memcpy(&storage, res->ai_addr, res->ai_addrlen);
+			freeaddrinfo(res);
 		}
 		else
 		{
@@ -144,7 +146,8 @@ int		Server::set_listen(const std::string& value)
 			if (getaddrinfo(host.c_str(), "80", &hints, &res))
 				return (1);
 			memcpy(&storage, res->ai_addr, res->ai_addrlen);
-		}		
+			freeaddrinfo(res);
+		}
 	}
 	else if (value.find(':') != std::string::npos)
 	{
@@ -170,6 +173,7 @@ int		Server::set_listen(const std::string& value)
 			if (getaddrinfo(host.c_str(), port.c_str(), &hints, &res))
 				return (1);
 			memcpy(&storage, res->ai_addr, res->ai_addrlen);
+			freeaddrinfo(res);
 		}
 		else
 		{
@@ -183,6 +187,7 @@ int		Server::set_listen(const std::string& value)
 			if (getaddrinfo(value.c_str(), "80", &hints, &res))
 				return (1);
 			memcpy(&storage, res->ai_addr, res->ai_addrlen);
+			freeaddrinfo(res);
 		}
 
 	}
@@ -204,6 +209,7 @@ int		Server::set_listen(const std::string& value)
 		if (getaddrinfo("0.0.0.0", port.c_str(), &hints, &res))
 			return (1);
 		memcpy(&storage, res->ai_addr, res->ai_addrlen);
+		freeaddrinfo(res);
 	}
 	_addr.push_back(storage);
 	return (0);

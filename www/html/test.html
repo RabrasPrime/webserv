@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        *, *::before, *::after { box-sizing: border-box;}
+        html {height: 100%;}
+        body {margin: 0px; background: #222; color: white; font-family: sans-serif; height: 100%;}
+        #game-info { margin: 20px; text-align: center; }
+        #target {height: 100%; width: 70%; display: flex; align-items: center; flex-direction: column;}
+        #list-player {display: flex; flex-direction: column; align-items: center; height: 100%; width: 30%; padding: 10px;position: relative;z-index: 10;}
+        #game {display: flex; height: 100%; }
+        #score-val { font-size: 3rem; color: #2ecc71; font-weight: bold; }
+        
+        svg {max-width:800px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); cursor: crosshair; }
+        
+        /* Styles des segments */
+        .sector { stroke: #111; stroke-width: 0.5; transition: 0.2s; }
+        .sector:hover { fill:blue }
+        
+        .label { fill: white; font-size: 8px; font-weight: bold; pointer-events: none; text-anchor: middle; }
+        .cricket-table
+        {
+            width: 100%;
+            max-width: 600px;
+            border-collapse: collapse;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px auto;
+        }
+
+        .cricket-table th, .cricket-table td {
+            border: 2px solid #444;
+            padding: 5px;
+            width: 25px;
+            height: 40px;
+        }
+
+        .cricket-table th {
+            background-color: #333;
+            color: #ffeb3b;
+        }
+
+        .player-name {
+            font-weight: bold;
+            text-align: left;
+            width: auto;
+        }
+        .pointer-hover:hover{
+            cursor: pointer;
+            transform: scale(1.5);
+            color:gold;
+        }
+
+        /* Effet visuel au clic */
+        .hit-1 { color: #fbc02d; font-weight: bold; } /* Un slash / */
+        .hit-2 { color: #ffa000; font-weight: bold; } /* Une croix X */
+        .hit-3 { color: #4caf50; background: rgba(76, 175, 80, 0.2); } /* Fermé */
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="list-player">
+            <select id="choixJoueur" onchange="verifierChoix(this)">
+                <option disabled selected value="">-- Choisir un joueur --</option>
+                <option value="Antoine">Antoine</option>
+                <option value="Tony">Tony</option>
+                <option value="Pauline">Pauline</option>
+                <option value="Catherine">Catherine</option>
+                <option value="Christophe">Christophe</option>
+                <option value="new">➕ Ajouter un joueur...</option>
+            </select>
+            <table class="cricket-table">
+                <thead>
+                    <tr>
+                        <th>Joueurs</th>
+                        <th>20</th>
+                        <th>19</th>
+                        <th>18</th>
+                        <th>17</th>
+                        <th>16</th>
+                        <th>15</th>
+                        <th>Bull</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="score-body">
+                </tbody>
+            </table>
+        </div>
+        <div id="target">
+            <div id="game-info">
+                <div>Dernier coup : <span id="hit-info">-</span></div>
+                <div id="score-val">0</div>
+            </div>
+
+            <svg viewBox="0 0 200 200" id="dartboard">
+                <circle cx="100" cy="100" r="100" fill="#111" />
+            </svg>
+        </div>
+    </div>
+
+
+<script>
+    function remove_tr(playerName)
+    {
+        conf = confirm("Are u sure you want do delete player : " + playerName + " ?")
+        if (conf)
+            document.getElementById(`Player_${playerName}`).remove()
+    }
+    function mark(cell, hit, playerName) {
+        const symbols = ["-", "/", "X", "⭕"];
+        let currentSymbol = cell.innerText;
+        let index = symbols.indexOf(currentSymbol);
+
+        if (index < 3)
+        {
+            let nextIndex = (index + 1);
+            cell.innerText = symbols[nextIndex];
+            cell.classList.add("hit-" + nextIndex);
+            cell.classList.remove("hit-" + index);
+        }
+        else
+        {
+            const allPlayer = document.querySelectorAll('[id^="Player_"]:not([id$="'+playerName+'"])');
+            allPlayer.forEach((el, index) => {
+                if (!el.querySelector("._" + hit + '_CaseScore').classList.contains("hit-3"))
+                {
+                    el.querySelector(".score-cell").innerHTML = Number(el.querySelector(".score-cell").innerHTML) + hit;
+                }
+            })
+        }
+
+    }
+    function verifierChoix(selectElement) {
+        valeur = selectElement.value;
+
+        if (valeur === "new") {
+            const nouveauNom = prompt("Entrez le nom du nouveau joueur :");
+            if (nouveauNom && nouveauNom.trim() !== "") {
+                const nouvelleOption = document.createElement("option");
+                nouvelleOption.value = nouveauNom;
+                nouvelleOption.text = nouveauNom;
+                selectElement.add(nouvelleOption, selectElement.options[selectElement.length - 1]);
+                selectElement.value = nouveauNom;
+                valeur = nouveauNom
+            } else {
+                selectElement.value = "";
+            }
+        }
+        if (!document.getElementById("Player_" + valeur))
+        {
+            t = document.getElementById("score-body")
+            console.log(t)
+            t.innerHTML += `
+<tr id="Player_${valeur}">
+    <td class="player-name">${valeur}</td>\
+    <td class="_20_CaseScore pointer-hover" onclick="mark(this,20,'${valeur}')">-</td>
+    <td class="_19_CaseScore pointer-hover" onclick="mark(this,19,'${valeur}')">-</td>
+    <td class="_18_CaseScore pointer-hover" onclick="mark(this,18,'${valeur}')">-</td>
+    <td class="_17_CaseScore pointer-hover" onclick="mark(this,17,'${valeur}')">-</td>
+    <td class="_16_CaseScore pointer-hover" onclick="mark(this,16,'${valeur}')">-</td>
+    <td class="_15_CaseScore pointer-hover" onclick="mark(this,15,'${valeur}')">-</td>
+    <td class="_25_CaseScore pointer-hover" onclick="mark(this,25,'${valeur}')">-</td>
+    <td class="score-cell">0</td>
+    <td class="remove-cell pointer-hover" onclick="remove_tr('${valeur}')">❌</td>
+</tr>`
+
+        }
+        
+        selectElement.selectedIndex = 0;
+    }
+
+
+
+    const svg = document.getElementById('dartboard');
+    const sectors = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+    
+    // Définition des rayons pour chaque zone (en % du SVG)
+    const R_DOUBLE = [78, 91];
+    const R_OUTER_SINGLE = [53, 78];
+    const R_TRIPLE = [40, 53];
+    const R_INNER_SINGLE = [15, 40];
+
+    function createSegment(index, rInt, rExt, multiplier, color) {
+        const angleStep = (2 * Math.PI) / 20;
+        const startAngle = (index - 0.5) * angleStep - Math.PI / 2;
+        const endAngle = (index + 0.5) * angleStep - Math.PI / 2;
+
+        const x1 = 100 + rExt * Math.cos(startAngle);
+        const y1 = 100 + rExt * Math.sin(startAngle);
+        const x2 = 100 + rExt * Math.cos(endAngle);
+        const y2 = 100 + rExt * Math.sin(endAngle);
+        
+        const x3 = 100 + rInt * Math.cos(endAngle);
+        const y3 = 100 + rInt * Math.sin(endAngle);
+        const x4 = 100 + rInt * Math.cos(startAngle);
+        const y4 = 100 + rInt * Math.sin(startAngle);
+
+        const d = `M ${x1} ${y1} A ${rExt} ${rExt} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${rInt} ${rInt} 0 0 0 ${x4} ${y4} Z`;
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", d);
+        path.setAttribute("fill", color);
+        path.setAttribute("class", "sector");
+        
+        const value = sectors[index];
+        path.onclick = () => registerHit(value, multiplier);
+        svg.appendChild(path);
+    }
+
+    function registerHit(val, mult) {
+        const total = val * mult;
+        document.getElementById('hit-info').innerText = `${val} x ${mult}`;
+        document.getElementById('score-val').innerText = parseInt(document.getElementById('score-val').innerText) + total;
+    }
+
+    // Génération des 20 parts
+    sectors.forEach((num, i) => {
+        const isRedGreen = i % 2 === 0;
+        const mainColor = isRedGreen ? "#000" : "#f3e5ab"; // Noir ou Crème
+        const altColor = isRedGreen ? "#2e7d32" : "#c62828"; // Vert ou Rouge
+
+        // On crée les 4 couches de l'extérieur vers l'intérieur
+        createSegment(i, R_DOUBLE[0], R_DOUBLE[1], 2, altColor);       // Double
+        createSegment(i, R_OUTER_SINGLE[0], R_OUTER_SINGLE[1], 1, mainColor); // Simple Ext
+        createSegment(i, R_TRIPLE[0], R_TRIPLE[1], 3, altColor);       // Triple
+        createSegment(i, R_INNER_SINGLE[0], R_INNER_SINGLE[1], 1, mainColor); // Simple Int
+        
+        // Ajouter les numéros autour
+        const angle = i * ((2 * Math.PI) / 20) - Math.PI / 2;
+        const tx = 100 + 96 * Math.cos(angle);
+        const ty = 100 + 96 * Math.sin(angle);
+        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", tx); txt.setAttribute("y", ty + 3);
+        txt.setAttribute("class", "label");
+        txt.textContent = num;
+        svg.appendChild(txt);
+    });
+
+    // Bullseye (Centre)
+    const bull25 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    bull25.setAttribute("cx", 100); bull25.setAttribute("cy", 100); bull25.setAttribute("r", 15);
+    bull25.setAttribute("fill", "#2e7d32"); bull25.onclick = () => registerHit(25, 1);
+    bull25.setAttribute("class", "sector");
+    svg.appendChild(bull25);
+
+    const bull50 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    bull50.setAttribute("cx", 100); bull50.setAttribute("cy", 100); bull50.setAttribute("r", 7);
+    bull50.setAttribute("fill", "#c62828"); bull50.onclick = () => registerHit(25, 2);
+    bull50.setAttribute("class", "sector");
+    svg.appendChild(bull50);
+
+</script>
+</body>
+</html>
+
+
+
+<!--
+<tr id="Player_Antoine">
+    <td class="player-name">Antoine</td>
+    <td class="_20_CaseScore" onclick="mark(this,20,'Antoine')">-</td>
+    <td class="_19_CaseScore" onclick="mark(this,19,'Antoine')">-</td>
+    <td class="_18_CaseScore" onclick="mark(this,18,'Antoine')">-</td>
+    <td class="_17_CaseScore" onclick="mark(this,17,'Antoine')">-</td>
+    <td class="_16_CaseScore" onclick="mark(this,16,'Antoine')">-</td>
+    <td class="_15_CaseScore" onclick="mark(this,15,'Antoine')">-</td>
+    <td class="_25_CaseScore" onclick="mark(this,25,'Antoine')">-</td>
+    <td class="score-cell">0</td>
+</tr>
+-->

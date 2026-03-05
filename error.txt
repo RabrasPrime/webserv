@@ -1,0 +1,23 @@
+==85906== Memcheck, a memory error detector
+==85906== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==85906== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==85906== Command: ./webserv www/config
+==85906== Parent PID: 79292
+==85906== 
+==85906== 
+==85906== FILE DESCRIPTORS: 5 open (3 std) at exit.
+==85906== Open file descriptor 52: /home/tjooris/.local/share/zed/prompts/prompts-library-db.0.mdb/data.mdb
+==85906==    <inherited from parent>
+==85906== 
+==85906== Open file descriptor 3: /home/tjooris/Documents/webserv/error.txt
+==85906==    <inherited from parent>
+==85906== 
+==85906== 
+==85906== HEAP SUMMARY:
+==85906==     in use at exit: 0 bytes in 0 blocks
+==85906==   total heap usage: 30,055 allocs, 30,055 frees, 4,483,354 bytes allocated
+==85906== 
+==85906== All heap blocks were freed -- no leaks are possible
+==85906== 
+==85906== For lists of detected and suppressed errors, rerun with: -s
+==85906== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

@@ -95,7 +95,7 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
 	std::cout << "___________Query String >" << req.queryString << std::endl;
 
 	path = path.substr(0, path.find('?'));
-	
+
 	if (method == "GET")
 		req.method = METHOD_GET;
 	if (method == "DELETE")
@@ -148,21 +148,21 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
 		server = servers.front();
 	req.tartgetServ = server;
 	std::cout << RED BOLD "HERE" RESET << std::endl;
-	std::map<std::string, Location> locations = server->get_locations();
+	const std::map<std::string, Location>& locations = server->get_locations();
 	Location* best = NULL;
 	size_t size_match = 0;
-	for (std::map<std::string, Location>::iterator it = locations.begin(); it != locations.end(); it++)
-	{
-		std::string p = it->second.get_path();
-		if (path.compare(0, p.size(), p) == 0)
-		{
-			if (p.size() > size_match)
-			{
-				best = &it->second;
-				size_match = p.size();
-			}
-		}
-	}
+	for (std::map<std::string, Location>::const_iterator it = locations.begin(); it != locations.end(); it++)
+    {
+        std::string p = it->second.get_path();
+        if (path.compare(0, p.size(), p) == 0)
+        {
+            if (p.size() > size_match)
+            {
+                best = const_cast<Location*>(&it->second);
+                size_match = p.size();
+            }
+        }
+    }
 	if (!best)
 	{
 		req.location_match = 0;
@@ -233,6 +233,8 @@ int main(int ac, char **av)
 		engine.add_server(*it);
 	engine.init_listeners();
 	engine.setup_epoll();
+	signal(SIGINT, Engine::signal_handler);
+	signal(SIGTERM, Engine::signal_handler);
 	engine.run();
 // 	std::string tmp("
 // GET /images/logo.png HTTP/1.0\r\n
@@ -265,84 +267,3 @@ int main(int ac, char **av)
 	// HttpRequest req;
 	// parse_header(str, req, servers);
 }
-
-
-
-
-// int main(int ac, char **av)
-// {
-// 	std::vector<Server> servers;
-// 	std::string path;
-// 	if (ac > 1)
-// 		path = av[1];
-// 	else
-// 		path = "config_file/config_file";
-// 	if (parse(servers, path))
-// 		return (1);
-// 	std::cout << servers.front() << std::endl;
-// 	return (0);
-// }
-
-
-// #include <iostream>
-// #include <map>
-// #include <string>
-// #include "Color.hpp"
-// #include <sys/socket.h>
-// #include <netinet/in.h>
-// #include <unistd.h>
-// #include <sstream>
-// #include "httpResponse.hpp"
-// #include "httpRequest.hpp"
-
-// int main()
-// {
-// 	HttpRequest req;
-// 	req.method = "POST";
-// 	req.path = "/home/samaouch/Documents/api_local/42_location.py?samaouch";
-// 	req.version = "HTTP/1.1";
-// 	req.headers["Host"] = "localhost:8080";
-// 	req.headers["Content-Type"] = "text/html";
-// 	req.headers["Connection"] = "Keep-Alive";
-// 	req.body = "<h1>Hello World!<h1>";
-// 	req.type = "html";
-// 	req.queryString = "samaouch";
-// 	req.auto_index = true;
-// 	req.indexes.push_back("default_page.html");
-// 	req.indexes.push_back("index.html");
-// 	req.methods.push_back("GET");
-// 	req.methods.push_back("POST");
-// 	req.methods.push_back("DELETE");
-// 	req.maxSize = 458;
-// 	std::stringstream ss;
-// 	ss << req.body.size();
-// 	req.headers["Content-Length"] = ss.str();
-// 	httpResponse resp;
-// 	// std::string response = resp.handleResponse(req);
-// 	// std::cout << std::endl << PURPLE BOLD "Final Response" RESET << std::endl << response << std::endl;
-
-// 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-// 	struct sockaddr_in addr;
-// 	addr.sin_family = AF_INET;
-// 	addr.sin_addr.s_addr = INADDR_ANY;
-// 	addr.sin_port = htons(8080);
-// 	bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
-
-// 	listen(server_fd, 10);
-// 	std::cout << YELLOW BOLD "Run Server to http://localhost:8080" RESET << std::endl;
-
-// 	while (1)
-// 	{
-// 		int client_fd = accept(server_fd, NULL, NULL);
-
-// 		char buffer[4096] = {0};
-// 		read(client_fd, buffer, sizeof(buffer));
-// 		std::cout << BLUE BOLD "Buffer: " RESET << std::endl << buffer << std::endl;
-// 		std::string response = resp.handleResponse(req);
-// 		std::cout << std::endl << PURPLE BOLD "Final Response" RESET << std::endl << response << std::endl;
-// 		write(client_fd, response.c_str(), response.size());
-// 		close(client_fd);
-// 	}
-// 	return 0;
-// }
-
