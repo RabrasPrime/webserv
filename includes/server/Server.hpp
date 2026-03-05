@@ -38,7 +38,7 @@ class Server : public Config
 	public:
 		const std::vector<struct sockaddr_storage>	get_addr() const;
 		const std::vector<std::string>&				get_server_name() const;
-		const std::map<std::string, Location>		get_locations() const;
+		const std::map<std::string, Location>& get_locations() const;
 
 		int		set_listen(const std::string& value);
 		int		set_server_name(const std::string& value);
@@ -47,4 +47,3 @@ class Server : public Config
 
 
 #endif
-
