@@ -209,6 +209,12 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 std::string httpResponse::handleResponse(HttpRequest &req, int code){
 
 	_version = req.version;
+	if (_statusCode != 0)
+	{
+		_statusMsg = "Internal Server Error";
+		handleError(req);
+		return convertFinalResponse();
+	}
 	_statusCode = 0;
 	if (req.loc)
 	{
@@ -251,8 +257,8 @@ void httpResponse::fillMapError(){
 	inFile.open(PATH_FILE_CODE);
 	if (!inFile.is_open())
 	{
-		std::cerr << RED BOLD "Error fail to open file" RESET << std::endl;
-		exit(EXIT_FAILURE);
+		_statusCode = 500;
+		return ;
 	}
 	std::string line;
 	while(std::getline(inFile, line))
@@ -277,8 +283,8 @@ void httpResponse::fillMapExtension(std::map<std::string, std::string> &map, std
 	inFile.open(pathFile.c_str());
 	if (!inFile.is_open())
 	{
-		std::cerr << RED BOLD "Error fail to open file" RESET << std::endl;
-		exit(EXIT_FAILURE);
+		_statusCode = 500;
+		return ;
 	}
 	std::string line;
 	while (std::getline(inFile, line))
@@ -449,8 +455,9 @@ void httpResponse::fillDefaultBody(){
 	if (pathErrFile.empty() || !inFile.is_open())
 	{
 		std::ostringstream index;
-		index 	<< "<html><head><title>" << _statusCode << " "<< _statusMsg + "</title></head>"
-				<< "<center><h1>Index of " << _statusCode << " " << _statusMsg << "</h1></center><hr><pre></html>";
+		index 	<< "<html><head><style> body {background-color: black;} h1 { font-size: 200px; color: #d70516; margin-top -50px; } p {font-size: 100px; font-weight: bold; margin-top: -60px; color: #ffffff; } </style></head><body><div class=\"styleContentError\"><h1>500</h1><p>Internal Server Error</p></div></body></html>";
+		_statusCode = 500;
+		_statusMsg = "Internal Server Error";
 		_body = index.str();
 		_bodyType = "html";
 	}
@@ -485,7 +492,7 @@ void httpResponse::handleError(HttpRequest &req)
 	if (_headers["Content-Type"].empty())
 		_headers["Content-Type"] = DEFAULT_TYPE;
 	if (_statusCode == 500)
-		_headers["Connection"] = "close"; // --> verif ce qu on fait dans ce cas la
+		_headers["Connection"] = "close";
 	else
 	{
 		size_t pos = req.version.find('.');
@@ -621,6 +628,12 @@ int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 
 void httpResponse::exePost(HttpRequest &req)
 {
+	if (!(req.methods & req.method))
+	{
+		_statusCode = 405;
+		handleError(req);
+		return ;
+	}
  	if (req.body.size() > req.maxSize)
 	{
 		_statusCode = 413;
