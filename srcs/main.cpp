@@ -95,7 +95,7 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
 	std::cout << "___________Query String >" << req.queryString << std::endl;
 
 	path = path.substr(0, path.find('?'));
-	
+
 	if (method == "GET")
 		req.method = METHOD_GET;
 	if (method == "DELETE")
@@ -233,6 +233,8 @@ int main(int ac, char **av)
 		engine.add_server(*it);
 	engine.init_listeners();
 	engine.setup_epoll();
+	signal(SIGINT, Engine::signal_handler);
+	signal(SIGTERM, Engine::signal_handler);
 	engine.run();
 // 	std::string tmp("
 // GET /images/logo.png HTTP/1.0\r\n
@@ -345,4 +347,3 @@ int main(int ac, char **av)
 // 	}
 // 	return 0;
 // }
-
