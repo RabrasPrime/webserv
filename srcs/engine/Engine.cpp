@@ -270,7 +270,18 @@ void Engine::handle_client_read(const int client_fd)
 			else
 			{
 				client.req.body = client.get_read();
-				client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
+				std::string resp = client.res.handleResponse(client.req, client.req.ErrorCode);
+                if (resp == "START_CGI")
+                {
+                    int pipefd = client.req.pipefdOut;   
+                    _fd_types[pipefd] = FD_CGI_PIPE;
+                    _map_cgi_pid[pipefd] = client_fd;
+                    add_to_epoll(pipefd, EPOLLIN);
+                    std::string status = "HTTP/1.1 200 OK\r\n";
+                    send(client_fd, status.c_str(), status.length(), 0);
+                    return ;
+                }
+                client._write_buffer = resp;
 				client.get_read().clear();
 				modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 			}
@@ -278,7 +289,18 @@ void Engine::handle_client_read(const int client_fd)
 		else
 		{
 			client.req.body = client.get_read();
-			client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
+			std::string resp = client.res.handleResponse(client.req, client.req.ErrorCode);
+            if (resp == "START_CGI")
+            {
+                int pipefd = client.req.pipefdOut;   
+                _fd_types[pipefd] = FD_CGI_PIPE;
+                _map_cgi_pid[pipefd] = client_fd;
+                add_to_epoll(pipefd, EPOLLIN);
+                std::string status = "HTTP/1.1 200 OK\r\n";
+                send(client_fd, status.c_str(), status.length(), 0);
+                return ;
+            }
+            client._write_buffer = resp;
 			client.get_read().clear();
 			modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 		}
@@ -297,8 +319,19 @@ void Engine::handle_client_read(const int client_fd)
 		}
 		client.req.body = client.get_read();
 		client.get_read().clear();
-		client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
-		modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+		std::string resp = client.res.handleResponse(client.req, client.req.ErrorCode);
+        if (resp == "START_CGI")
+        {
+            int pipefd = client.req.pipefdOut;   
+            _fd_types[pipefd] = FD_CGI_PIPE;
+            _map_cgi_pid[pipefd] = client_fd;
+            add_to_epoll(pipefd, EPOLLIN);
+            std::string status = "HTTP/1.1 200 OK\r\n";
+            send(client_fd, status.c_str(), status.length(), 0);
+            return ;
+        }
+        client._write_buffer = resp;
+        modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 	}
 }
 
@@ -417,7 +450,29 @@ void Engine::run()
         {
  //std::cout << BLUE << "New data collected !" << RESET << std::endl;
             int fd = events[i].data.fd;
-
+            
+            if (_fd_types[fd] == FD_CGI_PIPE)
+            {
+                char buffer[4096];
+                int client_fd = _map_cgi_pid[fd];
+                size_t bytes_read = read(fd, buffer, sizeof(buffer));
+                if (bytes_read > 0)
+                    send(client_fd, buffer, bytes_read, 0);
+                else
+                {
+                    remove_from_epoll(fd);
+                    close(fd);
+                    _fd_types.erase(fd);
+                    int pid = _map_cgi_pid[fd];
+                    int status;
+                    waitpid(pid, &status, 0);
+                    _map_cgi_pid.erase(fd);
+                    _cgi_to_client.erase(fd);
+                    modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+                }
+                continue;
+            }
+    
             if (_fd_types.find(fd) == _fd_types.end())
             {
                 std::cerr << "Unknown fd type for fd " << fd << std::endl;

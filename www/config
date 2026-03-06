@@ -29,10 +29,10 @@ server
 	locations /css/
 	locations /js/
 	locations /cgi/
+		alias ./
 		cgi_enabled true
-		methods GET
+		methods GET POST
 		cgi_ext .py /usr/bin/python3
-
 
 
 

@@ -353,9 +353,16 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 
 					vect.erase(vect.begin(),it + 2);
 					if (client.req.outFile)
+					{
 						client.req.outFile->write(reinterpret_cast<char*>(&client.req.body[0]),client.req.body.size());
+						// il nous manquait un clear je crois 
+						client.req.body.clear();
+					}
 					else if (client.req.isCgi)
+					{
 						write(client.req.pipefdIn, reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+						client.req.body.clear();
+					}
 					else
 						client.res.handleResponse(client.req, client.req.ErrorCode);
 					client.req.chunked = 1;

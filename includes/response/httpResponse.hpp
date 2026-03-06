@@ -14,6 +14,7 @@
 # include <algorithm>
 # include "httpRequest.hpp"
 # include <sys/wait.h>
+# include <fcntl.h>
 # include "Color.hpp"
 
 

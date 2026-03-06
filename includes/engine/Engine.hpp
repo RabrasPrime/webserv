@@ -24,12 +24,16 @@ class Engine
 
 		std::map<int, Client> _clients;
 		std::map<int, Listener> _listeners;
+		std::map<int, int> _cgi_to_client;
+		std::map<int, pid_t> _map_cgi_pid;
+
 		static Engine* _instance;
 
 		enum FdType
 		{
 			FD_LISTENER,
-			FD_CLIENT
+			FD_CLIENT,
+			FD_CGI_PIPE
 		};
 		std::map<int, FdType> _fd_types;
 

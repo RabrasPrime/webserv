@@ -37,14 +37,9 @@ struct HttpRequest
 	std::string 						queryString;
 	std::ofstream*	outFile;
 	int pipefdIn;
+	int pipefdOut;
+	pid_t cgi_pid;
 	bool isCgi;
 };
 
 #endif
-
-// root /usr/bin/
-// alias /usr/bin/
-
-// location /image/
-// /usr/bin/image/script/hello.py?
-// /usr/bin/hello.py

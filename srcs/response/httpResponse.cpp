@@ -19,7 +19,7 @@ std::string httpResponse::convertFinalResponse(){
 	resp += "\r\n";
 	resp += _body;
 	_statusCode = 0;
-	std::cout << resp << "\n\n\n" << std::endl;
+	// std::cout << resp << "\n\n\n" << std::endl;
 	return resp;
 }
 
@@ -48,6 +48,8 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 		envList.push_back("REQUEST_METHOD=POST");
 	if (req.methods & METHOD_DELETE)
 		envList.push_back("REQUEST_METHOD=DELETE");
+
+
 	for (std::vector<std::string>::iterator it = req.env.begin(); it != req.env.end(); ++it)
 		envList.push_back(*it);
 	std::stringstream ss;
@@ -64,11 +66,23 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	}
 	envList.push_back("CONTENT_TYPE=" + tmp);
 	// std::cerr << GOLD BOLD "CONTENT_TYPE=" << tmp << RESET << std::endl;
-	std::cerr << BLUE BOLD "path>>>" << path << RESET << std::endl;
-	envList.push_back("PATH_INFO=" + path);
-	envList.push_back("SCRIPT_NAME=" + path);
+	std::string scriptName = req.raw_path;
+	size_t pos = scriptName.find(".bla");
+	if (pos != std::string::npos)
+		scriptName = scriptName.substr(0, pos + 4);
+	envList.push_back("SCRIPT_NAME=" + scriptName);
+	std::string pathInfo = "";
+	if (pos != std::string::npos && pos + 4 < req.raw_path.size())
+		pathInfo = req.raw_path.substr(pos + 4);
+	envList.push_back("PATH_INFO=" + pathInfo);
+	envList.push_back("SCRIPT_FILENAME=" + path);
 	envList.push_back("SERVER_PROTOCOL=" + req.version);
 	envList.push_back("REDIRECT_STATUS=200");
+	envList.push_back("QUERY_STRING=" + req.queryString);
+
+	// std::cerr << BLUE BOLD "Scriptfilename {" << path << "}" RESET << std::endl;
+	// std::cerr << BLUE BOLD "scriptname {" << scriptName << "}" RESET << std::endl;
+	// std::cerr << BLUE BOLD "path info {" << pathInfo << "}" RESET << std::endl;
 
 	char **env = new char*[envList.size() + 1];
 	for (size_t i = 0; i < envList.size(); ++i)
@@ -97,20 +111,20 @@ void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
 
 	int status;
 	waitpid(pid, &status, 0);
-	std::cout << RED BOLD "WAITPID" RESET << std::endl;
 	int code = WEXITSTATUS(status);
+	_statusCode = code;
 	code == 0 ? _statusCode = 200 : _statusCode = 500;
 	_cgiOutput = outCgi;
 }
 
 int httpResponse::exeCgi(std::string path, HttpRequest &req){
 	
+	if (req.cgi_pid > 0)
+		return 0;
 	int pipeOut[2], pipeIn[2];
 	req.isCgi = true;
 	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
 		return 500;
-	if (req.pipefdIn == 0)
-		req.pipefdIn = pipeIn[1];
 	pid_t pid = fork();
 	if (pid < 0)
 	{
@@ -137,16 +151,24 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		delete []env;
 		exit(1);
 	}
-	if (!req.body.empty() && req.method & METHOD_POST)
-		write(pipeIn[1], reinterpret_cast<char*>(&req.body[0]), req.body.size());
-	close(pipeOut[1]);
-	if (req.chunked == 0 || req.chunked_size == 0)
-		close(pipeIn[1]);
+	req.cgi_pid = pid;
 	close(pipeIn[0]);
+	close(pipeOut[1]);
+	req.pipefdIn = pipeIn[1];
+	req.pipefdOut = pipeOut[0];
+	fcntl(req.pipefdIn, F_SETFL, O_NONBLOCK);
+	fcntl(req.pipefdOut, F_SETFL, O_NONBLOCK);
+	return 200;
+	// if (!req.body.empty() && req.method & METHOD_POST)
+	// 	write(pipeIn[1], reinterpret_cast<char*>(&req.body[0]), req.body.size());
+	// close(pipeOut[1]);
+	// if (req.chunked == 0 || req.chunked_size == 0)
+	// 	close(pipeIn[1]);
+	// close(pipeIn[0]);
 
-	saveCgiOutput(pipeOut, pid);
+	// saveCgiOutput(pipeOut, pid);
 
-	return _statusCode;
+	// return _statusCode;
 }
 
 int httpResponse::isCgi(HttpRequest &req, std::string path){
@@ -248,8 +270,7 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 			handleError(req);
 			return convertFinalResponse();
 		}
-		fillCgiResponse(req);
-		return convertFinalResponse();
+		return "START_CGI";
 	}
 	if (req.method & METHOD_GET)
 		exeGet(req);
@@ -403,7 +424,7 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 	struct stat s;
 	if (stat(path.c_str(), &s) == -1)
 	{
- //std::cout << RED BOLD "PATH NOT FOUND" RESET << std::endl;
+//  std::cout << RED BOLD "PATH NOT FOUND" RESET << std::endl;
 		if (req.path[req.path.size() - 1] != '/')
 			return 301;
 		return 404;
@@ -664,7 +685,7 @@ int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 	if (req.chunked == 0 || req.chunked_size == 0)
 	{
 		req.outFile->close();
-		std::cout << YELLOW BOLD "close fd" RESET << std::endl;
+		// std::cout << YELLOW BOLD "close fd" RESET << std::endl;
 		delete req.outFile;
 	}
 	return fileCreated ? 201 : 200;
