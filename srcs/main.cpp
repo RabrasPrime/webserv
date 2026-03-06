@@ -289,7 +289,7 @@ int main(int ac, char **av)
 
 void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, const int client_fd)
 {
-	std::cout << BLUE BOLD "HANDLE CHUNCK" RESET << std::endl;
+	// std::cout << BLUE BOLD "HANDLE CHUNCK" RESET << std::endl;
 	do
 	{
 		if (client.req.chunked <= 1)
@@ -308,13 +308,13 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						client.req.chunked = 5;
 					else
 						client.req.chunked = 3;
-		 std::cout << ORANGE BOLD "HEXA >>>" << hexa << RESET <<std::endl;
+		//  std::cout << ORANGE BOLD "HEXA >>>" << hexa << RESET <<std::endl;
 					// std::string hexa = "FF";
 					size_t valeur;
 					std::stringstream ss;
 					ss << std::hex << hexa;
 					ss >> valeur;
-		 std::cout << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
+		//  std::cout << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
 					client.req.chunked_size = valeur;
 					vect.erase(vect.begin(),it + 2);
 					client.req.chunked--;
@@ -329,7 +329,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 		if (client.req.chunked_size == 0 && client.req.chunked > 1)
 		{
 			client.req.body = client.get_read();
-			std::cout << RED BOLD "CALL RESPONSE HERE" RESET << std::endl;
+			// std::cout << RED BOLD "CALL RESPONSE HERE" RESET << std::endl;
 			client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
 			client.get_read().clear();
 			std::cout << PURPLE BOLD << client.get_read().size() << RESET << std::endl;
@@ -349,13 +349,13 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 					client.req.body.insert(client.req.body.end(), vect.begin(), it);
 
 					std::string s(client.req.body.begin(), client.req.body.end());
-					 std::cout << LIME BOLD "BODY>>>" << s << RESET << std::endl;
+					//  std::cout << LIME BOLD "BODY>>>" << s << RESET << std::endl;
 
 					vect.erase(vect.begin(),it + 2);
-					// if (client.req.chunked == 2)
-					// 	client.req.outFile->write(reinterpret_cast<char*>(&client.req.body[0]),client.req.body.size());
-					// else
-					client.res.handleResponse(client.req, client.req.ErrorCode);
+					if (client.req.outFile)
+						client.req.outFile->write(reinterpret_cast<char*>(&client.req.body[0]),client.req.body.size());
+					else
+						client.res.handleResponse(client.req, client.req.ErrorCode);
 					client.req.chunked = 1;
 					break;
 				}

@@ -236,7 +236,7 @@ void Engine::handle_client_read(const int client_fd)
 		if (client.req.chunked != 0 || (client.req.mult.find("Transfer-Encoding") != client.req.mult.end() && client.req.mult["Transfer-Encoding"].size() != 0 && client.req.mult["Transfer-Encoding"].front() == "chunked"))
 		{
 			handle_chunked(vect, client, client_fd);
-			std::cout << BLUE BOLD << client.get_read().size() << RESET << std::endl;
+			// std::cout << BLUE BOLD << client.get_read().size() << RESET << std::endl;
 			return;
 		}
 		else if (client.req.mult.find("Content-Length") != client.req.mult.end())

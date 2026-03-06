@@ -212,11 +212,11 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 
 std::string httpResponse::handleResponse(HttpRequest &req, int code){
 
-	if (req.body.size() != 0)
-	{
-		std::string s(req.body.begin(), req.body.end());
-		std::cout << RED BOLD "BODY>>>" << s << RESET << std::endl;
-	}
+	// if (req.body.size() != 0)
+	// {
+	// 	std::string s(req.body.begin(), req.body.end());
+	// 	std::cout << RED BOLD "BODY>>>" << s << RESET << std::endl;
+	// }
 	_version = req.version;
 	if (_statusCode != 0)
 	{
@@ -638,7 +638,7 @@ int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 
 	// std::ofstream outFiletmp;
 	 //std::cout << BLUE BOLD "req.chunked" << req.chunked << RESET << std::endl;
-	if (req.chunked == 4 || req.chunked == 0)
+	if (!req.outFile)
 	{
 		// req.outFile = &outFiletmp;
 		req.outFile = new std::ofstream;
