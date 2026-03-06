@@ -36,6 +36,8 @@ struct HttpRequest
 
 	std::string 						queryString;
 	std::ofstream*	outFile;
+	int pipefdIn;
+	bool isCgi;
 };
 
 #endif

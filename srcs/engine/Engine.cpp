@@ -221,7 +221,7 @@ void Engine::handle_client_read(const int client_fd)
 				parse_header(header, client.req, client.get_server());
 				// if (it + 4 != vect.end())
 				vect.erase(vect.begin(), it + 4);
-				std::cout << LIME BOLD "Size >>> " << vect.size() << std::endl;
+				// std::cout << LIME BOLD "Size >>> " << vect.size() << std::endl;
 				break;
 			}
 			else
@@ -232,7 +232,7 @@ void Engine::handle_client_read(const int client_fd)
         if (client.req.mult.count("Cookie") > 0 && !client.req.mult["Cookie"].empty())
             std::string user = extractCookie(client.req.mult["Cookie"].front(), "user_id");
     
- std::cout << "Header : \n" << YELLOW << header << RESET << std::endl;
+//  std::cout << "Header : \n" << YELLOW << header << RESET << std::endl;
 		if (client.req.chunked != 0 || (client.req.mult.find("Transfer-Encoding") != client.req.mult.end() && client.req.mult["Transfer-Encoding"].size() != 0 && client.req.mult["Transfer-Encoding"].front() == "chunked"))
 		{
 			handle_chunked(vect, client, client_fd);

@@ -53,7 +53,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	std::stringstream ss;
 	ss << req.body.size();
 	envList.push_back("CONTENT_LENGTH=" + ss.str());
-	std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
+	// std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
 	std::string tmp;
 	for (std::vector<std::string>::iterator it = req.mult["Content-Type"].begin();it != req.mult["Content-Type"].end();it++)
 	{
@@ -63,7 +63,8 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 			tmp += *it;
 	}
 	envList.push_back("CONTENT_TYPE=" + tmp);
-	std::cerr << GOLD BOLD "CONTENT_TYPE=" << tmp << RESET << std::endl;
+	// std::cerr << GOLD BOLD "CONTENT_TYPE=" << tmp << RESET << std::endl;
+	std::cerr << BLUE BOLD "path>>>" << path << RESET << std::endl;
 	envList.push_back("PATH_INFO=" + path);
 	envList.push_back("SCRIPT_NAME=" + path);
 	envList.push_back("SERVER_PROTOCOL=" + req.version);
@@ -96,6 +97,7 @@ void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
 
 	int status;
 	waitpid(pid, &status, 0);
+	std::cout << RED BOLD "WAITPID" RESET << std::endl;
 	int code = WEXITSTATUS(status);
 	code == 0 ? _statusCode = 200 : _statusCode = 500;
 	_cgiOutput = outCgi;
@@ -104,10 +106,11 @@ void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
 int httpResponse::exeCgi(std::string path, HttpRequest &req){
 	
 	int pipeOut[2], pipeIn[2];
-	
+	req.isCgi = true;
 	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
 		return 500;
-	
+	if (req.pipefdIn == 0)
+		req.pipefdIn = pipeIn[1];
 	pid_t pid = fork();
 	if (pid < 0)
 	{
@@ -137,7 +140,8 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 	if (!req.body.empty() && req.method & METHOD_POST)
 		write(pipeIn[1], reinterpret_cast<char*>(&req.body[0]), req.body.size());
 	close(pipeOut[1]);
-	close(pipeIn[1]);
+	if (req.chunked == 0 || req.chunked_size == 0)
+		close(pipeIn[1]);
 	close(pipeIn[0]);
 
 	saveCgiOutput(pipeOut, pid);

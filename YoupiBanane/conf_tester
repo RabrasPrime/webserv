@@ -1,7 +1,7 @@
 server
 	server_name localhost
 	listen 8080
-	cgi_ext .exrt ./YoupiBanane/cgi_tester 
+	cgi_ext .bla ./cgi_tester 
 	root ./
 	
 	locations /
