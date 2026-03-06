@@ -19,6 +19,7 @@ std::string httpResponse::convertFinalResponse(){
 	resp += "\r\n";
 	resp += _body;
 	_statusCode = 0;
+	std::cout << resp << "\n\n\n" << std::endl;
 	return resp;
 }
 
@@ -211,8 +212,11 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 
 std::string httpResponse::handleResponse(HttpRequest &req, int code){
 
-	std::string s(req.body.begin(), req.body.end());
-	 std::cout << RED BOLD "BODY>>>" << s << RESET << std::endl;
+	if (req.body.size() != 0)
+	{
+		std::string s(req.body.begin(), req.body.end());
+		std::cout << RED BOLD "BODY>>>" << s << RESET << std::endl;
+	}
 	_version = req.version;
 	if (_statusCode != 0)
 	{
@@ -278,7 +282,7 @@ void httpResponse::fillMapError(){
 		int value;
 		if (ss >> value)
 			_mErrorMsg[value] = errorMsg;
-		 std::cout << LIME BOLD "_________________________HERE code >" << value << "    msg >" << errorMsg << RESET << std::endl;
+		 //std::cout << LIME BOLD "_________________________HERE code >" << value << "    msg >" << errorMsg << RESET << std::endl;
 	}
 	inFile.close();
 }
@@ -395,7 +399,7 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 	struct stat s;
 	if (stat(path.c_str(), &s) == -1)
 	{
- std::cout << RED BOLD "PATH NOT FOUND" RESET << std::endl;
+ //std::cout << RED BOLD "PATH NOT FOUND" RESET << std::endl;
 		if (req.path[req.path.size() - 1] != '/')
 			return 301;
 		return 404;
@@ -403,7 +407,7 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 	std::ifstream inFile;
 	if (S_ISDIR(s.st_mode))
 	{
- std::cout << RED BOLD "REQ IS A DIR" RESET << std::endl;
+ //std::cout << RED BOLD "REQ IS A DIR" RESET << std::endl;
 		if (req.path[req.path.size() - 1] != '/')
 			return 301;
 		return(searchFileInDir(path, req));
@@ -486,9 +490,9 @@ void httpResponse::fillDefaultBody(){
 
 void httpResponse::handleError(HttpRequest &req)
 {
- std::cout << YELLOW BOLD "HANDLE ERROR CODE >>>" << _statusCode << RESET << std::endl;
+ //std::cout << YELLOW BOLD "HANDLE ERROR CODE >>>" << _statusCode << RESET << std::endl;
 	_statusMsg = _mErrorMsg[_statusCode];
- std::cout << YELLOW BOLD "MESSAGE FOUND >>>" << _statusMsg << RESET << std::endl;
+ //std::cout << YELLOW BOLD "MESSAGE FOUND >>>" << _statusMsg << RESET << std::endl;
 	if (_statusMsg.empty() && _statusCode == 0)
 	{
 		_statusCode = 500;
@@ -526,7 +530,7 @@ void httpResponse::handleError(HttpRequest &req)
 	if (_statusCode == 501 || _statusCode == 405)
 	{
 		std::string allowMethods;
- std::cout << PURPLE BOLD "Allow methods >>>" RESET << req.methods << std::endl;
+ //std::cout << PURPLE BOLD "Allow methods >>>" RESET << req.methods << std::endl;
 
 		if (req.methods & METHOD_GET)
 			allowMethods += "GET";
@@ -633,7 +637,7 @@ int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 	}
 
 	// std::ofstream outFiletmp;
-	 std::cout << BLUE BOLD "req.chunked" << req.chunked << RESET << std::endl;
+	 //std::cout << BLUE BOLD "req.chunked" << req.chunked << RESET << std::endl;
 	if (req.chunked == 4 || req.chunked == 0)
 	{
 		// req.outFile = &outFiletmp;
@@ -642,20 +646,21 @@ int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 	}
 	if (!req.outFile->is_open())
 	{
- std::cout << PURPLE BOLD "NOT OPEN" RESET << std::endl;
+ //std::cout << PURPLE BOLD "NOT OPEN" RESET << std::endl;
 		return 500;
 	}		
- std::cout << RED BOLD "WRITE IN FILE" RESET << std::endl;
+ //std::cout << RED BOLD "WRITE IN FILE" RESET << std::endl;
 	req.outFile->write(reinterpret_cast<char*>(&req.body[0]), req.body.size());
 	if (!req.outFile->good())
 	{
- std::cout << PURPLE BOLD "NOT GOOD" RESET << std::endl;
+ //std::cout << PURPLE BOLD "NOT GOOD" RESET << std::endl;
 		req.outFile->close();
 		return 500;
 	}
 	if (req.chunked == 0 || req.chunked_size == 0)
 	{
 		req.outFile->close();
+		std::cout << YELLOW BOLD "close fd" RESET << std::endl;
 		delete req.outFile;
 	}
 	return fileCreated ? 201 : 200;
@@ -740,13 +745,13 @@ void httpResponse::exePost(HttpRequest &req)
 	else
 	{
 		_statusCode = isFileExist(req.path, req);
- std::cout << GREEN BOLD "STATUS CODE>>" << _statusCode << RESET << std::endl;
+ //std::cout << GREEN BOLD "STATUS CODE>>" << _statusCode << RESET << std::endl;
 		if (_statusCode != 200 && _statusCode != 201)
 		{
 			handleError(req);
 			return ;
 		}
-		if (req.chunked != 0)
+		if (req.chunked != 0 && req.chunked_size != 0)
 			_statusCode = 100;
 		_statusMsg = _mErrorMsg[_statusCode];
 		fillBody(req);

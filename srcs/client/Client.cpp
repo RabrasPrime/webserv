@@ -16,7 +16,7 @@ Client::Client() : _fd(-1), _status(READING)
 {
 	req = HttpRequest();
 	res = httpResponse();
- std::cout << LIME << "Open1 Client" << RESET << std::endl;
+ //std::cout << LIME << "Open1 Client" << RESET << std::endl;
 	std::memset(&_last_active_time, 0, sizeof(_last_active_time));
 	gettimeofday(&_last_active_time, NULL);
 }
@@ -25,7 +25,7 @@ Client::Client(int fd, std::vector<Server *> server) : _fd(fd), _server(server),
 {
 	req = HttpRequest();
 	res = httpResponse();
- std::cout << GREEN << "Open1bis	 Client" << RESET << std::endl;
+ //std::cout << GREEN << "Open1bis	 Client" << RESET << std::endl;
 	std::memset(&_last_active_time, 0, sizeof(_last_active_time));
 	gettimeofday(&_last_active_time, NULL);
 	set_non_blocking();
@@ -33,7 +33,7 @@ Client::Client(int fd, std::vector<Server *> server) : _fd(fd), _server(server),
 
 Client::~Client()
 {
- std::cout << RED << "Close Client" << RESET << std::endl;
+ //std::cout << RED << "Close Client" << RESET << std::endl;
 	// close();
 }
 
@@ -43,7 +43,7 @@ ssize_t Client::read_from_socket()
 	ssize_t bytes_read = recv(_fd, buffer, sizeof(buffer), 0);
 	while (bytes_read > 0 || errno == EINTR)
 	{
-		 std::cout << LIME "READ" RESET << std::endl;
+		 //std::cout << LIME "READ" RESET << std::endl;
 		_read.insert(_read.end(), buffer, buffer + bytes_read);
 		update();
 		bytes_read = recv(_fd, buffer, sizeof(buffer), 0);
@@ -65,7 +65,7 @@ ssize_t Client::read_from_socket()
 	// }
 	// else if (bytes_read == 0)
 	// {
-	 std::cout << "Client closed connection (fd " << _fd << ")" << std::endl;
+	 //std::cout << "Client closed connection (fd " << _fd << ")" << std::endl;
 	// 	return 0;
 	// }
 	// else
@@ -87,7 +87,7 @@ ssize_t Client::write_to_socket()
 	if (_write_buffer.empty())
 		return 0;
 		
- std::cout << "\n\nSend Data >>>\n" << _write_buffer.c_str();
+ //std::cout << "\n\nSend Data >>>\n" << _write_buffer.c_str();
 	ssize_t bytes_sent = send(_fd, _write_buffer.c_str(), _write_buffer.size(), MSG_NOSIGNAL);
 
 	if (bytes_sent > 0)

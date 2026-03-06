@@ -8,12 +8,12 @@ int parse(std::vector<Server>& servers, std::string path)
 
 	if (stat(path.c_str(), &info) != 0)
 	{
- std::cout << "Invalid config file path" << std::endl;
+ //std::cout << "Invalid config file path" << std::endl;
 		return (1);
 	}
 	if (info.st_mode & S_IFDIR)
 	{
- std::cout << "Config file path is a directory" << std::endl;
+ //std::cout << "Config file path is a directory" << std::endl;
 		return (1);
 	}
 
@@ -21,7 +21,7 @@ int parse(std::vector<Server>& servers, std::string path)
 
 	if (!file.is_open())
 	{
- std::cout << "Failed to open file" << std::endl;
+ //std::cout << "Failed to open file" << std::endl;
 		return (1);
 	}
 	std::string line;
