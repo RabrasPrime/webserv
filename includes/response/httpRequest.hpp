@@ -2,10 +2,13 @@
 # define HTTPREQUEST_HPP
 
 #include "Location.hpp"
+#include <fstream>
 
 struct HttpRequest
 {
-	Location* loc;
+	size_t		chunked_size;
+	int			chunked;
+	Location*	loc;
 	bool		location_match;
 	size_t		ContentLength;
 	int			end_head;
@@ -32,6 +35,7 @@ struct HttpRequest
 	std::map<std::string, std::string>	cgi_ext;
 
 	std::string 						queryString;
+	std::ofstream*	outFile;
 };
 
 #endif

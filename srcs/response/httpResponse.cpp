@@ -18,6 +18,7 @@ std::string httpResponse::convertFinalResponse(){
 		resp += it->first + ": " + it->second + "\r\n";
 	resp += "\r\n";
 	resp += _body;
+	_statusCode = 0;
 	return resp;
 }
 
@@ -51,6 +52,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	std::stringstream ss;
 	ss << req.body.size();
 	envList.push_back("CONTENT_LENGTH=" + ss.str());
+	std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
 	std::string tmp;
 	for (std::vector<std::string>::iterator it = req.mult["Content-Type"].begin();it != req.mult["Content-Type"].end();it++)
 	{
@@ -60,6 +62,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 			tmp += *it;
 	}
 	envList.push_back("CONTENT_TYPE=" + tmp);
+	std::cerr << GOLD BOLD "CONTENT_TYPE=" << tmp << RESET << std::endl;
 	envList.push_back("PATH_INFO=" + path);
 	envList.push_back("SCRIPT_NAME=" + path);
 	envList.push_back("SERVER_PROTOCOL=" + req.version);
@@ -131,7 +134,7 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		exit(1);
 	}
 	if (!req.body.empty() && req.method & METHOD_POST)
-		write(pipeIn[1], reinterpret_cast<char*>(&req.body), req.body.size());
+		write(pipeIn[1], reinterpret_cast<char*>(&req.body[0]), req.body.size());
 	close(pipeOut[1]);
 	close(pipeIn[1]);
 	close(pipeIn[0]);
@@ -208,6 +211,8 @@ void httpResponse::fillCgiResponse(HttpRequest &req){
 
 std::string httpResponse::handleResponse(HttpRequest &req, int code){
 
+	std::string s(req.body.begin(), req.body.end());
+	 std::cout << RED BOLD "BODY>>>" << s << RESET << std::endl;
 	_version = req.version;
 	if (_statusCode != 0)
 	{
@@ -246,7 +251,7 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		exeDelete(req);
 	else
 	{
-		_statusCode = 501;
+		_statusCode = 405;//HERE
 		handleError(req);
 	}
 	return convertFinalResponse();
@@ -273,6 +278,7 @@ void httpResponse::fillMapError(){
 		int value;
 		if (ss >> value)
 			_mErrorMsg[value] = errorMsg;
+		 std::cout << LIME BOLD "_________________________HERE code >" << value << "    msg >" << errorMsg << RESET << std::endl;
 	}
 	inFile.close();
 }
@@ -377,7 +383,7 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 	if (req.auto_index)
 		return (generateAutoIndex(path));
 	else
-		return 403;
+		return 404;//HERE
 	return 200;
 }
 
@@ -388,10 +394,16 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 		return 405;
 	struct stat s;
 	if (stat(path.c_str(), &s) == -1)
+	{
+ std::cout << RED BOLD "PATH NOT FOUND" RESET << std::endl;
+		if (req.path[req.path.size() - 1] != '/')
+			return 301;
 		return 404;
+	}
 	std::ifstream inFile;
 	if (S_ISDIR(s.st_mode))
 	{
+ std::cout << RED BOLD "REQ IS A DIR" RESET << std::endl;
 		if (req.path[req.path.size() - 1] != '/')
 			return 301;
 		return(searchFileInDir(path, req));
@@ -447,33 +459,36 @@ std::string httpResponse::setPathError()
 }
 
 void httpResponse::fillDefaultBody(){
-
+	if (_statusCode == 405)
+		return;//HERE
 	std::string pathErrFile = setPathError();
 	std::ifstream inFile;
 	if (!pathErrFile.empty())
 		inFile.open(pathErrFile.c_str(), std::ios::binary);
-	if (pathErrFile.empty() || !inFile.is_open())
-	{
-		std::ostringstream index;
-		index 	<< "<html><head><style> body {background-color: black;} h1 { font-size: 200px; color: #d70516; margin-top -50px; } p {font-size: 100px; font-weight: bold; margin-top: -60px; color: #ffffff; } </style></head><body><div class=\"styleContentError\"><h1>500</h1><p>Internal Server Error</p></div></body></html>";
-		_statusCode = 500;
-		_statusMsg = "Internal Server Error";
-		_body = index.str();
-		_bodyType = "html";
-	}
-	else
-	{
-		std::ostringstream oss;
-		oss << inFile.rdbuf();
-		_body = oss.str();
-		_bodyType = pathErrFile.substr(pathErrFile.find_last_of(".") + 1);
-		inFile.close();
-	}
+	// if (pathErrFile.empty() || !inFile.is_open())
+	// {
+	// 	std::ostringstream index;
+	// 	index 	<< "<html><head><style> body {background-color: black;} h1 { font-size: 200px; color: #d70516; margin-top -50px; } p {font-size: 100px; font-weight: bold; margin-top: -60px; color: #ffffff; } </style></head><body><div class=\"styleContentError\"><h1>500</h1><p>Internal Server Error</p></div></body></html>";
+	// 	_statusCode = 500;
+	// 	_statusMsg = "Internal Server Error";
+	// 	_body = index.str();
+	// 	_bodyType = "html";
+	// }
+	// else
+	// {
+	// 	std::ostringstream oss;
+	// 	oss << inFile.rdbuf();
+	// 	_body = oss.str();
+	// 	_bodyType = pathErrFile.substr(pathErrFile.find_last_of(".") + 1);
+	// 	inFile.close();
+	// }
 }
 
 void httpResponse::handleError(HttpRequest &req)
 {
+ std::cout << YELLOW BOLD "HANDLE ERROR CODE >>>" << _statusCode << RESET << std::endl;
 	_statusMsg = _mErrorMsg[_statusCode];
+ std::cout << YELLOW BOLD "MESSAGE FOUND >>>" << _statusMsg << RESET << std::endl;
 	if (_statusMsg.empty() && _statusCode == 0)
 	{
 		_statusCode = 500;
@@ -500,8 +515,10 @@ void httpResponse::handleError(HttpRequest &req)
 			_headers["Connection"] = "Keep-Alive";
 		else if (req.mult["Connection"].size() == 0 && _version[pos + 1] == '0')
 			_headers["Connection"] = "close";
-		else
+		else if (req.mult.find("Connection") != req.mult.end() && req.mult["Connection"].size() != 0)
 			_headers["Connection"] = req.mult["Connection"].front();
+		else
+			_headers["Connection"] = "close";
 	}
 	std::stringstream ss;
 	ss << _body.size();
@@ -509,6 +526,7 @@ void httpResponse::handleError(HttpRequest &req)
 	if (_statusCode == 501 || _statusCode == 405)
 	{
 		std::string allowMethods;
+ std::cout << PURPLE BOLD "Allow methods >>>" RESET << req.methods << std::endl;
 
 		if (req.methods & METHOD_GET)
 			allowMethods += "GET";
@@ -567,6 +585,8 @@ void httpResponse::exeGet(HttpRequest &req){
 
 void httpResponse::fillBody(HttpRequest &req)
 {
+	if (_statusCode == 100)
+		return;
 	std::ostringstream index;
 	index << "<html><head><style>body{ background: #1a1a1a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; flex-direction: column;} h1 {font-size: 100px; color: #16d705; margin-top: -50px; } </style></head><body> <h1>";
 	if (_statusCode == 200 && req.method & METHOD_DELETE)
@@ -612,17 +632,32 @@ int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 		fileCreated = true;
 	}
 
-	std::ofstream outFile;
-	outFile.open(path.c_str(), std::ios::binary | std::ios::trunc);
-	if (!outFile.is_open())
-		return 500;
-	outFile.write(reinterpret_cast<char*>(&req.body[0]), req.body.size());
-	if (!outFile.good())
+	// std::ofstream outFiletmp;
+	 std::cout << BLUE BOLD "req.chunked" << req.chunked << RESET << std::endl;
+	if (req.chunked == 4 || req.chunked == 0)
 	{
-		outFile.close();
+		// req.outFile = &outFiletmp;
+		req.outFile = new std::ofstream;
+		req.outFile->open(path.c_str(), std::ios::binary | std::ios::trunc);
+	}
+	if (!req.outFile->is_open())
+	{
+ std::cout << PURPLE BOLD "NOT OPEN" RESET << std::endl;
+		return 500;
+	}		
+ std::cout << RED BOLD "WRITE IN FILE" RESET << std::endl;
+	req.outFile->write(reinterpret_cast<char*>(&req.body[0]), req.body.size());
+	if (!req.outFile->good())
+	{
+ std::cout << PURPLE BOLD "NOT GOOD" RESET << std::endl;
+		req.outFile->close();
 		return 500;
 	}
-	outFile.close();
+	if (req.chunked == 0 || req.chunked_size == 0)
+	{
+		req.outFile->close();
+		delete req.outFile;
+	}
 	return fileCreated ? 201 : 200;
 }
 
@@ -640,7 +675,7 @@ void httpResponse::exePost(HttpRequest &req)
 		handleError(req);
 		return ;
 	}
-	if (req.body.size() == 0 && req.raw_path != "/logout")
+	if (req.body.size() == 0 && req.raw_path != "/logout" && req.chunked == 0)
 	{
 		_statusCode = 411;
 		handleError(req);
@@ -705,11 +740,14 @@ void httpResponse::exePost(HttpRequest &req)
 	else
 	{
 		_statusCode = isFileExist(req.path, req);
+ std::cout << GREEN BOLD "STATUS CODE>>" << _statusCode << RESET << std::endl;
 		if (_statusCode != 200 && _statusCode != 201)
 		{
 			handleError(req);
 			return ;
 		}
+		if (req.chunked != 0)
+			_statusCode = 100;
 		_statusMsg = _mErrorMsg[_statusCode];
 		fillBody(req);
 		fillHeaders(req.mult);

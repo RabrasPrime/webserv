@@ -1,7 +1,7 @@
 server
 	server_name localhost
 	listen 8080
-	cgi_ext .bla ./cgi_tester 
+	cgi_ext .exrt ./YoupiBanane/cgi_tester 
 	root ./
 	
 	locations /
@@ -13,6 +13,6 @@ server
 		client_max_body_size 100
 	
 	locations /directory/
-		methods GET
-		root ./
+		methods GET POST
+		alias ./YoupiBanane/
 		index youpi.bad_extension

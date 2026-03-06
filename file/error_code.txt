@@ -1,3 +1,4 @@
+100  Continue
 200  OK
 201  Created
 204  No Content

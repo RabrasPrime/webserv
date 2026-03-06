@@ -39,6 +39,11 @@ class Engine
 	public:
 		Engine();
 		~Engine();
+
+
+		void handle_chunked(std::vector<unsigned char>& vect, Client& client,const int client_fd);
+
+
 		/**
 		 * @brief the server by setting up listeners based on the provided server configurations and preparing the epoll instance for event handling.\n\n
 		 * This method creates sockets for each listener, binds them to the appropriate addresses and ports, and starts listening for incoming connections.\n\n
