@@ -66,7 +66,7 @@ void	fill_headers(std::vector<std::string>& ligne, HttpRequest& req)
 int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> servers)
 {
 	(void)req;
- //std::cout << BLUE BOLD "STR >> " << str << RESET << std::endl;
+ std::cout << YELLOW BOLD "\n\nSTR >> " << str << RESET << std::endl;
 	std::string first_line;
 	if (str.find("\r\n") != std::string::npos)
 		first_line = str.substr(0,str.find("\r\n"));
@@ -119,7 +119,7 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
 	req.path = path;
 	req.version = version;
 	std::string header(str.substr(str.find("\r\n") + 2, str.size()));
-	 //std::cout << header << std::endl;
+	// std::cout << header << std::endl;
 	std::vector<std::string> ligne = ft_split(header, "\r\n");
 	// for (std::vector<std::string>::iterator it = ligne.begin();it != ligne.end();it++)
 	// {
@@ -329,7 +329,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 		if (client.req.chunked_size == 0 && client.req.chunked > 1)
 		{
 			client.req.body = client.get_read();
-			// std::cout << RED BOLD "CALL RESPONSE HERE" RESET << std::endl;
+			std::cout << BLUE BOLD "CALL RESPONSE HERE" RESET << std::endl;
 			client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
 			client.get_read().clear();
 			std::cout << PURPLE BOLD << client.get_read().size() << RESET << std::endl;
@@ -364,7 +364,10 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						client.req.body.clear();
 					}
 					else
+					{
+						std::cout << ORANGE BOLD "CALL REPONSE HERE" RESET << std::endl;
 						client.res.handleResponse(client.req, client.req.ErrorCode);
+					}
 					client.req.chunked = 1;
 					break;
 				}

@@ -87,7 +87,7 @@ ssize_t Client::write_to_socket()
 	if (_write_buffer.empty())
 		return 0;
 		
- //std::cout << "\n\nSend Data >>>\n" << _write_buffer.c_str();
+ std::cout << RED BOLD  "\n\nSend Data >>>\n" << _write_buffer.c_str() << RESET << std::endl;
 	ssize_t bytes_sent = send(_fd, _write_buffer.c_str(), _write_buffer.size(), MSG_NOSIGNAL);
 
 	if (bytes_sent > 0)

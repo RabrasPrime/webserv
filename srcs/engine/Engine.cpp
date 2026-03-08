@@ -437,6 +437,7 @@ void Engine::run()
     while (_is_running)
     {
         const int n = epoll_wait(_epoll_fd, events, MAX_EVENTS, 1000);
+		std::cerr << "EPOLL WAIT UNLOCK" << std::endl;
         if (n < 0)
         {
             if (errno == EINTR)
@@ -448,24 +449,73 @@ void Engine::run()
 
         for (int i = 0; i < n; i++)
         {
- //std::cout << BLUE << "New data collected !" << RESET << std::endl;
+ std::cout << BLUE << "New data collected !" << RESET << std::endl;
             int fd = events[i].data.fd;
             
             if (_fd_types[fd] == FD_CGI_PIPE)
             {
-                char buffer[4096];
+                char buffer[4096] = {};
                 int client_fd = _map_cgi_pid[fd];
                 size_t bytes_read = read(fd, buffer, sizeof(buffer));
+				const std::map<int, Client>::iterator it = _clients.find(client_fd);
+				if (it == _clients.end())
+					return;
+
+				Client& client = it->second;
                 if (bytes_read > 0)
-                    send(client_fd, buffer, bytes_read, 0);
+				{
+					// std::string str(buffer);
+					client.req.str += buffer;
+					std::cout << "SEND DATA CGI data>"<< client.req.str << std::endl;
+					if (!client.req.foundHeader)
+					{
+						size_t pos = client.req.str.find("\r\n\r\n");
+						if (pos != std::string::npos)
+						{
+							client.req.foundHeader = 1;
+							// std::cout << "Header cgi>" << client.req.str.substr(0,pos) << std::endl;
+							std::string header;
+							header = client.res.handleResponse(client.req, 200);
+							std::cout << ORANGE BOLD "header>" << header << RESET << std::endl;
+                    		send(client_fd, &header[0], header.size(), 0);
+                    		// send(client_fd, "\r\n\r\n", header.size(), 0);
+
+							client.req.dataCgi.insert(client.req.dataCgi.end(), client.req.str.begin() + pos + 4, client.req.str.end());
+						}
+					}
+					if (client.req.dataCgi.size() >= 0x8000)
+					{
+						send(client_fd,"8000\r\n",6,0);
+                    	send(client_fd, &client.req.dataCgi[0], 0x8000, 0);
+						send(client_fd,"\r\n",2,0);
+						client.req.dataCgi.erase(client.req.dataCgi.begin(),client.req.dataCgi.begin() + 0x8000);
+					}
+				}
                 else
                 {
+					// if (bytes_read == 0)
+					// {
+					// 	// send(client_fd,"8000\r\n",6,0);
+					// 	// size_t valeur;
+					// 	std::stringstream ss;
+					// 	ss << std::hex << client.req.dataCgi.size();
+					// 	// ss >> valeur;
+					// 	std::cout << BLUE BOLD "END CHUNK HERE" << RESET << std::endl;
+					// 	std::string hexa = ss.str() + "\r\n";
+					// 	send(client_fd,&hexa[0],hexa.size(),0);
+                    // 	send(client_fd, &client.req.dataCgi[0], client.req.dataCgi.size(), 0);
+					// 	send(client_fd,"\r\n",2,0);
+					// 	send(client_fd,"0",1,0);
+					// 	send(client_fd,"\r\n",2,0);
+					// }
                     remove_from_epoll(fd);
                     close(fd);
                     _fd_types.erase(fd);
                     int pid = _map_cgi_pid[fd];
                     int status;
+					std::cerr << LIME BOLD "BEFORE WAITPID" RESET << std::endl;
                     waitpid(pid, &status, 0);
+					std::cerr << GREEN BOLD "AFTER WAITPID" RESET << std::endl;
                     _map_cgi_pid.erase(fd);
                     _cgi_to_client.erase(fd);
                     modify_epoll(client_fd, EPOLLOUT | EPOLLET);

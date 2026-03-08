@@ -73,9 +73,9 @@ std::ostream& operator<<(std::ostream& out, const Server& serv)
 		if (it->ss_family == AF_INET) {
 			const struct sockaddr_in* addr4 = (const struct sockaddr_in*)&(*it);
 			port = ntohs(addr4->sin_port);
- //std::cout << "\tIPv4: ";
+ std::cout << "\tIPv4: ";
 			print_ipv4(addr4);
- //std::cout << ":" << port << std::endl;
+ std::cout << ":" << port << std::endl;
 		}
 		else if (it->ss_family == AF_INET6) {
 			const struct sockaddr_in6* addr6 = (const struct sockaddr_in6*)&(*it);

@@ -79,8 +79,8 @@ class httpResponse
 		int exeCgi(std::string path, HttpRequest &req);
 		char** createEnv(HttpRequest &req, std::string path);
 		void saveCgiOutput(int *pipeOut, pid_t pid);
-		void fillCgiResponse(HttpRequest &req);
-		void parseCgiOutput();
+		// void fillCgiResponse(HttpRequest &req);
+		// void parseCgiOutput();
 };
 
 #endif

@@ -55,7 +55,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	std::stringstream ss;
 	ss << req.body.size();
 	envList.push_back("CONTENT_LENGTH=" + ss.str());
-	// std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
+	std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
 	std::string tmp;
 	for (std::vector<std::string>::iterator it = req.mult["Content-Type"].begin();it != req.mult["Content-Type"].end();it++)
 	{
@@ -65,7 +65,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 			tmp += *it;
 	}
 	envList.push_back("CONTENT_TYPE=" + tmp);
-	// std::cerr << GOLD BOLD "CONTENT_TYPE=" << tmp << RESET << std::endl;
+	std::cerr << GOLD BOLD "CONTENT_TYPE=" << tmp << RESET << std::endl;
 	std::string scriptName = req.raw_path;
 	size_t pos = scriptName.find(".bla");
 	if (pos != std::string::npos)
@@ -80,9 +80,9 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	envList.push_back("REDIRECT_STATUS=200");
 	envList.push_back("QUERY_STRING=" + req.queryString);
 
-	// std::cerr << BLUE BOLD "Scriptfilename {" << path << "}" RESET << std::endl;
-	// std::cerr << BLUE BOLD "scriptname {" << scriptName << "}" RESET << std::endl;
-	// std::cerr << BLUE BOLD "path info {" << pathInfo << "}" RESET << std::endl;
+	std::cerr << BLUE BOLD "Scriptfilename {" << path << "}" RESET << std::endl;
+	std::cerr << BLUE BOLD "scriptname {" << scriptName << "}" RESET << std::endl;
+	std::cerr << BLUE BOLD "path info {" << pathInfo << "}" RESET << std::endl;
 
 	char **env = new char*[envList.size() + 1];
 	for (size_t i = 0; i < envList.size(); ++i)
@@ -110,7 +110,9 @@ void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
 	close(pipeOut[0]);
 
 	int status;
+	std::cerr << LIME BOLD "_BEFORE WAITPID" RESET << std::endl;
 	waitpid(pid, &status, 0);
+	std::cerr << GREEN BOLD "_AFTER WAITPID" RESET << std::endl;
 	int code = WEXITSTATUS(status);
 	_statusCode = code;
 	code == 0 ? _statusCode = 200 : _statusCode = 500;
@@ -123,6 +125,7 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		return 0;
 	int pipeOut[2], pipeIn[2];
 	req.isCgi = true;
+	// if (req.pipefdIn == -1 && req.pipefdOut == -1)
 	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
 		return 500;
 	pid_t pid = fork();
@@ -148,6 +151,7 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(path.c_str()), NULL};
 		char **env = createEnv(req, path);
 		execve(_binary.c_str(), arg, env);
+		std::cerr << RED BOLD "FAIL EXECVE" RESET << std::endl;
 		delete []env;
 		exit(1);
 	}
@@ -191,50 +195,50 @@ int httpResponse::isCgi(HttpRequest &req, std::string path){
 }
 
 
-void httpResponse::parseCgiOutput(){
+// void httpResponse::parseCgiOutput(std::string dat){
 
-	size_t sep =_cgiOutput.find("\r\n\r\n");
-	size_t sizeSpace = 4;
-	if (sep == std::string::npos)
-	{
-		sep = _cgiOutput.find("\n\n");
-		sizeSpace = 2;
-	}
-	if (sep != std::string::npos)
-	{
-		std::string headers = _cgiOutput.substr(0, sep);
-		std::string strContent = "Content-Type:";
-		size_t posContentType = headers.find(strContent);
-		if (posContentType != std::string::npos)
-		{
+// 	size_t sep =_cgiOutput.find("\r\n\r\n");
+// 	size_t sizeSpace = 4;
+// 	if (sep == std::string::npos)
+// 	{
+// 		sep = _cgiOutput.find("\n\n");
+// 		sizeSpace = 2;
+// 	}
+// 	if (sep != std::string::npos)
+// 	{
+// 		std::string headers = _cgiOutput.substr(0, sep);
+// 		std::string strContent = "Content-Type:";
+// 		size_t posContentType = headers.find(strContent);
+// 		if (posContentType != std::string::npos)
+// 		{
 			
-			size_t posEndContentType = headers.find("\n", posContentType + strContent.size());
-			_headers["Content-Type"] =  headers.substr(posContentType + strContent.size(), posEndContentType);
-		}
-		_body = _cgiOutput.substr(sep + sizeSpace);
-	}
-	else
-		_body = _cgiOutput;
-}
+// 			size_t posEndContentType = headers.find("\n", posContentType + strContent.size());
+// 			_headers["Content-Type"] =  headers.substr(posContentType + strContent.size(), posEndContentType);
+// 		}
+// 		_body = _cgiOutput.substr(sep + sizeSpace);
+// 	}
+// 	else
+// 		_body = _cgiOutput;
+// }
 
-void httpResponse::fillCgiResponse(HttpRequest &req){
+// void httpResponse::fillCgiResponse(HttpRequest &req){
 
-	_statusMsg = _mErrorMsg[_statusCode];
-	parseCgiOutput();
+// 	_statusMsg = _mErrorMsg[_statusCode];
+// 	// parseCgiOutput();
 
-	size_t pos = _version.find('.');
-	if (req.mult["Connection"].size() == 0 && _version[pos + 1] == '1')
-		_headers["Connection"] = "Keep-Alive";
-	else if (req.mult["Connection"].size() == 0 && _version[pos + 1] == '0')
-		_headers["Connection"] = "close";
-	else
-		_headers["Connection"] = req.mult["Connection"].front();
-	if (_headers["Content-Type"].empty())
-		_headers["Content-Type"] = "text/html";
-	std::stringstream ss;
-	ss << _body.size();
-	_headers["Content-Length"] = ss.str();
-}
+// 	size_t pos = _version.find('.');
+// 	if (req.mult["Connection"].size() == 0 && _version[pos + 1] == '1')
+// 		_headers["Connection"] = "Keep-Alive";
+// 	else if (req.mult["Connection"].size() == 0 && _version[pos + 1] == '0')
+// 		_headers["Connection"] = "close";
+// 	else
+// 		_headers["Connection"] = req.mult["Connection"].front();
+// 	if (_headers["Content-Type"].empty())
+// 		_headers["Content-Type"] = "text/html";
+// 	std::stringstream ss;
+// 	ss << _body.size();
+// 	_headers["Content-Length"] = ss.str();
+// }
 
 std::string httpResponse::handleResponse(HttpRequest &req, int code){
 
@@ -244,6 +248,19 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 	// 	std::cout << RED BOLD "BODY>>>" << s << RESET << std::endl;
 	// }
 	_version = req.version;
+	if (code != 0)
+	{
+		_statusCode = code;
+		handleError(req);
+		if (code == 200)
+		{
+			std::cout << PURPLE BOLD << "__________________HERE PASS" RESET << std::endl;
+			// _headers["Transfer-Encoding"] = "chunked";
+			_headers["Content-Type"] = "text/html; charset=utf-8";
+		}
+		_headers.erase("Content-Length");
+		return convertFinalResponse();
+	}
 	if (_statusCode != 0)
 	{
 		_statusMsg = "Internal Server Error";
@@ -256,12 +273,7 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		if (req.loc->get_is_set_return())
 			code = 301;
 	}
-	if (code != 0)
-	{
-		_statusCode = code;
-		handleError(req);
-		return convertFinalResponse();
-	}
+	
 	_statusCode = isCgi(req, req.path);
 	if (_statusCode != 0)
 	{
@@ -270,6 +282,7 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 			handleError(req);
 			return convertFinalResponse();
 		}
+		// return convertFinalResponse();
 		return "START_CGI";
 	}
 	if (req.method & METHOD_GET)

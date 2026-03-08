@@ -40,6 +40,14 @@ struct HttpRequest
 	int pipefdOut;
 	pid_t cgi_pid;
 	bool isCgi;
+	bool foundHeader;
+	std::string str;
+	std::vector<unsigned char> dataCgi;
+
+	// HttpRequest()
+	// : pipefdIn(-1)
+	// , pipefdOut(-1)
+	// {}
 };
 
 #endif
