@@ -275,10 +275,17 @@ void Engine::handle_client_read(const int client_fd)
                 {
                     int pipefd = client.req.pipefdOut;   
                     _fd_types[pipefd] = FD_CGI_PIPE;
-                    _map_cgi_pid[pipefd] = client_fd;
+                    _map_cgi_pid[pipefd] = client.req.cgi_pid;
+                    _cgi_to_client[pipefd] = client_fd; 
+                    if (!client.req.body.empty())
+                    {
+                        write(client.req.pipefdIn, &client.req.body[0], client.req.body.size());
+                    }
+                    close(client.req.pipefdIn);
+                    client.req.pipefdIn = -1;
                     add_to_epoll(pipefd, EPOLLIN);
                     // std::string status = "HTTP/1.1 200 OK\r\n";
-					// std::cout << BOLD RED "_______________________________HERE   1" RESET << std::endl;
+                    // 	std::cout << BOLD RED "_______________________________HERE   2" RESET << std::endl;
                     // send(client_fd, status.c_str(), status.length(), 0);
                     return ;
                 }
@@ -295,10 +302,17 @@ void Engine::handle_client_read(const int client_fd)
             {
                 int pipefd = client.req.pipefdOut;   
                 _fd_types[pipefd] = FD_CGI_PIPE;
-                _map_cgi_pid[pipefd] = client_fd;
+                _map_cgi_pid[pipefd] = client.req.cgi_pid;
+                _cgi_to_client[pipefd] = client_fd; 
+                if (!client.req.body.empty())
+                {
+                    write(client.req.pipefdIn, &client.req.body[0], client.req.body.size());
+                }
+                close(client.req.pipefdIn);
+                client.req.pipefdIn = -1;
                 add_to_epoll(pipefd, EPOLLIN);
                 // std::string status = "HTTP/1.1 200 OK\r\n";
-				// 	std::cout << BOLD RED "_______________________________HERE   2" RESET << std::endl;
+                // 	std::cout << BOLD RED "_______________________________HERE   2" RESET << std::endl;
                 // send(client_fd, status.c_str(), status.length(), 0);
                 return ;
             }
@@ -326,10 +340,17 @@ void Engine::handle_client_read(const int client_fd)
         {
             int pipefd = client.req.pipefdOut;   
             _fd_types[pipefd] = FD_CGI_PIPE;
-            _map_cgi_pid[pipefd] = client_fd;
+            _map_cgi_pid[pipefd] = client.req.cgi_pid;
+            _cgi_to_client[pipefd] = client_fd; 
+            if (!client.req.body.empty())
+            {
+                write(client.req.pipefdIn, &client.req.body[0], client.req.body.size());
+            }
+            close(client.req.pipefdIn);
+            client.req.pipefdIn = -1;
             add_to_epoll(pipefd, EPOLLIN);
             // std::string status = "HTTP/1.1 200 OK\r\n";
-			// 		std::cout << BOLD RED "_______________________________HERE   3" RESET << std::endl;
+            // 	std::cout << BOLD RED "_______________________________HERE   2" RESET << std::endl;
             // send(client_fd, status.c_str(), status.length(), 0);
             return ;
         }
@@ -459,7 +480,7 @@ void Engine::run()
             if (_fd_types[fd] == FD_CGI_PIPE)
             {
                 char buffer[4096] = {};
-                int client_fd = _map_cgi_pid[fd];
+                int client_fd = _cgi_to_client[fd];
                 size_t bytes_read = read(fd, buffer, sizeof(buffer));
 				const std::map<int, Client>::iterator it = _clients.find(client_fd);
 				if (it == _clients.end())
@@ -469,11 +490,17 @@ void Engine::run()
                 if (bytes_read > 0)
 				{
 					// std::string str(buffer);
-					client.req.str += buffer;
+					client.req.str += std::string(buffer, bytes_read);
 					std::cout << "SEND DATA CGI data>"<< client.req.str << std::endl;
 					if (!client.req.foundHeader)
 					{
 						size_t pos = client.req.str.find("\r\n\r\n");
+                        size_t sep_size = 4;
+                        if (pos == std::string::npos)
+                        {
+                            pos = client.req.str.find("\n\n");
+                            sep_size = 2;
+                        }
 						if (pos != std::string::npos)
 						{
 							client.req.foundHeader = 1;
@@ -486,7 +513,7 @@ void Engine::run()
 							// send(client_fd,"PATH_INFO incorrect",19,0);
                     		// send(client_fd, "\r\n\r\n", header.size(), 0);
 
-							client.req.dataCgi.insert(client.req.dataCgi.end(), client.req.str.begin() + pos + 4, client.req.str.end());
+							client.req.dataCgi.insert(client.req.dataCgi.end(), client.req.str.begin() + pos + sep_size, client.req.str.end());
 						}
 					}
 					if (client.req.dataCgi.size() >= 0x8000)

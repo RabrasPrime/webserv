@@ -7,7 +7,7 @@ print("")
 
 # On génère 1 Go de données par morceaux de 8 Ko
 chunk_size = 8192
-total_size = 200 * 200 * 200 # 1 Go
+total_size = 10 * 10 * 10 # 1 Go
 data = "A" * chunk_size
 
 for _ in range(total_size // chunk_size):

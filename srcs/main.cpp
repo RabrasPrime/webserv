@@ -328,6 +328,17 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 		}
 		if (client.req.chunked_size == 0 && client.req.chunked > 1)
 		{
+			if (client.req.isCgi)
+			{
+				close(client.req.pipefdIn);
+				client.req.pipefdIn = -1;
+				int pipefd = client.req.pipefdOut;
+				_fd_types[pipefd] = FD_CGI_PIPE;
+				_map_cgi_pid[pipefd] = client.req.cgi_pid;
+				_cgi_to_client[pipefd] = client_fd;
+				add_to_epoll(pipefd, EPOLLIN);
+				return;
+			}
 			client.req.body = client.get_read();
 			std::cout << BLUE BOLD "CALL RESPONSE HERE" RESET << std::endl;
 			client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);

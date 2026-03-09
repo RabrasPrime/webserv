@@ -42,11 +42,11 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 
 	std::vector<std::string> envList;
 
-	if (req.methods & METHOD_GET)
+	if (req.method & METHOD_GET)
 		envList.push_back("REQUEST_METHOD=GET");
-	if (req.methods & METHOD_POST)
+	if (req.method & METHOD_POST)
 		envList.push_back("REQUEST_METHOD=POST");
-	if (req.methods & METHOD_DELETE)
+	if (req.method & METHOD_DELETE)
 		envList.push_back("REQUEST_METHOD=DELETE");
 
 
@@ -261,7 +261,7 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		{
 			std::cout << PURPLE BOLD << "__________________HERE PASS" RESET << std::endl;
 			_headers["Transfer-Encoding"] = "chunked";
-			// _headers["Content-Type"] = "text/html; charset=utf-8";
+			_headers["Content-Type"] = "text/html; charset=utf-8";
 			// _headers.erase("Content-Length");
 			// _headers["Content-Length"] = "19";
 			// PATH_INFO incorrect
