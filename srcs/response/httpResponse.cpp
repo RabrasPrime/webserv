@@ -512,7 +512,7 @@ std::string httpResponse::setPathError(HttpRequest &req)
 }
 
 void httpResponse::fillDefaultBody(HttpRequest &req){
-	if (_statusCode == 405)
+	if (_statusCode == 405 || req.isCgi)
 		return;//HERE
 	std::string pathErrFile = setPathError(req);
 	std::ifstream inFile;
@@ -521,7 +521,6 @@ void httpResponse::fillDefaultBody(HttpRequest &req){
 	if (pathErrFile.empty() || !inFile.is_open())
 	{
 		std::ostringstream index;
-		std::cout << ORANGE BOLD "_________________IN" RESET << std::endl;
 		index 	<< "<html><head><style> body {background-color: black; text-align: center;} h1 { font-size: 200px; color: #d70516; margin-top -50px; } p {font-size: 100px; font-weight: bold; margin-top: -60px; color: #d70516; } </style></head><body><div><h1>" << _statusCode << "</h1><p>" << _statusMsg << "</p></div></body></html>";
 		_body = index.str();
 		_bodyType = "html";

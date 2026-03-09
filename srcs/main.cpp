@@ -236,6 +236,7 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
 
 int main(int ac, char **av)
 {
+	// signal(SIGPIPE, SIG_IGN);
 	std::vector<Server> servers;
 	std::string path;
 	if (ac > 1)
@@ -369,11 +370,11 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						// il nous manquait un clear je crois 
 						client.req.body.clear();
 					}
-					else if (client.req.isCgi)
-					{
-						write(client.req.pipefdIn, reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
-						client.req.body.clear();
-					}
+					// else if (client.req.isCgi)
+					// {
+					// 	// write(client.req.pipefdIn, reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+					// 	client.req.body.clear();
+					// }
 					else
 					{
 						std::cout << ORANGE BOLD "CALL REPONSE HERE" RESET << std::endl;

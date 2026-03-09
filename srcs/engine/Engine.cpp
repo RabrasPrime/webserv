@@ -277,13 +277,14 @@ void Engine::handle_client_read(const int client_fd)
                     _fd_types[pipefd] = FD_CGI_PIPE;
                     _map_cgi_pid[pipefd] = client.req.cgi_pid;
                     _cgi_to_client[pipefd] = client_fd; 
+                    add_to_epoll(pipefd, EPOLLIN);
+
                     if (!client.req.body.empty())
                     {
                         write(client.req.pipefdIn, &client.req.body[0], client.req.body.size());
                     }
                     close(client.req.pipefdIn);
                     client.req.pipefdIn = -1;
-                    add_to_epoll(pipefd, EPOLLIN);
                     // std::string status = "HTTP/1.1 200 OK\r\n";
                     // 	std::cout << BOLD RED "_______________________________HERE   2" RESET << std::endl;
                     // send(client_fd, status.c_str(), status.length(), 0);
@@ -304,13 +305,14 @@ void Engine::handle_client_read(const int client_fd)
                 _fd_types[pipefd] = FD_CGI_PIPE;
                 _map_cgi_pid[pipefd] = client.req.cgi_pid;
                 _cgi_to_client[pipefd] = client_fd; 
+                add_to_epoll(pipefd, EPOLLIN);
                 if (!client.req.body.empty())
                 {
                     write(client.req.pipefdIn, &client.req.body[0], client.req.body.size());
                 }
+                // add_to_epoll(pipefd, EPOLLIN);
                 close(client.req.pipefdIn);
                 client.req.pipefdIn = -1;
-                add_to_epoll(pipefd, EPOLLIN);
                 // std::string status = "HTTP/1.1 200 OK\r\n";
                 // 	std::cout << BOLD RED "_______________________________HERE   2" RESET << std::endl;
                 // send(client_fd, status.c_str(), status.length(), 0);
@@ -342,13 +344,13 @@ void Engine::handle_client_read(const int client_fd)
             _fd_types[pipefd] = FD_CGI_PIPE;
             _map_cgi_pid[pipefd] = client.req.cgi_pid;
             _cgi_to_client[pipefd] = client_fd; 
+            add_to_epoll(pipefd, EPOLLIN);
             if (!client.req.body.empty())
             {
                 write(client.req.pipefdIn, &client.req.body[0], client.req.body.size());
             }
             close(client.req.pipefdIn);
             client.req.pipefdIn = -1;
-            add_to_epoll(pipefd, EPOLLIN);
             // std::string status = "HTTP/1.1 200 OK\r\n";
             // 	std::cout << BOLD RED "_______________________________HERE   2" RESET << std::endl;
             // send(client_fd, status.c_str(), status.length(), 0);
