@@ -53,11 +53,11 @@ class httpResponse
 		
 		void fillHeaders(std::map<std::string, std::vector<std::string> > &mult);
 		int fillBody(std::string &path, HttpRequest &req);
-		void fillDefaultBody();
+		void fillDefaultBody(HttpRequest &req);
 		void fillMapError();
 		void fillMapExtension(std::map<std::string, std::string> &map, std::string pathFile);
 		void handleError(HttpRequest &req);
-		std::string setPathError();
+		std::string setPathError(HttpRequest &req);
 
 		void exeGet(HttpRequest &req);
 		int searchFileInDir(std::string &path, HttpRequest &req);

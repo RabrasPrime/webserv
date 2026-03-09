@@ -2,6 +2,15 @@ server
 	listen 8080
 	root ./www/
 	server_name site.com
+	error_pages 401 ./file/error_page/error_page_401.html
+	error_pages 403 ./file/error_page/error_page_403.html
+	error_pages 404 ./file/error_page/error_page_404.html
+	error_pages 405 ./file/error_page/error_page_405.html
+	error_pages 409 ./file/error_page/error_page_409.html
+	error_pages 411 ./file/error_page/error_page_411.html
+	error_pages 413 ./file/error_page/error_page_413.html
+	error_pages 500 ./file/error_page/error_page_500.html
+	error_pages 501 ./file/error_page/error_page_501.html
 
 	methods GET POST
 	locations /
@@ -15,10 +24,10 @@ server
 		methods GET
 		alias ./www/html/Account.html
 	locations /signup
-		methods GET
+		methods GET POST
 		alias ./www/html/Connected.html
 	locations /signin
-		methods GET
+		methods GET POST
 		alias ./www/html/Connected.html
 	locations /logout
 		methods GET

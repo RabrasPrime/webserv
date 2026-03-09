@@ -101,28 +101,28 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	return env;
 }
 
-void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
+// void httpResponse::saveCgiOutput(int *pipeOut, pid_t pid){
 
-	std::string outCgi;
-	char buffer[4096];
-	int bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
-	while ((bytesRead > 0))
-	{
-		buffer[bytesRead] = '\0';
-		outCgi += buffer;
-		bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
-	}
-	close(pipeOut[0]);
+// 	std::string outCgi;
+// 	char buffer[4096];
+// 	int bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
+// 	while ((bytesRead > 0))
+// 	{
+// 		buffer[bytesRead] = '\0';
+// 		outCgi += buffer;
+// 		bytesRead = read(pipeOut[0], buffer, sizeof(buffer) - 1);
+// 	}
+// 	close(pipeOut[0]);
 
-	int status;
-	std::cerr << LIME BOLD "_BEFORE WAITPID" RESET << std::endl;
-	waitpid(pid, &status, 0);
-	std::cerr << GREEN BOLD "_AFTER WAITPID" RESET << std::endl;
-	int code = WEXITSTATUS(status);
-	_statusCode = code;
-	code == 0 ? _statusCode = 200 : _statusCode = 500;
-	_cgiOutput = outCgi;
-}
+// 	int status;
+// 	std::cerr << LIME BOLD "_BEFORE WAITPID" RESET << std::endl;
+// 	waitpid(pid, &status, 0);
+// 	std::cerr << GREEN BOLD "_AFTER WAITPID" RESET << std::endl;
+// 	int code = WEXITSTATUS(status);
+// 	_statusCode = code;
+// 	code == 0 ? _statusCode = 200 : _statusCode = 500;
+// 	_cgiOutput = outCgi;
+// }
 
 int httpResponse::exeCgi(std::string path, HttpRequest &req){
 	
@@ -472,9 +472,11 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 	return 200;	
 }
 
-std::string httpResponse::setPathError()
+std::string httpResponse::setPathError(HttpRequest &req)
 {
 	std::string pathErrFile;
+	if (req.error_pages.find(_statusCode) != req.error_pages.end())
+		return req.error_pages[_statusCode];
 	switch (_statusCode)
 	{
 		
@@ -509,30 +511,29 @@ std::string httpResponse::setPathError()
 	return pathErrFile;
 }
 
-void httpResponse::fillDefaultBody(){
+void httpResponse::fillDefaultBody(HttpRequest &req){
 	if (_statusCode == 405)
 		return;//HERE
-	std::string pathErrFile = setPathError();
+	std::string pathErrFile = setPathError(req);
 	std::ifstream inFile;
 	if (!pathErrFile.empty())
 		inFile.open(pathErrFile.c_str(), std::ios::binary);
-	// if (pathErrFile.empty() || !inFile.is_open())
-	// {
-	// 	std::ostringstream index;
-	// 	index 	<< "<html><head><style> body {background-color: black;} h1 { font-size: 200px; color: #d70516; margin-top -50px; } p {font-size: 100px; font-weight: bold; margin-top: -60px; color: #ffffff; } </style></head><body><div class=\"styleContentError\"><h1>500</h1><p>Internal Server Error</p></div></body></html>";
-	// 	_statusCode = 500;
-	// 	_statusMsg = "Internal Server Error";
-	// 	_body = index.str();
-	// 	_bodyType = "html";
-	// }
-	// else
-	// {
-	// 	std::ostringstream oss;
-	// 	oss << inFile.rdbuf();
-	// 	_body = oss.str();
-	// 	_bodyType = pathErrFile.substr(pathErrFile.find_last_of(".") + 1);
-	// 	inFile.close();
-	// }
+	if (pathErrFile.empty() || !inFile.is_open())
+	{
+		std::ostringstream index;
+		std::cout << ORANGE BOLD "_________________IN" RESET << std::endl;
+		index 	<< "<html><head><style> body {background-color: black; text-align: center;} h1 { font-size: 200px; color: #d70516; margin-top -50px; } p {font-size: 100px; font-weight: bold; margin-top: -60px; color: #d70516; } </style></head><body><div><h1>" << _statusCode << "</h1><p>" << _statusMsg << "</p></div></body></html>";
+		_body = index.str();
+		_bodyType = "html";
+	}
+	else
+	{
+		std::ostringstream oss;
+		oss << inFile.rdbuf();
+		_body = oss.str();
+		_bodyType = pathErrFile.substr(pathErrFile.find_last_of(".") + 1);
+		inFile.close();
+	}
 }
 
 void httpResponse::handleError(HttpRequest &req)
@@ -545,7 +546,7 @@ void httpResponse::handleError(HttpRequest &req)
 		_statusCode = 500;
 		_statusMsg = "Internal Server Error";
 	}
-	fillDefaultBody();
+	fillDefaultBody(req);
 	if (_statusCode == 301)
 	{
 		if (req.loc->get_is_set_return())
