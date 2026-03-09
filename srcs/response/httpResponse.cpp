@@ -54,8 +54,11 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 		envList.push_back(*it);
 	std::stringstream ss;
 	ss << req.body.size();
-	envList.push_back("CONTENT_LENGTH=" + ss.str());
-	std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
+	if (req.chunked == 0)
+	{
+		envList.push_back("CONTENT_LENGTH=" + ss.str());
+		std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
+	}
 	std::string tmp;
 	for (std::vector<std::string>::iterator it = req.mult["Content-Type"].begin();it != req.mult["Content-Type"].end();it++)
 	{
@@ -71,10 +74,12 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	if (pos != std::string::npos)
 		scriptName = scriptName.substr(0, pos + 4);
 	envList.push_back("SCRIPT_NAME=" + scriptName);
-	std::string pathInfo = "";
-	if (pos != std::string::npos && pos + 4 < req.raw_path.size())
-		pathInfo = req.raw_path.substr(pos + 4);
-	envList.push_back("PATH_INFO=" + pathInfo);
+	// std::string pathInfo = "";
+	// if (pos != std::string::npos && pos + 4 < req.raw_path.size())
+	// 	pathInfo = req.raw_path.substr(pos + 4);
+	std::cout << "Raw Path>" << req.raw_path << std::endl;
+	std::cout << "Raw Path>" << req.path << std::endl;
+	envList.push_back("PATH_INFO=" + req.path);
 	envList.push_back("SCRIPT_FILENAME=" + path);
 	envList.push_back("SERVER_PROTOCOL=" + req.version);
 	envList.push_back("REDIRECT_STATUS=200");
@@ -82,7 +87,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 
 	std::cerr << BLUE BOLD "Scriptfilename {" << path << "}" RESET << std::endl;
 	std::cerr << BLUE BOLD "scriptname {" << scriptName << "}" RESET << std::endl;
-	std::cerr << BLUE BOLD "path info {" << pathInfo << "}" RESET << std::endl;
+	// std::cerr << BLUE BOLD "path info {" << pathInfo << "}" RESET << std::endl;
 
 	char **env = new char*[envList.size() + 1];
 	for (size_t i = 0; i < envList.size(); ++i)
@@ -162,9 +167,9 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 	req.pipefdOut = pipeOut[0];
 	fcntl(req.pipefdIn, F_SETFL, O_NONBLOCK);
 	fcntl(req.pipefdOut, F_SETFL, O_NONBLOCK);
-	return 200;
 	// if (!req.body.empty() && req.method & METHOD_POST)
 	// 	write(pipeIn[1], reinterpret_cast<char*>(&req.body[0]), req.body.size());
+	return 200;
 	// close(pipeOut[1]);
 	// if (req.chunked == 0 || req.chunked_size == 0)
 	// 	close(pipeIn[1]);
@@ -255,10 +260,13 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		if (code == 200)
 		{
 			std::cout << PURPLE BOLD << "__________________HERE PASS" RESET << std::endl;
-			// _headers["Transfer-Encoding"] = "chunked";
-			_headers["Content-Type"] = "text/html; charset=utf-8";
+			_headers["Transfer-Encoding"] = "chunked";
+			// _headers["Content-Type"] = "text/html; charset=utf-8";
+			// _headers.erase("Content-Length");
+			// _headers["Content-Length"] = "19";
+			// PATH_INFO incorrect
+			_headers.erase("Content-Length");
 		}
-		_headers.erase("Content-Length");
 		return convertFinalResponse();
 	}
 	if (_statusCode != 0)
