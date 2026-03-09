@@ -477,6 +477,7 @@ std::string httpResponse::setPathError()
 	std::string pathErrFile;
 	switch (_statusCode)
 	{
+		
 		case 401:
 			pathErrFile = "file/error_page/error_page_401.html";
 			break ;

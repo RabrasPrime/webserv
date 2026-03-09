@@ -13,7 +13,7 @@ FT_API_BASE = os.getenv("FT_API_BASE", "https://api.intra.42.fr")
 FT_LOGIN = os.getenv("FT_LOGIN")
 
 if not FT_UID or not FT_SECRET:
-    print("Erreur: FT_UID ou FT_SECRET manquants dans le fichier .env")
+    print("\r\n\r\nErreur: FT_UID ou FT_SECRET manquants dans le fichier .env")
     sys.exit(1)
 
 def get_token():

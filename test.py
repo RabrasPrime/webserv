@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 import sys
+import time
 
 print("Content-Type: text/plain")
 print("Status: 200 OK")
 print("")
 
-# On génère 1 Go de données par morceaux de 8 Ko
-chunk_size = 8192
-total_size = 10 * 10 * 10 # 1 Go
-data = "A" * chunk_size
 
-for _ in range(total_size // chunk_size):
-    sys.stdout.write(data)
+for i in range(100000): # 15Mo / 32000 ~ 480 itérations
+    sys.stdout.write("A" * 500)
+    sys.stdout.flush()
+    time.sleep(0.01)
 
-sys.stdout.flush()
