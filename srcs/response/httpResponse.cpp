@@ -165,7 +165,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 // }
 
 int httpResponse::exeCgi(std::string path, HttpRequest &req){
-
+	
 	if (req.cgi_pid > 0)
 		return 0;
 	int pipeOut[2], pipeIn[2];
@@ -251,7 +251,7 @@ int httpResponse::isCgi(HttpRequest &req, std::string path){
 	if (stat(path.c_str(), &s) == 0)
 	{
 		if (S_ISREG(s.st_mode))
-		{
+		{	
 			std::ifstream inFile;
 			inFile.open(path.c_str(), std::ios::binary);
 			if (!inFile.is_open())
@@ -281,7 +281,7 @@ int httpResponse::isCgi(HttpRequest &req, std::string path){
 // 		size_t posContentType = headers.find(strContent);
 // 		if (posContentType != std::string::npos)
 // 		{
-
+			
 // 			size_t posEndContentType = headers.find("\n", posContentType + strContent.size());
 // 			_headers["Content-Type"] =  headers.substr(posContentType + strContent.size(), posEndContentType);
 // 		}
@@ -361,7 +361,7 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		if (req.loc->get_is_set_return())
 			code = 301;
 	}
-
+	
 	_statusCode = isCgi(req, req.path);
 	if (_statusCode != 0)
 	{
@@ -531,7 +531,8 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 	{
 //  std::cout << RED BOLD "PATH NOT FOUND" RESET << std::endl;
 		if (req.path[req.path.size() - 1] != '/')
-			return 404;
+			return 301;
+		return 404;
 	}
 	std::ifstream inFile;
 	if (S_ISDIR(s.st_mode))
@@ -543,19 +544,16 @@ int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 	}
 	else
 	{
-    	inFile.open(path.c_str(), std::ios::binary);
-        if (!inFile.is_open())
-        {
-            std::cerr << "403 - Cannot open: " << path << std::endl;
-            return 403;
-        }
+		inFile.open(path.c_str(), std::ios::binary);
+		if (!inFile.is_open())
+			return 403;
 		std::ostringstream oss;
 		oss << inFile.rdbuf();
 		_body = oss.str();
 		inFile.close();
 		_bodyType = path.substr(path.find_last_of(".") + 1, path.size());
 	}
-	return 200;
+	return 200;	
 }
 
 std::string httpResponse::setPathError(HttpRequest &req)
@@ -565,7 +563,7 @@ std::string httpResponse::setPathError(HttpRequest &req)
 		return req.error_pages[_statusCode];
 	switch (_statusCode)
 	{
-
+		
 		case 401:
 			pathErrFile = "file/error_page/error_page_401.html";
 			break ;
@@ -635,7 +633,7 @@ void httpResponse::handleError(HttpRequest &req)
 	fillDefaultBody(req);
 	if (_statusCode == 301)
 	{
-		if (req.loc && req.loc->get_is_set_return())
+		if (req.loc->get_is_set_return())
 			_headers["Location"] = req.loc->get_return_path();
 		else
 			_headers["Location"] = req.raw_path + '/' + req.queryString;
@@ -682,7 +680,7 @@ void httpResponse::handleError(HttpRequest &req)
 			else
 				allowMethods += ", DELETE";
 		}
-		_headers["Allow"] = allowMethods;
+		_headers["Allow"] = allowMethods; 
 	}
 }
 
@@ -753,7 +751,7 @@ int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 		dirPath = "/";
 	else
 		dirPath = path.substr(0, parentDir);
-
+	
 	if (stat(path.c_str(), &s) == 0)
 	{
 		if (S_ISDIR(s.st_mode))
@@ -782,7 +780,7 @@ int httpResponse::isFileExist(std::string &path, HttpRequest &req)
 	{
  //std::cout << PURPLE BOLD "NOT OPEN" RESET << std::endl;
 		return 500;
-	}
+	}		
  //std::cout << RED BOLD "WRITE IN FILE" RESET << std::endl;
 	req.outFile->write(reinterpret_cast<char*>(&req.body[0]), req.body.size());
 	if (!req.outFile->good())
