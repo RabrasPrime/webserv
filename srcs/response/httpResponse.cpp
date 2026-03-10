@@ -1,5 +1,6 @@
 #include "httpResponse.hpp"
 #include "Server.hpp"
+#include <algorithm>
 
 httpResponse::httpResponse()
 : _statusCode(0){
@@ -56,8 +57,24 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	ss << req.body.size();
 	if (req.chunked == 0)
 	{
-		envList.push_back("CONTENT_LENGTH=" + ss.str());
-		std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
+		if (!(req.method & METHOD_GET))
+		{
+			envList.push_back("CONTENT_LENGTH=" + ss.str());
+			std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
+			// std::stringstream sa;
+			// struct stat st;
+			// if (stat(req.path.c_str(), &st) == 0)
+			// {
+			// 	long long taille = st.st_size;
+			// 	sa << taille;
+			// }
+			// envList.push_back("CONTENT_LENGTH=" + sa.str());
+			// std::cerr << GOLD BOLD "CONTENT_LENGTH=" << sa.str() << RESET << std::endl;
+		}
+		else
+		{
+			envList.push_back("PATH_TRANSLATED=" + req.path);
+		}
 	}
 	std::string tmp;
 	for (std::vector<std::string>::iterator it = req.mult["Content-Type"].begin();it != req.mult["Content-Type"].end();it++)
@@ -77,13 +94,36 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	// std::string pathInfo = "";
 	// if (pos != std::string::npos && pos + 4 < req.raw_path.size())
 	// 	pathInfo = req.raw_path.substr(pos + 4);
-	std::cout << "Raw Path>" << req.raw_path << std::endl;
-	std::cout << "Raw Path>" << req.path << std::endl;
-	envList.push_back("PATH_INFO=" + req.path);
+	std::cerr << "Raw path>" << req.raw_path << std::endl;
+	std::cerr << "Raw Path>" << req.path << std::endl;
+	envList.push_back("PATH_INFO=" + req.raw_path);
+	envList.push_back("REQUEST_URI=" + req.raw_path);
 	envList.push_back("SCRIPT_FILENAME=" + path);
 	envList.push_back("SERVER_PROTOCOL=" + req.version);
 	envList.push_back("REDIRECT_STATUS=200");
 	envList.push_back("QUERY_STRING=" + req.queryString);
+
+	std::map<std::string,std::vector<std::string> >::iterator it;
+	for (it = req.mult.begin();it != req.mult.end();it++)
+	{
+		std::string content;
+		std::vector<std::string>::iterator itt;
+		for (itt = it->second.begin();itt != it->second.end();itt++)
+		{
+			if (content.size() == 0)
+			{
+				content += *itt;
+			}
+			else
+			{
+				content += ", " + *itt;
+			}
+		}
+		std::string ident(it->first);
+		std::transform(ident.begin(),ident.end(),ident.begin(),::toupper);
+		envList.push_back("HTTP_" + ident + "=" + content);
+		std::cerr << RED BOLD "HTTP_" + ident + "=" + content + RESET << std::endl;
+	}
 
 	std::cerr << BLUE BOLD "Scriptfilename {" << path << "}" RESET << std::endl;
 	std::cerr << BLUE BOLD "scriptname {" << scriptName << "}" RESET << std::endl;
@@ -130,30 +170,54 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		return 0;
 	int pipeOut[2], pipeIn[2];
 	req.isCgi = true;
-	// if (req.pipefdIn == -1 && req.pipefdOut == -1)
-	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
-		return 500;
+	// if (req.method & METHOD_GET)
+	// {
+	// 	if (pipe(pipeOut) == -1)
+	// 		return 500;
+	// }
+	// else
+	// {
+		if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
+			return 500;
+	// }
 	pid_t pid = fork();
 	if (pid < 0)
 	{
-		close(pipeIn[1]);
-		close(pipeIn[0]);
+		if (req.method & METHOD_GET)
+		{
+			close(pipeIn[1]);
+			close(pipeIn[0]);
+		}
 		close(pipeOut[0]);
 		close(pipeOut[1]);
 		return 500;
 	}
 	else if (pid == 0)
 	{
-		if (dup2(pipeIn[0], STDIN_FILENO) == -1)
-			exit(EXIT_FAILURE);
+		// int fd;
+		// if (req.method & METHOD_GET)
+		// {
+		// 	fd = open(req.path.c_str(), O_WRONLY, 0644);
+		// 	if (fd == -1)
+		// 		exit(EXIT_FAILURE);
+		// 	if (dup2(fd, STDIN_FILENO) == -1)
+		// 		exit(EXIT_FAILURE);
+		// 	close(fd);
+		// }
+		// else
+		// {
+			if (dup2(pipeIn[0], STDIN_FILENO) == -1)
+				exit(EXIT_FAILURE);
+			close(pipeIn[1]);
+			close(pipeIn[0]);
+		// }
+
 		if (dup2(pipeOut[1], STDOUT_FILENO) == -1)
 			exit(EXIT_FAILURE);
-		close(pipeIn[1]);
-		close(pipeIn[0]);
 		close(pipeOut[0]);
 		close(pipeOut[1]);
 
-		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(path.c_str()), NULL};
+		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(req.path.c_str()), NULL};
 		char **env = createEnv(req, path);
 		execve(_binary.c_str(), arg, env);
 		std::cerr << RED BOLD "FAIL EXECVE" RESET << std::endl;
@@ -161,28 +225,29 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		exit(1);
 	}
 	req.cgi_pid = pid;
-	close(pipeIn[0]);
-	close(pipeOut[1]);
-	req.pipefdIn = pipeIn[1];
-	req.pipefdOut = pipeOut[0];
-	fcntl(req.pipefdIn, F_SETFL, O_NONBLOCK);
-	fcntl(req.pipefdOut, F_SETFL, O_NONBLOCK);
-	// if (!req.body.empty() && req.method & METHOD_POST)
-	// 	write(pipeIn[1], reinterpret_cast<char*>(&req.body[0]), req.body.size());
+	// if (!(req.method & METHOD_GET))
+	// {
+		req.pipeIn[1] = pipeIn[1];
+		req.pipeIn[0] = pipeIn[0];
+		fcntl(req.pipeIn[1], F_SETFL, O_NONBLOCK);
+	// }
+	req.pipeOut[0] = pipeOut[0];
+	req.pipeOut[1] = pipeOut[1];
+	fcntl(req.pipeOut[0], F_SETFL, O_NONBLOCK);
 	return 200;
-	// close(pipeOut[1]);
-	// if (req.chunked == 0 || req.chunked_size == 0)
-	// 	close(pipeIn[1]);
-	// close(pipeIn[0]);
-
-	// saveCgiOutput(pipeOut, pid);
-
-	// return _statusCode;
 }
 
 int httpResponse::isCgi(HttpRequest &req, std::string path){
 
 	struct stat s;
+	// || req.raw_path.find(".bla") != std::string::npos
+	int status = stat(path.c_str(), &s);
+	if (status != 0 && req.path.find(".bla") != std::string::npos)
+	{
+		int fd = open(req.path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+		if (fd != -1)
+			close(fd);
+	}
 	if (stat(path.c_str(), &s) == 0)
 	{
 		if (S_ISREG(s.st_mode))
@@ -252,7 +317,22 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 	// 	std::string s(req.body.begin(), req.body.end());
 	// 	std::cout << RED BOLD "BODY>>>" << s << RESET << std::endl;
 	// }
+	std::cerr << "HANDLE RESPONSE code>" << code << std::endl;
 	_version = req.version;
+	// if (code == 2)
+	// {
+	// 	// code = 0;
+	// 	_statusCode = 201;
+	// 	if (req.isCgi && req.method & METHOD_POST)
+	// 	{
+	// 		_statusCode = 201;
+	// 		handleError(req);
+	// 		_headers.erase("Connection");
+	// 		_headers["Content-Type"] = "text/plain";
+	// 		_headers["Content-Length"] = "0";
+	// 		return convertFinalResponse();
+	// 	}
+	// }
 	if (code != 0)
 	{
 		_statusCode = code;
@@ -261,7 +341,7 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		{
 			std::cout << PURPLE BOLD << "__________________HERE PASS" RESET << std::endl;
 			_headers["Transfer-Encoding"] = "chunked";
-			_headers["Content-Type"] = "text/html; charset=utf-8";
+			_headers["Content-Type"] = "text/plain";
 			// _headers.erase("Content-Length");
 			// _headers["Content-Length"] = "19";
 			// PATH_INFO incorrect
@@ -288,9 +368,9 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		if (_statusCode != 200)
 		{
 			handleError(req);
+			req.ErrorCode = _statusCode;
 			return convertFinalResponse();
 		}
-		// return convertFinalResponse();
 		return "START_CGI";
 	}
 	if (req.method & METHOD_GET)

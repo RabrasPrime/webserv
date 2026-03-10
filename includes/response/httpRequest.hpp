@@ -36,13 +36,16 @@ struct HttpRequest
 
 	std::string 						queryString;
 	std::ofstream*	outFile;
-	int pipefdIn;
-	int pipefdOut;
+	// int pipefdIn;
+	// int pipefdOut;
+	int pipeOut[2];
+	int pipeIn[2];
 	pid_t cgi_pid;
 	bool isCgi;
 	bool foundHeader;
 	std::string str;
 	std::vector<unsigned char> dataCgi;
+	int fd;
 
 	// HttpRequest()
 	// : pipefdIn(-1)

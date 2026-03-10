@@ -33,7 +33,8 @@ class Engine
 		{
 			FD_LISTENER,
 			FD_CLIENT,
-			FD_CGI_PIPE
+			FD_CGI_PIPE,
+			FD_CGI_PIPE_IN
 		};
 		std::map<int, FdType> _fd_types;
 

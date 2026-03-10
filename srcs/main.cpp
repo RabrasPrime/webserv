@@ -293,6 +293,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 	// std::cout << BLUE BOLD "HANDLE CHUNCK" RESET << std::endl;
 	do
 	{
+		client.req.chunked_size = -1;
 		if (client.req.chunked <= 1)
 		{
 			// std::string s(vect.begin(), vect.end());
@@ -329,22 +330,27 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 		}
 		if (client.req.chunked_size == 0 && client.req.chunked > 1)
 		{
+			std::string str(client.get_read().begin(),client.get_read().end());
+			std::cerr << BLUE BOLD "CALL RESPONSE END FUNC CHUNCKED HERE>" RESET << str << std::endl;
 			if (client.req.isCgi)
 			{
-				close(client.req.pipefdIn);
-				client.req.pipefdIn = -1;
-				int pipefd = client.req.pipefdOut;
-				_fd_types[pipefd] = FD_CGI_PIPE;
-				_map_cgi_pid[pipefd] = client.req.cgi_pid;
-				_cgi_to_client[pipefd] = client_fd;
-				add_to_epoll(pipefd, EPOLLIN);
+				close(client.req.pipeIn[1]);
+				close(client.req.pipeIn[0]);
+				close(client.req.pipeOut[1]);
+				client.req.pipeIn[1] = -1;
+				// int pipefd = client.req.pipeOut[0];
+				// _fd_types[pipefd] = FD_CGI_PIPE;
+				// _map_cgi_pid[pipefd] = client.req.cgi_pid;
+				// _cgi_to_client[pipefd] = client_fd;
+				// std::cerr << "ADD FD BEFORE" << std::endl;
+				// add_to_epoll(pipefd, EPOLLIN);
+				// std::cerr << "ADD FD AFTER" << std::endl;
 				return;
 			}
 			client.req.body = client.get_read();
-			std::cout << BLUE BOLD "CALL RESPONSE HERE" RESET << std::endl;
-			client._write_buffer = client.res.handleResponse(client.req, client.req.ErrorCode);
+			client._write_buffer = client.res.handleResponse(client.req, 0);
 			client.get_read().clear();
-			std::cout << PURPLE BOLD << client.get_read().size() << RESET << std::endl;
+			// std::cout << PURPLE BOLD << client.get_read().size() << RESET << std::endl;
 			modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 			return ;
 		}
@@ -370,15 +376,31 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						// il nous manquait un clear je crois 
 						client.req.body.clear();
 					}
-					// else if (client.req.isCgi)
-					// {
-					// 	// write(client.req.pipefdIn, reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
-					// 	client.req.body.clear();
-					// }
+					else if (client.req.isCgi)
+					{
+						write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+						client.req.body.clear();
+					}
 					else
 					{
 						std::cout << ORANGE BOLD "CALL REPONSE HERE" RESET << std::endl;
 						client.res.handleResponse(client.req, client.req.ErrorCode);
+						// if (client.req.ErrorCode == 404)
+						// {
+						// 	modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+						// 	return ;
+						// }
+
+						int pipefd = client.req.pipeOut[0];
+						_fd_types[pipefd] = FD_CGI_PIPE;
+						_map_cgi_pid[pipefd] = client.req.cgi_pid;
+						_cgi_to_client[pipefd] = client_fd;
+						std::cout << BROWN "ADD FD BEFORE" RESET << std::endl;
+						add_to_epoll(pipefd, EPOLLIN);
+						std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
+
+						write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+						client.req.body.clear();
 					}
 					client.req.chunked = 1;
 					break;

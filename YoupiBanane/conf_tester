@@ -1,6 +1,6 @@
 server
 	server_name localhost
-	listen 8080
+	listen 8090
 	cgi_ext .bla ./cgi_tester 
 	root ./
 	
