@@ -122,7 +122,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 		std::string ident(it->first);
 		std::transform(ident.begin(),ident.end(),ident.begin(),::toupper);
 		envList.push_back("HTTP_" + ident + "=" + content);
-		std::cerr << RED BOLD "HTTP_" + ident + "=" + content + RESET << std::endl;
+		std::cout << RED BOLD "HTTP_" + ident + "=" + content + RESET << std::endl;
 	}
 
 	std::cerr << BLUE BOLD "Scriptfilename {" << path << "}" RESET << std::endl;
@@ -333,6 +333,15 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 	// 		return convertFinalResponse();
 	// 	}
 	// }
+	if (req.loc)
+	{
+		if (req.loc->get_is_set_return())
+			code = 301;
+	}
+	else
+	{
+		code = 404;
+	}
 	if (code != 0)
 	{
 		_statusCode = code;
@@ -356,11 +365,6 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 		return convertFinalResponse();
 	}
 	_statusCode = 0;
-	if (req.loc)
-	{
-		if (req.loc->get_is_set_return())
-			code = 301;
-	}
 	
 	_statusCode = isCgi(req, req.path);
 	if (_statusCode != 0)

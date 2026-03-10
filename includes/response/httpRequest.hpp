@@ -6,6 +6,7 @@
 
 struct HttpRequest
 {
+	size_t		total_size;
 	size_t		chunked_size;
 	int			chunked;
 	Location*	loc;

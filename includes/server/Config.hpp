@@ -8,7 +8,7 @@
 # define METHOD_GET 0b1
 # define METHOD_POST 0b10
 # define METHOD_DELETE 0b100
-# define CLIENT_MAX_BODY_SIZE_DEFAULT 10 * 1024 * 1024 // 10M
+# define CLIENT_MAX_BODY_SIZE_DEFAULT 1 * 1024 * 1024 * 1024 // 1G
 
 class Config
 {

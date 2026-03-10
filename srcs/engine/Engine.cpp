@@ -191,6 +191,7 @@ void Engine::handle_client_read(const int client_fd)
     //     std::string s(buf.begin(), buf.end());
     //     std::cout << ORANGE BOLD "READ>>>" << s << RESET << std::endl;
     // }
+	
 
     if (ret == 0)
     {
@@ -202,9 +203,26 @@ void Engine::handle_client_read(const int client_fd)
     //     handle_client_disconnect(client_fd);
     //     return;
     // }
-
-    //Sammy, c'est ta partie, pour l'instant j'ai mis une commande random de gemini pour l'instant
-    // client.get_write_buffer() = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
+	if (client.req.ErrorCode == 413)
+	{
+		std::vector<unsigned char>::iterator it;
+		std::vector<unsigned char>& vect = client.get_read();
+		for (it = vect.begin();it != vect.end();it++)
+		{
+			if (is_end_head(it, vect))
+			{
+				vect.erase(vect.begin(),it + 4);
+				std::cerr << LIME BOLD "ERASE DATA AFTER 413" RESET << std::endl;
+				modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+				return;
+			}
+		}
+		std::cerr << BLUE BOLD "READ ALL DATA BUT NO END FOUND" RESET << std::endl;
+		std::string tmp(vect.begin(),vect.end());
+		std::cerr << "DATA>" << tmp << std::endl;
+		// vect.clear();
+		return;
+	}
 
  //std::cout << "Client end head > " << client.req.end_head << std::endl;
 	if (!client.req.end_head)
@@ -473,11 +491,46 @@ void Engine::run()
         for (int i = 0; i < n; i++)
         {
 //  std::cout << BLUE << "New data collected !" << RESET << std::endl;
-            int fd = events[i].data.fd;
-            
+			int fd = events[i].data.fd;
+
+			if (_fd_types[fd] == FD_CGI_PIPE_WRITE)
+			{
+				std::cerr << "ADD WRITE IN CGI" << std::endl;
+				int client_fd = _cgi_to_client[fd];
+				const std::map<int, Client>::iterator it = _clients.find(client_fd);
+				if (it == _clients.end())
+					return;
+
+				Client& client = it->second;
+				while (client.req.body.size() > 0)
+				{
+					size_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+					if (bytes_write > 0)
+					{
+						client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
+					}
+					else if (errno == EAGAIN || errno == EWOULDBLOCK)
+					{
+						break;
+					}
+					else
+					{
+						std::cerr << RED BOLD "AIE RUN" RESET << std::endl;
+					}
+				}
+				if (client.req.body.size() == 0)
+				{
+					add_to_epoll(_cgi_to_client[fd],EPOLLIN | EPOLLET);
+					remove_from_epoll(fd);
+					_fd_types.erase(fd);
+					_cgi_to_client.erase(fd);
+				}
+				continue;
+			}
+
 			if (_fd_types[fd] == FD_CGI_PIPE_IN)
 			{
-                int client_fd = _cgi_to_client[fd];
+				int client_fd = _cgi_to_client[fd];
 				const std::map<int, Client>::iterator it = _clients.find(client_fd);
 				if (it == _clients.end())
 					return;
@@ -504,8 +557,8 @@ void Engine::run()
 						_fd_types.erase(fd);
 						_cgi_to_client.erase(fd);
 					}
-					continue;
 				}
+				continue;
 			}
 
             if (_fd_types[fd] == FD_CGI_PIPE)
@@ -637,7 +690,7 @@ void Engine::run()
                 }
                 else if (events[i].events & EPOLLIN)
                 {
-		//  std::cout << PURPLE << "Handle client read !" << RESET << std::endl;
+		 std::cout << PURPLE << "Handle client read !" << RESET << std::endl;
                     handle_client_read(fd);
                 }
                 else if (events[i].events & EPOLLOUT)

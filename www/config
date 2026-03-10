@@ -5,7 +5,7 @@ server
 	methods GET POST
 	error_pages 401 ./file/error_page/error_page_401.html
 	error_pages 403 ./file/error_page/error_page_403.html
-# 	error_pages 404 ./file/error_page/error_page_404.html
+	error_pages 404 ./file/error_page/error_page_404.html
 	error_pages 405 ./file/error_page/error_page_405.html
 	error_pages 409 ./file/error_page/error_page_409.html
 	error_pages 411 ./file/error_page/error_page_411.html

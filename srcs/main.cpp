@@ -63,9 +63,13 @@ void	fill_headers(std::vector<std::string>& ligne, HttpRequest& req)
 	}
 }
 
-int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> servers)
+int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> servers)
 {
 	(void)req;
+	size_t i;
+	for (i = 0;(tmp[i] == '\n' || tmp[i] == '\r') && i < tmp.size();i++)
+		;
+	std::string str(&tmp[i]);
  std::cout << YELLOW BOLD "\n\nSTR >> " << str << RESET << std::endl;
 	std::string first_line;
 	if (str.find("\r\n") != std::string::npos)
@@ -291,14 +295,15 @@ int main(int ac, char **av)
 
 void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, const int client_fd)
 {
-	// std::cout << BLUE BOLD "HANDLE CHUNCK" RESET << std::endl;
+	std::cout << BLUE BOLD "HANDLE CHUNCK" RESET << std::endl;
 	do
 	{
+		std::cout << ORANGE BOLD "HANDLE CHUNCK" RESET << std::endl;
 		client.req.chunked_size = -1;
 		if (client.req.chunked <= 1)
 		{
 			// std::string s(vect.begin(), vect.end());
-			// std::cout << ORANGE BOLD "BODY CHUCK>>>" << s << RESET << std::endl;
+			// std::cout << ORANGE BOLD "BODY CHUCK>>>" << s << "END" << RESET << std::endl;
 			//size
 			client.req.chunked = 1;
 			std::vector<unsigned char>::iterator it;
@@ -317,8 +322,38 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 					std::stringstream ss;
 					ss << std::hex << hexa;
 					ss >> valeur;
-		//  std::cout << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
+					// std::cerr << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
+					if (!client.req.isCgi)
+						std::cerr << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
 					client.req.chunked_size = valeur;
+					client.req.total_size += valeur;
+					if (client.req.total_size > client.req.maxSize && !client.req.ErrorCode)
+					{
+						std::cerr << ORANGE BOLD "REQ BODY TOO BIG" RESET << std::endl;
+						client.get_read().clear();
+						vect.clear();
+						if (client.req.isCgi)
+						{
+							close(client.req.pipeIn[1]);
+							close(client.req.pipeIn[0]);
+							close(client.req.pipeOut[1]);
+							client.req.pipeIn[1] = -1;
+							// int pipefd = client.req.pipeOut[0];
+							// _fd_types[pipefd] = FD_CGI_PIPE;
+							// _map_cgi_pid[pipefd] = client.req.cgi_pid;
+							// _cgi_to_client[pipefd] = client_fd;
+							// std::cerr << "ADD FD BEFORE" << std::endl;
+							// add_to_epoll(pipefd, EPOLLIN);
+							// std::cerr << "ADD FD AFTER" << std::endl;
+							return;
+						}
+						client.req.ErrorCode = 413;
+						client._write_buffer = client.res.handleResponse(client.req, 413);
+						// modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+						return;
+					}
+					// std::cerr << "SIZE VECT>" << vect.size() << std::endl;
+
 					vect.erase(vect.begin(),it + 2);
 					client.req.chunked--;
 					break;
@@ -331,8 +366,23 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 		}
 		if (client.req.chunked_size == 0 && client.req.chunked > 1)
 		{
-			std::string str(client.get_read().begin(),client.get_read().end());
-			std::cerr << BLUE BOLD "CALL RESPONSE END FUNC CHUNCKED HERE>" RESET << str << std::endl;
+			if (client.req.ErrorCode != 0)
+				modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+			// for (size_t i = 0;i < vect.size();i++)
+			// {
+			// 	std::cerr << "int val>" << (int)vect[i] << std::endl;
+			// }
+			std::cerr << "SIZE VECT>" << vect.size() << std::endl;
+			// if (vect.size() == 0)
+			// {
+			// 	return ;
+			// }
+			std::string str(vect.begin(),vect.end());
+			// std::cerr << BLUE BOLD "CALL RESPONSE END FUNC CHUNCKED HERE>";
+			// std::cerr << str ;
+			// std::cerr << "<END" RESET << std::endl;
+			client.get_read().clear();
+			vect.clear();
 			if (client.req.isCgi)
 			{
 				close(client.req.pipeIn[1]);
@@ -349,7 +399,8 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 				return;
 			}
 			client.req.body = client.get_read();
-			client._write_buffer = client.res.handleResponse(client.req, 0);
+			// if (!client.req.ErrorCode)
+				client._write_buffer = client.res.handleResponse(client.req, 0);
 			client.get_read().clear();
 			// std::cout << PURPLE BOLD << client.get_read().size() << RESET << std::endl;
 			modify_epoll(client_fd, EPOLLOUT | EPOLLET);
@@ -379,6 +430,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 					}
 					else if (client.req.isCgi)
 					{
+						std::cout << "WRITE HERE" << std::endl;
 						write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 						client.req.body.clear();
 					}
@@ -400,8 +452,34 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						add_to_epoll(pipefd, EPOLLIN);
 						std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
 
-						write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
-						client.req.body.clear();
+						// write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+
+						while (client.req.body.size() > 0)
+						{
+							size_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+							if (bytes_write > 0)
+							{
+								client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
+							}
+							else if (errno == EAGAIN || errno == EWOULDBLOCK)
+							{
+								remove_from_epoll(client_fd);
+								int pipefd = client.req.pipeIn[1];
+								_fd_types[pipefd] = FD_CGI_PIPE_WRITE;
+								_map_cgi_pid[pipefd] = client.req.cgi_pid;
+								_cgi_to_client[pipefd] = client_fd;
+								std::cout << LIME "ADD FD BEFORE" RESET << std::endl;
+								add_to_epoll(pipefd, EPOLLIN);
+								std::cout << LIME "ADD FD AFTER" RESET << std::endl;
+							}
+							else
+							{
+								std::cerr << RED BOLD "AIE MAIN" RESET << std::endl;
+							}
+							std::cout << "HERE" << std::endl;
+						}
+
+						// client.req.body.clear();
 					}
 					client.req.chunked = 1;
 					break;
