@@ -1,0 +1,120 @@
+.
+├── 42_location.py
+├── cgi_tester
+├── config_file
+│   ├── 1
+│   └── config_file
+├── error.txt
+├── file
+│   ├── cgi_path.txt
+│   ├── error_code.txt
+│   ├── error_page
+│   │   ├── error_page_401.html
+│   │   ├── error_page_403.html
+│   │   ├── error_page_404.html
+│   │   ├── error_page_405.html
+│   │   ├── error_page_409.html
+│   │   ├── error_page_411.html
+│   │   ├── error_page_413.html
+│   │   ├── error_page_500.html
+│   │   └── error_page_501.html
+│   └── mime_types.txt
+├── includes
+│   ├── Client.hpp
+│   ├── engine
+│   │   ├── Engine.hpp
+│   │   └── Listener.hpp
+│   ├── Parsing.hpp
+│   ├── response
+│   │   ├── httpRequest.hpp
+│   │   └── httpResponse.hpp
+│   ├── server
+│   │   ├── Config.hpp
+│   │   ├── Location.hpp
+│   │   └── Server.hpp
+│   └── utils
+│       ├── Color.hpp
+│       └── Utils.hpp
+├── index.html
+├── index.txt
+├── Makefile
+├── resource
+│   ├── doc_Sockets.md
+│   ├── en.subject.pdf
+│   ├── link
+│   └── orga.md
+├── srcs
+│   ├── client
+│   │   └── Client.cpp
+│   ├── engine
+│   │   ├── Engine.cpp
+│   │   └── Listener.cpp
+│   ├── main.cpp
+│   ├── parsing_config_file
+│   │   └── parsing_config_file.cpp
+│   ├── response
+│   │   └── httpResponse.cpp
+│   ├── server
+│   │   ├── Config.cpp
+│   │   ├── Location.cpp
+│   │   └── Server.cpp
+│   └── utils
+│       └── utils.cpp
+├── tester
+├── test.py
+├── TODO
+├── tree.txt
+├── webserv
+├── www
+│   ├── config
+│   ├── css
+│   │   ├── Account.css
+│   │   ├── Connected.css
+│   │   ├── Dart.css
+│   │   ├── Global.css
+│   │   ├── Home.css
+│   │   └── MenuBar.css
+│   ├── html
+│   │   ├── Account.html
+│   │   ├── Connected.html
+│   │   ├── Dart.html
+│   │   ├── Home.html
+│   │   └── test.html
+│   ├── js
+│   │   ├── GameModeDart.js
+│   │   └── MenuBar.js
+│   └── static
+│       ├── icn
+│       │   ├── Account.png
+│       │   ├── Account.svg
+│       │   ├── Dart.png
+│       │   ├── Dart.svg
+│       │   ├── Home.png
+│       │   ├── Home.svg
+│       │   ├── Score.png
+│       │   └── Score.svg
+│       ├── img
+│       │   ├── 401.jpg
+│       │   ├── 403.gif
+│       │   ├── 404.gif
+│       │   ├── 405.jpeg
+│       │   ├── 409.png
+│       │   ├── 411.jpg
+│       │   ├── 413.jpg
+│       │   ├── 500.jpg
+│       │   └── 501.jpg
+│       └── png
+│           └── cross.png
+└── YoupiBanane
+    ├── conf_tester
+    ├── nop
+    │   ├── other.pouic
+    │   └── youpi.bad_extension
+    ├── Yeah
+    │   └── not_happy.bad_extension
+    ├── youpi.bad_extension
+    ├── youpi.bla
+    ├── youpi.nop
+    └── youpla.bla
+
+27 directories, 90 files

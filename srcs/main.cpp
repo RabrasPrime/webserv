@@ -170,6 +170,8 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
         std::string p = it->second.get_path();
         if (path.compare(0, p.size(), p) == 0)
         {
+            if (p.size() < path.size() && path[p.size()] != '/' && p[p.size()-1] != '/')
+                continue;
             if (p.size() > size_match)
             {
                 best = const_cast<Location*>(&it->second);
@@ -180,6 +182,7 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
  //std::cout << "Path >> " << path << std::endl;
 	if (!best)
 	{
+	    req.loc = NULL;
 		req.location_match = 0;
 		req.error_pages = server->get_error_pages();
 		req.methods = server->get_methods();
@@ -203,7 +206,7 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
 		req.indexes = best->get_indexes();
 		req.maxSize = best->get_client_max_body_size();
 		req.cgi_ext = best->get_cgi_ext();
-		
+
 		req.loc = best;
 
  //std::cout << *best << std::endl;
@@ -211,11 +214,15 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
 		if (best->get_use_alias())
 		{
  //std::cout << RED BOLD "USE ALIAS" RESET << std::endl;
-			req.path = best->get_alias() + &path[best->get_path().size()];
+            std::string suffix(&path[best->get_path().size()]);
+            if (!suffix.empty() && suffix[0] == '/' && !best->get_alias().empty() && best->get_alias()[best->get_alias().size()-1] == '/')
+                suffix = suffix.substr(1);
+            req.path = best->get_alias() + suffix;
 		}
 		else
 			req.path = best->get_root() + &path[1];
 	}
+	std::cerr << "PATH: " << path << " -> req.path: " << req.path << " (best: " << (best ? best->get_path() : "NULL") << ")" << std::endl;
  //std::cout << "__________________Path>" << req.path << std::endl;
 	// for (std::multimap<std::string, std::string>::iterator it = req.mult.begin();it != req.mult.end();it++)
 	// {
@@ -374,7 +381,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 					if (client.req.outFile)
 					{
 						client.req.outFile->write(reinterpret_cast<char*>(&client.req.body[0]),client.req.body.size());
-						// il nous manquait un clear je crois 
+						// il nous manquait un clear je crois
 						client.req.body.clear();
 					}
 					else if (client.req.isCgi)
@@ -410,7 +417,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 		}
 	}
 	while (client.req.chunked == 1);
-	
+
 	// std::string hexa;
 	// for (it = vect.begin();it != vect.end();it++)
 	// {
