@@ -521,7 +521,11 @@ int httpResponse::searchFileInDir(std::string &path, HttpRequest &req)
 int httpResponse::fillBody(std::string &path, HttpRequest &req) {
 
 	if (!(req.methods & req.method))
+	{
+		std::cout << PURPLE BOLD " __________________________HERE" RESET << std::endl;
+		std::cout << "method >>> " << req.method << std::endl;
 		return 405;
+	}
 	struct stat s;
 	if (stat(path.c_str(), &s) == -1)
 	{
@@ -592,6 +596,7 @@ std::string httpResponse::setPathError(HttpRequest &req)
 }
 
 void httpResponse::fillDefaultBody(HttpRequest &req){
+	std::cout << PURPLE BOLD "____________________________________code >> " << _statusCode << RESET << std::endl;
 	if (_statusCode == 405 || req.isCgi)
 		return;//HERE
 	std::string pathErrFile = setPathError(req);

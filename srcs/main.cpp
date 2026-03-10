@@ -203,6 +203,7 @@ int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> 
 		req.indexes = best->get_indexes();
 		req.maxSize = best->get_client_max_body_size();
 		req.cgi_ext = best->get_cgi_ext();
+		
 		req.loc = best;
 
  //std::cout << *best << std::endl;
