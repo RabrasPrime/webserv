@@ -499,7 +499,10 @@ void Engine::run()
 				int client_fd = _cgi_to_client[fd];
 				const std::map<int, Client>::iterator it = _clients.find(client_fd);
 				if (it == _clients.end())
+				{
+					std::cerr << RED BOLD "Client Not Found" RESET << std::endl;
 					return;
+				}
 
 				Client& client = it->second;
 				while (client.req.body.size() > 0)
@@ -507,6 +510,8 @@ void Engine::run()
 					ssize_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 					if (bytes_write > 0)
 					{
+						std::cout << "WRITE IN CGI>" << bytes_write << std::endl;
+						client.req.total_send += bytes_write;
 						client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
 					}
 					else if (errno == EAGAIN || errno == EWOULDBLOCK)

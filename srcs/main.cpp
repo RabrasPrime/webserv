@@ -366,6 +366,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 		}
 		if (client.req.chunked_size == 0 && client.req.chunked > 1)
 		{
+			std::cerr << RED BOLD "BYTES WRITE TOTAL>>>>" << client.req.total_send << RESET << std::endl;
 			if (client.req.ErrorCode != 0)
 				modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 			// for (size_t i = 0;i < vect.size();i++)
@@ -442,6 +443,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 							ssize_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 							if (bytes_write > 0)
 							{
+								client.req.total_send += bytes_write;
 								// std::cout << "WRITE >>>" << bytes_write << std::endl;
 								client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
 							}
@@ -500,12 +502,14 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						std::cout << LIME "ADD FD AFTER" RESET << std::endl;
 
 						// write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
-
+						client.req.total_send = 0;
 						while (client.req.body.size() > 0)
 						{
 							ssize_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 							if (bytes_write > 0)
 							{
+								client.req.total_send += bytes_write;
+								// std::cout << "WRITE >>>" << bytes_write << std::endl;
 								client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
 							}
 							else if (errno == EAGAIN || errno == EWOULDBLOCK)

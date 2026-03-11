@@ -219,6 +219,7 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 
 		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(req.path.c_str()), NULL};
 		char **env = createEnv(req, path);
+		sleep(5);
 		std::cerr << "RETURN ENV AFTER" << std::endl;
 		execve(_binary.c_str(), arg, env);
 		std::cerr << RED BOLD "FAIL EXECVE" RESET << std::endl;

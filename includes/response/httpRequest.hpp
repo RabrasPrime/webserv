@@ -48,7 +48,7 @@ struct HttpRequest
 	std::vector<unsigned char> dataCgi;
 	int fd;
 
-	
+	size_t total_send;
 
 	// HttpRequest()
 	// : pipefdIn(-1)
