@@ -385,6 +385,10 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 			vect.clear();
 			if (client.req.isCgi)
 			{
+
+				remove_from_epoll(client.req.pipeIn[1]);
+				_fd_types.erase(client.req.pipeIn[1]);
+				_cgi_to_client.erase(client.req.pipeIn[1]);
 				close(client.req.pipeIn[1]);
 				close(client.req.pipeIn[0]);
 				close(client.req.pipeOut[1]);
@@ -434,21 +438,27 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 
 						while (client.req.body.size() > 0)
 						{
-							size_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+							errno = 0;
+							ssize_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 							if (bytes_write > 0)
 							{
+								// std::cout << "WRITE >>>" << bytes_write << std::endl;
 								client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
 							}
 							else if (errno == EAGAIN || errno == EWOULDBLOCK)
 							{
-								remove_from_epoll(client_fd);
-								int pipefd = client.req.pipeIn[1];
-								_fd_types[pipefd] = FD_CGI_PIPE_WRITE;
-								_map_cgi_pid[pipefd] = client.req.cgi_pid;
-								_cgi_to_client[pipefd] = client_fd;
-								std::cout << LIME "ADD FD BEFORE" RESET << std::endl;
-								add_to_epoll(pipefd, EPOLLIN);
-								std::cout << LIME "ADD FD AFTER" RESET << std::endl;
+								// remove_from_epoll(client_fd);
+								// _fd_types.erase(client_fd);
+								modify_epoll(client_fd,0);
+								modify_epoll(client.req.pipeIn[1],EPOLLOUT);
+								// int pipefd = client.req.pipeIn[1];
+								// _fd_types[pipefd] = FD_CGI_PIPE_WRITE;
+								// _map_cgi_pid[pipefd] = client.req.cgi_pid;
+								// _cgi_to_client[pipefd] = client_fd;
+								// std::cout << LIME "ADD FD BEFORE" RESET << std::endl;
+								// add_to_epoll(pipefd, EPOLLOUT);
+								// std::cout << LIME "ADD FD AFTER" RESET << std::endl;
+								break;
 							}
 							else
 							{
@@ -457,7 +467,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 							// std::cout << "HERE" << std::endl;
 						}
 
-						// size_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+						// ssize_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 						// if (bytes_write != client.req.body.size())
 						// 	std::cerr << RED BOLD "AIE WRITE" RESET <<std::endl;
 						// client.req.body.clear();
@@ -480,25 +490,38 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						add_to_epoll(pipefd, EPOLLIN);
 						std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
 
+
+						pipefd = client.req.pipeIn[1];
+						_fd_types[pipefd] = FD_CGI_PIPE_WRITE;
+						_map_cgi_pid[pipefd] = client.req.cgi_pid;
+						_cgi_to_client[pipefd] = client_fd;
+						std::cout << LIME "ADD FD BEFORE" RESET << std::endl;
+						add_to_epoll(pipefd, 0);
+						std::cout << LIME "ADD FD AFTER" RESET << std::endl;
+
 						// write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 
 						while (client.req.body.size() > 0)
 						{
-							size_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+							ssize_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 							if (bytes_write > 0)
 							{
 								client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
 							}
 							else if (errno == EAGAIN || errno == EWOULDBLOCK)
 							{
-								remove_from_epoll(client_fd);
-								int pipefd = client.req.pipeIn[1];
-								_fd_types[pipefd] = FD_CGI_PIPE_WRITE;
-								_map_cgi_pid[pipefd] = client.req.cgi_pid;
-								_cgi_to_client[pipefd] = client_fd;
-								std::cout << LIME "ADD FD BEFORE" RESET << std::endl;
-								add_to_epoll(pipefd, EPOLLIN);
-								std::cout << LIME "ADD FD AFTER" RESET << std::endl;
+								// remove_from_epoll(client_fd);
+								// _fd_types.erase(client_fd);
+								modify_epoll(client_fd,0);
+								modify_epoll(client.req.pipeIn[1],EPOLLOUT);
+								// int pipefd = client.req.pipeIn[1];
+								// _fd_types[pipefd] = FD_CGI_PIPE_WRITE;
+								// _map_cgi_pid[pipefd] = client.req.cgi_pid;
+								// _cgi_to_client[pipefd] = client_fd;
+								// std::cout << LIME "ADD FD BEFORE" RESET << std::endl;
+								// add_to_epoll(pipefd, EPOLLOUT);
+								// std::cout << LIME "ADD FD AFTER" RESET << std::endl;
+								break;
 							}
 							else
 							{

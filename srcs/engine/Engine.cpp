@@ -504,7 +504,7 @@ void Engine::run()
 				Client& client = it->second;
 				while (client.req.body.size() > 0)
 				{
-					size_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+					ssize_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 					if (bytes_write > 0)
 					{
 						client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
@@ -520,10 +520,12 @@ void Engine::run()
 				}
 				if (client.req.body.size() == 0)
 				{
-					add_to_epoll(_cgi_to_client[fd],EPOLLIN | EPOLLET);
-					remove_from_epoll(fd);
-					_fd_types.erase(fd);
-					_cgi_to_client.erase(fd);
+					// add_to_epoll(_cgi_to_client[fd], EPOLLIN | EPOLLET);
+					modify_epoll(_cgi_to_client[fd], EPOLLIN | EPOLLET);
+					modify_epoll(fd,0);
+					// remove_from_epoll(fd);
+					// _fd_types.erase(fd);
+					// _cgi_to_client.erase(fd);
 				}
 				continue;
 			}

@@ -48,6 +48,8 @@ struct HttpRequest
 	std::vector<unsigned char> dataCgi;
 	int fd;
 
+	
+
 	// HttpRequest()
 	// : pipefdIn(-1)
 	// , pipefdOut(-1)
