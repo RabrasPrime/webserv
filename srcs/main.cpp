@@ -70,7 +70,7 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 	for (i = 0;(tmp[i] == '\n' || tmp[i] == '\r') && i < tmp.size();i++)
 		;
 	std::string str(&tmp[i]);
- std::cout << YELLOW BOLD "\n\nSTR >> " << str << RESET << std::endl;
+//  std::cout << YELLOW BOLD "\n\nSTR >> " << str << RESET << std::endl;
 	std::string first_line;
 	if (str.find("\r\n") != std::string::npos)
 		first_line = str.substr(0,str.find("\r\n"));
@@ -295,10 +295,10 @@ int main(int ac, char **av)
 
 void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, const int client_fd)
 {
-	std::cout << BLUE BOLD "HANDLE CHUNCK" RESET << std::endl;
+	// std::cout << BLUE BOLD "HANDLE CHUNCK" RESET << std::endl;
 	do
 	{
-		std::cout << ORANGE BOLD "HANDLE CHUNCK" RESET << std::endl;
+		// std::cout << ORANGE BOLD "HANDLE CHUNCK" RESET << std::endl;
 		client.req.chunked_size = -1;
 		if (client.req.chunked <= 1)
 		{
@@ -323,8 +323,8 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 					ss << std::hex << hexa;
 					ss >> valeur;
 					// std::cerr << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
-					if (!client.req.isCgi)
-						std::cerr << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
+					// if (!client.req.isCgi)
+					// 	std::cerr << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
 					client.req.chunked_size = valeur;
 					client.req.total_size += valeur;
 					if (client.req.total_size > client.req.maxSize && !client.req.ErrorCode)
@@ -430,13 +430,41 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 					}
 					else if (client.req.isCgi)
 					{
-						std::cout << "WRITE HERE" << std::endl;
-						write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
-						client.req.body.clear();
+						// std::cout << "WRITE HERE" << std::endl;
+
+						while (client.req.body.size() > 0)
+						{
+							size_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+							if (bytes_write > 0)
+							{
+								client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
+							}
+							else if (errno == EAGAIN || errno == EWOULDBLOCK)
+							{
+								remove_from_epoll(client_fd);
+								int pipefd = client.req.pipeIn[1];
+								_fd_types[pipefd] = FD_CGI_PIPE_WRITE;
+								_map_cgi_pid[pipefd] = client.req.cgi_pid;
+								_cgi_to_client[pipefd] = client_fd;
+								std::cout << LIME "ADD FD BEFORE" RESET << std::endl;
+								add_to_epoll(pipefd, EPOLLIN);
+								std::cout << LIME "ADD FD AFTER" RESET << std::endl;
+							}
+							else
+							{
+								std::cerr << RED BOLD "AIE MAIN" RESET << std::endl;
+							}
+							// std::cout << "HERE" << std::endl;
+						}
+
+						// size_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
+						// if (bytes_write != client.req.body.size())
+						// 	std::cerr << RED BOLD "AIE WRITE" RESET <<std::endl;
+						// client.req.body.clear();
 					}
 					else
 					{
-						std::cout << ORANGE BOLD "CALL REPONSE HERE" RESET << std::endl;
+						std::cerr << ORANGE BOLD "CALL REPONSE HERE" RESET << std::endl;
 						client.res.handleResponse(client.req, client.req.ErrorCode);
 						// if (client.req.ErrorCode == 404)
 						// {
@@ -476,10 +504,10 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 							{
 								std::cerr << RED BOLD "AIE MAIN" RESET << std::endl;
 							}
-							std::cout << "HERE" << std::endl;
+							// std::cout << "HERE" << std::endl;
 						}
-
 						// client.req.body.clear();
+						// std::cerr << RED BOLD "CALL REPONSE AFTER >" << client.req.chunked << RESET << std::endl;
 					}
 					client.req.chunked = 1;
 					break;

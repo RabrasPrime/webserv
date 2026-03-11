@@ -122,7 +122,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 		std::string ident(it->first);
 		std::transform(ident.begin(),ident.end(),ident.begin(),::toupper);
 		envList.push_back("HTTP_" + ident + "=" + content);
-		std::cout << RED BOLD "HTTP_" + ident + "=" + content + RESET << std::endl;
+		// std::cout << RED BOLD "HTTP_" + ident + "=" + content + RESET << std::endl;
 	}
 
 	std::cerr << BLUE BOLD "Scriptfilename {" << path << "}" RESET << std::endl;
@@ -219,6 +219,7 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 
 		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(req.path.c_str()), NULL};
 		char **env = createEnv(req, path);
+		std::cerr << "RETURN ENV AFTER" << std::endl;
 		execve(_binary.c_str(), arg, env);
 		std::cerr << RED BOLD "FAIL EXECVE" RESET << std::endl;
 		delete []env;

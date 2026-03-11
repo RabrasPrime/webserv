@@ -613,7 +613,7 @@ void Engine::run()
 
 					if (client.req.dataCgi.size() >= 0x8000)
 					{
-						std::cout << RED BOLD "_________________________________HERE SEND DATA dataCgi size> 0x8000" RESET << std::endl;
+						// std::cout << RED BOLD "_________________________________HERE SEND DATA dataCgi size> 0x8000" RESET << std::endl;
 						send(client_fd,"8000\r\n",6,0);
                     	send(client_fd, &client.req.dataCgi[0], 0x8000, 0);
 						send(client_fd,"\r\n",2,0);
@@ -690,7 +690,7 @@ void Engine::run()
                 }
                 else if (events[i].events & EPOLLIN)
                 {
-		 std::cout << PURPLE << "Handle client read !" << RESET << std::endl;
+		//  std::cout << PURPLE << "Handle client read !" << RESET << std::endl;
                     handle_client_read(fd);
                 }
                 else if (events[i].events & EPOLLOUT)
