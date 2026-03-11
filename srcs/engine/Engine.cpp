@@ -495,7 +495,7 @@ void Engine::run()
 
 			if (_fd_types[fd] == FD_CGI_PIPE_WRITE)
 			{
-				std::cerr << "ADD WRITE IN CGI" << std::endl;
+				// std::cerr << "ADD WRITE IN CGI" << std::endl;
 				int client_fd = _cgi_to_client[fd];
 				const std::map<int, Client>::iterator it = _clients.find(client_fd);
 				if (it == _clients.end())
@@ -523,11 +523,24 @@ void Engine::run()
 						std::cerr << RED BOLD "AIE RUN" RESET << std::endl;
 					}
 				}
-				if (client.req.body.size() == 0)
+				if (client.req.body.size() == 0 && client.req.chunked_size == 0)
 				{
+					std::cerr << RED BOLD "BYTES WRITE TOTAL>>>>" << client.req.total_send << RESET << std::endl;
+					
+					remove_from_epoll(client.req.pipeIn[1]);
+					_fd_types.erase(client.req.pipeIn[1]);
+					_cgi_to_client.erase(client.req.pipeIn[1]);
+
+					close(client.req.pipeIn[1]);
+					close(client.req.pipeIn[0]);
+					close(client.req.pipeOut[1]);
+					// client.req.pipeIn[1] = -1;
+					// std::cerr << ORANGE BOLD "NOTHING LEFT TO WRITE" RESET << std::endl;
 					// add_to_epoll(_cgi_to_client[fd], EPOLLIN | EPOLLET);
-					modify_epoll(_cgi_to_client[fd], EPOLLIN | EPOLLET);
-					modify_epoll(fd,0);
+
+					// modify_epoll(_cgi_to_client[fd], EPOLLIN | EPOLLET);
+					// modify_epoll(fd,0);
+
 					// remove_from_epoll(fd);
 					// _fd_types.erase(fd);
 					// _cgi_to_client.erase(fd);
@@ -620,7 +633,7 @@ void Engine::run()
 
 					if (client.req.dataCgi.size() >= 0x8000)
 					{
-						// std::cout << RED BOLD "_________________________________HERE SEND DATA dataCgi size> 0x8000" RESET << std::endl;
+						std::cout << RED BOLD "_________________________________HERE SEND DATA dataCgi size> 0x8000" RESET << std::endl;
 						send(client_fd,"8000\r\n",6,0);
                     	send(client_fd, &client.req.dataCgi[0], 0x8000, 0);
 						send(client_fd,"\r\n",2,0);
@@ -711,7 +724,7 @@ void Engine::run()
         {
             if (it->second.is_timed_out() || it->second.get_status())
             {
- //std::cout << "Client " << it->first << " timed out or closed, disconnecting" << std::endl;
+ std::cout << "Client " << it->first << " timed out or closed, disconnecting" << std::endl;
                 const int fd = it->first;
                 remove_from_epoll(fd);
                 _fd_types.erase(fd);

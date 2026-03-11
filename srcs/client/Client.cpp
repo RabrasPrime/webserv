@@ -119,7 +119,7 @@ bool Client::is_timed_out() const
 	struct timeval now;
 	gettimeofday(&now, NULL);
 
-	const long TIMEOUT_SECONDS = 60;
+	const long TIMEOUT_SECONDS = 6000;
 	long elapsed = now.tv_sec - _last_active_time.tv_sec;
 
 	return elapsed > TIMEOUT_SECONDS;
