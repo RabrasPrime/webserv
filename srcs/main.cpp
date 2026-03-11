@@ -420,10 +420,10 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 			{
 				if (is_end_line(it, vect))
 				{
-					client.req.body.clear();
+					// client.req.body.clear();
 					client.req.body.insert(client.req.body.end(), vect.begin(), it);
 
-					std::string s(client.req.body.begin(), client.req.body.end());
+					// std::string s(client.req.body.begin(), client.req.body.end());
 					//  std::cout << LIME BOLD "BODY>>>" << s << RESET << std::endl;
 
 					vect.erase(vect.begin(),it + 2);
@@ -449,6 +449,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 							}
 							else if (errno == EAGAIN || errno == EWOULDBLOCK)
 							{
+								std::cerr << RED BOLD "FAIL WRITE >" RESET << bytes_write << std::endl;
 								// remove_from_epoll(client_fd);
 								// _fd_types.erase(client_fd);
 								modify_epoll(client_fd,0);
@@ -460,11 +461,14 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 								// std::cout << LIME "ADD FD BEFORE" RESET << std::endl;
 								// add_to_epoll(pipefd, EPOLLOUT);
 								// std::cout << LIME "ADD FD AFTER" RESET << std::endl;
-								break;
+								return;
 							}
 							else
 							{
-								std::cerr << RED BOLD "AIE MAIN" RESET << std::endl;
+								// std::cerr << RED BOLD "AIE MAIN>" <<  << RESET << std::endl;
+								modify_epoll(client_fd,0);
+								modify_epoll(client.req.pipeIn[1],EPOLLOUT);
+								return;
 							}
 							// std::cout << "HERE" << std::endl;
 						}
@@ -505,6 +509,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						client.req.total_send = 0;
 						while (client.req.body.size() > 0)
 						{
+							errno = 0;
 							ssize_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
 							if (bytes_write > 0)
 							{
@@ -514,6 +519,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 							}
 							else if (errno == EAGAIN || errno == EWOULDBLOCK)
 							{
+								std::cerr << RED BOLD "FAIL WRITE >" RESET << bytes_write << std::endl;
 								// remove_from_epoll(client_fd);
 								// _fd_types.erase(client_fd);
 								modify_epoll(client_fd,0);
@@ -525,11 +531,12 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 								// std::cout << LIME "ADD FD BEFORE" RESET << std::endl;
 								// add_to_epoll(pipefd, EPOLLOUT);
 								// std::cout << LIME "ADD FD AFTER" RESET << std::endl;
-								break;
+								return;
 							}
 							else
 							{
 								std::cerr << RED BOLD "AIE MAIN" RESET << std::endl;
+								return;
 							}
 							// std::cout << "HERE" << std::endl;
 						}
