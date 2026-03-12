@@ -12,6 +12,7 @@ int main() {
 
     // Boucle de lecture par blocs
     while (std::cin.read(tampon, TAILLE_TAMPON) || std::cin.gcount() > 0) {
+		std::cerr << "READ DATA" << std::endl;
         std::streamsize nb_lus = std::cin.gcount();
         total_bytes += nb_lus; // On incrémente le compteur
 

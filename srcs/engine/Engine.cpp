@@ -317,31 +317,8 @@ void Engine::handle_client_read(const int client_fd)
 					add_to_epoll(pipefd, EPOLLIN);
 					std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
 				}
-				{
-					int pipefd = client.req.pipeIn[1];
-					_fd_types[pipefd] = FD_CGI_PIPE_IN;
-					// _map_cgi_pid[pipefd] = client.req.cgi_pid;
-					_cgi_to_client[pipefd] = client_fd;
-					std::cout << BROWN "ADD FD BEFORE" RESET << std::endl;
-					add_to_epoll(pipefd, EPOLLOUT);
-					std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
-					client.req.fd = open(client.req.path.c_str(),O_RDONLY,644);
-					std::cout << "FD >" << client.req.fd << std::endl;
-					// dup2(fd,client.req.pipeIn[1]);
-					// close(fd);
-				}
 
-				// std::ifstream file(client.req.path.c_str());
-				// std::string content;
-
-				// if (file) {
-				// 	std::stringstream ss;
-				// 	ss << file.rdbuf();
-				// 	content = ss.str();
-				// }
-				// write(client.req.pipeIn[1],&content[0],content.size());
-				// close(client.req.pipeIn[1]);
-				close(client.req.pipeIn[0]);
+				// close(client.req.pipeIn[0]);
 				close(client.req.pipeOut[1]);
 				return ;
 			}
@@ -495,7 +472,7 @@ void Engine::run()
 
 			if (_fd_types[fd] == FD_CGI_PIPE_WRITE)
 			{
-				// std::cerr << "ADD WRITE IN CGI" << std::endl;
+				std::cerr << RED BOLD "ADD WRITE IN CGI" RESET << std::endl;
 				int client_fd = _cgi_to_client[fd];
 				const std::map<int, Client>::iterator it = _clients.find(client_fd);
 				if (it == _clients.end())
@@ -633,7 +610,7 @@ void Engine::run()
 
 					if (client.req.dataCgi.size() >= 0x8000)
 					{
-						std::cout << RED BOLD "_________________________________HERE SEND DATA dataCgi size> 0x8000" RESET << std::endl;
+						// std::cout << RED BOLD "_________________________________HERE SEND DATA dataCgi size> 0x8000" RESET << std::endl;
 						send(client_fd,"8000\r\n",6,0);
                     	send(client_fd, &client.req.dataCgi[0], 0x8000, 0);
 						send(client_fd,"\r\n",2,0);
@@ -715,7 +692,7 @@ void Engine::run()
                 }
                 else if (events[i].events & EPOLLOUT)
                 {
-		 std::cout << BROWN << "Handle client write !" << RESET << std::endl;
+		//  std::cout << BROWN << "Handle client write !" << RESET << std::endl;
                     handle_client_write(fd);
                 }
             }

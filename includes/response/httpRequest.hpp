@@ -47,6 +47,7 @@ struct HttpRequest
 	std::string str;
 	std::vector<unsigned char> dataCgi;
 	int fd;
+	std::string tmpName;
 
 	size_t total_send;
 
