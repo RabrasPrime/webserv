@@ -216,60 +216,60 @@ The server uses a custom configuration format inspired by **Nginx** (logic) and 
 
 ```yml
 server
-	listen 8080
-	root ./www/
-	server_name site.com
-	methods GET POST
+    listen 8080
+    root ./www/
+    server_name site.com
+    methods GET POST
 
     # Custom error page
-	error_pages 401 ./file/error_page/error_page_401.html
-	error_pages 403 ./file/error_page/error_page_403.html
-	error_pages 404 ./file/error_page/error_page_404.html
-	error_pages 405 ./file/error_page/error_page_405.html
-	error_pages 409 ./file/error_page/error_page_409.html
-	error_pages 411 ./file/error_page/error_page_411.html
-	error_pages 413 ./file/error_page/error_page_413.html
-	error_pages 500 ./file/error_page/error_page_500.html
-	error_pages 501 ./file/error_page/error_page_501.html
+    error_pages 401 ./file/error_page/error_page_401.html
+    error_pages 403 ./file/error_page/error_page_403.html
+    error_pages 404 ./file/error_page/error_page_404.html
+    error_pages 405 ./file/error_page/error_page_405.html
+    error_pages 409 ./file/error_page/error_page_409.html
+    error_pages 411 ./file/error_page/error_page_411.html
+    error_pages 413 ./file/error_page/error_page_413.html
+    error_pages 500 ./file/error_page/error_page_500.html
+    error_pages 501 ./file/error_page/error_page_501.html
 
     # Redirection example
-	locations /
-		methods GET
-		return 301 /Home
+    locations /
+        methods GET
+        return 301 /Home
 
     # Static Routes
-	locations /Home
-		alias ./www/html/Home.html
-	locations /Dart
-		alias ./www/html/Dart.html
-	locations /Account
+    locations /Home
+        alias ./www/html/Home.html
+    locations /Dart
+        alias ./www/html/Dart.html
+    locations /Account
 		methods GET
-		alias ./www/html/Account.html
-	locations /signup
+        alias ./www/html/Account.html
+    locations /signup
 		methods GET POST
-		alias ./www/html/Connected.html
-	locations /signin
+        alias ./www/html/Connected.html
+    locations /signin
 		methods GET POST
-		alias ./www/html/Connected.html
-	locations /logout
+        alias ./www/html/Connected.html
+    locations /logout
 		methods GET
-		alias ./www/html/Account.html
+        alias ./www/html/Account.html
     
     # Static Asset
-	locations /img/
-		alias ./www/static/
+    locations /img/
+        alias ./www/static/
 
     # CGI Configuration
-	locations /css/
-	locations /js/
-	locations /cgi/
-		alias ./
-		cgi_enabled true
-		methods GET POST
-		cgi_ext .py /usr/bin/python3
+    locations /css/
+    locations /js/
+    locations /cgi/
+        alias ./
+        cgi_enabled true
+        methods GET POST
+        cgi_ext .py /usr/bin/python3
 
-	locations /Test
-		alias ./www/html/test.html
+    locations /Test
+        alias ./www/html/test.html
 ```
 
 </blockquote>
