@@ -354,7 +354,7 @@ To launch the server, provide a configuration file as an argument:
 
 🏆 Scoreboard and Profil  
 >
-> <img src="resource/README_img/profil.png" width="700">
+<img src="resource/README_img/profil.png" width="700">
 
 🏋️‍♂️ CGI Example
 > The data is processed via CGI to calculate time location with Python script.
