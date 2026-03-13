@@ -361,8 +361,11 @@ To launch the server, provide a configuration file as an argument:
 >
 > <img src="resource/README_img/profil.png" width="700">
 
-CGI location
+🏋️‍♂️ CGI Example
 > The data is processed via CGI to calculate time location with Python script.
+<br>
+>
+> <img src="resource/README_img/cgi_example.png" width="700">
 
 </details>
 
