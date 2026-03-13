@@ -349,13 +349,13 @@ To launch the server, provide a configuration file as an argument:
 <br>
 >
 > <img src="resource/README_img/select_game.png" width="700">  
->
+>  
 ><br>
->
+>  
 > <img src="resource/README_img/calculator.png" width="700">  
->
+>  
 > <br>
->
+>  
 > <img src="resource/README_img/game.png" width="700">  
 
 <br>
@@ -367,7 +367,7 @@ To launch the server, provide a configuration file as an argument:
 🏋️‍♂️ CGI Example
 > The data is processed via CGI to calculate time location with Python script.
 <br>
->
+>  
 > <img src="resource/README_img/cgi_example.png" width="700">
 
 </details>
