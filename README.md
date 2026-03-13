@@ -350,10 +350,10 @@ To launch the server, provide a configuration file as an argument:
 >
 > <img src="resource/README_img/select_game.png" width="700">  
 >
-> <br>
-
+><br>
+>
 > <img src="resource/README_img/calculator.png" width="700">  
-
+>
 > <br>
 >
 > <img src="resource/README_img/game.png" width="700">  
