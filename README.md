@@ -1,12 +1,13 @@
 > *This project has been created as part of the 42 curriculum by samaouch, tjooris, ale-guel.*
 <!-- Custom fonts -->
 <!-- 𝔸 𝔹 ℂ 𝔻 𝔼 𝔽 𝔾 ℍ 𝕀 𝕁 𝕂 𝕃 𝕄 ℕ 𝕆 ℙ ℚ ℝ 𝕊 𝕋 𝕌 𝕍 𝕎 𝕏 𝕐 ℤ -->
+<!-- 𝕒 𝕓 𝕔 𝕕 𝕖 𝕗 𝕘 𝕙 𝕚 𝕛 𝕜 𝕝 𝕞 𝕟 𝕠 𝕡 𝕢 𝕣 𝕤 𝕥 𝕦 𝕧 𝕨 𝕩 𝕪 𝕫  -->
+
 <b><font size="2">*end*[^1]</b></font>
 
-<div align="center">
-  <b><font size="100">🌐 𝕎𝕖𝕓𝕤𝕖𝕣𝕧</font></b>
-  <p><i>A C++98 Non-blocking HTTP/1.1 Server</i></p>
-</div>
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&height=300&section=header&text=🌐𝕎𝕖𝕓𝕤𝕖𝕣𝕧&fontSize=120&animation=scaleIn&fontAlignY=42&fontAlign=48&desc=C%2B%2B%20HTTP%20Server&descAlignY=60&descAlign=74"/>
+</p>
 
 ---
 
