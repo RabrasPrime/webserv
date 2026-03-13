@@ -94,15 +94,15 @@ The architecture was broken down into independent modules to allow for efficient
 
 <ins>**🧱 Core Modules** </ins> 
 >
-> - Configuration Parsing: Parsing and validation of .conf files (Server blocks, Directives, Locations).
-> - Network Engine (Epoll/Sockets): Implementation of the non-blocking Event Loop and managing the connection lifecycle.
-> - Response & CGI: HTTP header generation, error code handling, and interfacing with external scripts (CGI).
+> - **Configuration Parsing**: Parsing and validation of .conf files (Server blocks, Directives, Locations).
+> - **Network Engine (Epoll/Sockets)**: Implementation of the non-blocking Event Loop and managing the connection lifecycle.
+> - **Response & CGI**: HTTP header generation, error code handling, and interfacing with external scripts (CGI).
 
 <ins> **👥 Collaborative Integration** </ins>  
 >
 > Once the core components were stable, we focused as a team on the critical integration points:
-> - Request Parsing: Developed a State Machine to process incoming streams (Chunked requests, Headers).
-> - Testing & Debugging: Intensive bug-fixing sessions and load testing to ensure server stability.
+> - **Request Parsing**: Developed a State Machine to process incoming streams (Chunked requests, Headers).
+> - **Testing & Debugging**: Intensive bug-fixing sessions and load testing to ensure server stability.
 
 <ins> **📣 Organisation**</ins> 
 > - **Tools:** Git, Mermaid.live, Discord.
