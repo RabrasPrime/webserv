@@ -44,8 +44,6 @@ server
 		methods GET POST
 		cgi_ext .py /usr/bin/python3
 
-
-
 	locations /Test
 		alias ./www/html/test.html
 
