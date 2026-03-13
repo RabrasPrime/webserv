@@ -243,16 +243,16 @@ server
     locations /Dart
         alias ./www/html/Dart.html
     locations /Account
-		methods GET
+        methods GET
         alias ./www/html/Account.html
     locations /signup
-		methods GET POST
+        methods GET POST
         alias ./www/html/Connected.html
     locations /signin
-		methods GET POST
+        methods GET POST
         alias ./www/html/Connected.html
     locations /logout
-		methods GET
+        methods GET
         alias ./www/html/Account.html
     
     # Static Asset
