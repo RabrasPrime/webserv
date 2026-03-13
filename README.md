@@ -1,6 +1,7 @@
 > *This project has been created as part of the 42 curriculum by samaouch, tjooris, ale-guel.*
 <!-- Custom fonts -->
 <!-- 𝔸 𝔹 ℂ 𝔻 𝔼 𝔽 𝔾 ℍ 𝕀 𝕁 𝕂 𝕃 𝕄 ℕ 𝕆 ℙ ℚ ℝ 𝕊 𝕋 𝕌 𝕍 𝕎 𝕏 𝕐 ℤ -->
+<b><font size="2">*end*[^1]</b></font>
 
 <div align="center">
   <b><font size="7">🌐 𝕎𝕖𝕓𝕤𝕖𝕣𝕧</font></b>
@@ -30,7 +31,6 @@
 </blockquote>
 </details>
 
-<b><font size="2">*end*[^1]</b></font>
 
 --- 
 
@@ -302,6 +302,8 @@ To launch the server, provide a configuration file as an argument:
     <summary>
         <h2>ℝessources</h2>
     </summary>
+
+<br>
 
 📚 Global References
 > [Beej's Guide to Network Programming:](https://beej.us/guide/bgnet/): The absolute Bible for socket programming in C++.  
