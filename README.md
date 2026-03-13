@@ -352,8 +352,8 @@ To launch the server, provide a configuration file as an argument:
 
 <br>
 
-🏆 Scoreboard and Profil  
->
+> 🏆 Scoreboard and Profil  
+
 <img src="resource/README_img/profil.png" width="700">
 
 🏋️‍♂️ CGI Example
