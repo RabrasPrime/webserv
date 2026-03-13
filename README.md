@@ -346,17 +346,9 @@ To launch the server, provide a configuration file as an argument:
 🎯 Dart Game Engine & Scoring  
 > A dynamic interface where you can add players.  
 > *Note: The dartboard is currently accessible at /Test as we refine the game logic.*  
-<br>
->
-> <img src="resource/README_img/select_game.png" width="700">  
->  
-><br>
->  
-> <img src="resource/README_img/calculator.png" width="700">  
->  
-> <br>
->  
-> <img src="resource/README_img/game.png" width="700">  
+<img src="resource/README_img/select_game.png" width="700">  
+<img src="resource/README_img/calculator.png" width="700">  
+<img src="resource/README_img/game.png" width="700">  
 
 <br>
 
@@ -366,9 +358,7 @@ To launch the server, provide a configuration file as an argument:
 
 🏋️‍♂️ CGI Example
 > The data is processed via CGI to calculate time location with Python script.
-<br>
->  
-> <img src="resource/README_img/cgi_example.png" width="700">
+<img src="resource/README_img/cgi_example.png" width="700">
 
 </details>
 
