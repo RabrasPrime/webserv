@@ -84,23 +84,31 @@ This project involves developing an **HTTP/1.1, HTTP/1.0 Web Server** from scrat
 </details>
 </dd></dl>
 
-
 <dl><dd>
 <details id="team">
     <summary>
         <h3>🤝 Team Workflow</h3>
     </summary>
 
-<blockquote>
+The architecture was broken down into independent modules to allow for efficient parallel development before final integration.  
 
-We chose **epoll** for efficient socket event management. 
-Our workflow started with individual research, followed by a collaborative phase where we identified four main modules: **Configuration Parsing**, **Socket/Epoll Management**, **Request Parsing**, and **Response Generation**.
+<ins>**🧱 Core Modules** </ins> 
+>
+> - Configuration Parsing: Parsing and validation of .conf files (Server blocks, Directives, Locations).
+> - Network Engine (Epoll/Sockets): Implementation of the non-blocking Event Loop and managing the connection lifecycle.
+> - Response & CGI: HTTP header generation, error code handling, and interfacing with external scripts (CGI).
 
-- **Tools:** Git, Mermaid.live, Discord.
-- **Communication:** Weekly in-person meetings, continuous sync via Discord.
-- **Standards:** Clean commit history and mandatory Peer-Review (PR) before merging.
+<ins> **👥 Collaborative Integration** </ins>  
+>
+> Once the core components were stable, we focused as a team on the critical integration points:
+> - Request Parsing: Developed a State Machine to process incoming streams (Chunked requests, Headers).
+> - Testing & Debugging: Intensive bug-fixing sessions and load testing to ensure server stability.
 
-</blockquote>
+<ins> **📣 Organisation**</ins> 
+> - **Tools:** Git, Mermaid.live, Discord.
+> - **Communication:** Weekly in-person meetings, continuous sync via Discord.
+> - **Standards:** Clean commit history and mandatory Peer-Review (PR) before merging.
+
 </details>
 </dd></dl>
 
