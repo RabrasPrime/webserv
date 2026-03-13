@@ -4,7 +4,7 @@
 <b><font size="2">*end*[^1]</b></font>
 
 <div align="center">
-  <b><font size="7">🌐 𝕎𝕖𝕓𝕤𝕖𝕣𝕧</font></b>
+  <b><font size="100">🌐 𝕎𝕖𝕓𝕤𝕖𝕣𝕧</font></b>
   <p><i>A C++98 Non-blocking HTTP/1.1 Server</i></p>
 </div>
 
