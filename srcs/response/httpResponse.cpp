@@ -170,7 +170,7 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		return 0;
 	int pipeOut[2];//, pipeIn[2];
 	req.isCgi = true;
-	if (req.chunked != 0 && req.chunked_size != 0)
+	if (req.chunked_size != 0)
 		return 200;
 	// if (req.chunked == 0)
 	// {
