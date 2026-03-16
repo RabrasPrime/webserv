@@ -165,52 +165,71 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 // }
 
 int httpResponse::exeCgi(std::string path, HttpRequest &req){
-	
+	std::cerr << "START EXE CGI" << std::endl;
 	if (req.cgi_pid > 0)
 		return 0;
-	int pipeOut[2], pipeIn[2];
+	int pipeOut[2];//, pipeIn[2];
 	req.isCgi = true;
-	// if (req.method & METHOD_GET)
+	if (req.chunked_size != 0)
+		return 200;
+	// if (req.chunked == 0)
 	// {
-	// 	if (pipe(pipeOut) == -1)
+	// 	if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
 	// 		return 500;
 	// }
 	// else
 	// {
-		if (pipe(pipeIn) == -1 || pipe(pipeOut) == -1)
-			return 500;
+	if (pipe(pipeOut) == -1)
+		return 500;
 	// }
 	pid_t pid = fork();
 	if (pid < 0)
 	{
-		if (req.method & METHOD_GET)
-		{
-			close(pipeIn[1]);
-			close(pipeIn[0]);
-		}
+		// if (req.chunked == 0)
+		// {
+		// 	close(pipeIn[1]);
+		// 	close(pipeIn[0]);
+		// }
 		close(pipeOut[0]);
 		close(pipeOut[1]);
 		return 500;
 	}
 	else if (pid == 0)
 	{
-		// int fd;
-		// if (req.method & METHOD_GET)
+		// if (req.chunked == 0)
 		// {
-		// 	fd = open(req.path.c_str(), O_WRONLY, 0644);
-		// 	if (fd == -1)
+		// 	if (dup2(pipeIn[0], STDIN_FILENO) == -1)
 		// 		exit(EXIT_FAILURE);
-		// 	if (dup2(fd, STDIN_FILENO) == -1)
-		// 		exit(EXIT_FAILURE);
-		// 	close(fd);
+		// 	close(pipeIn[1]);
+		// 	close(pipeIn[0]);
 		// }
-		// else
-		// {
-			if (dup2(pipeIn[0], STDIN_FILENO) == -1)
+		int fd;
+		if (req.method & METHOD_GET)
+		{
+			std::cerr << "IS A GET" << std::endl;
+			fd = open(req.path.c_str(),O_RDONLY,0644);
+			if (fd == -1)
 				exit(EXIT_FAILURE);
-			close(pipeIn[1]);
-			close(pipeIn[0]);
-		// }
+			if (dup2(fd,STDIN_FILENO) == -1)
+				exit(EXIT_FAILURE);
+		}
+		else
+		{
+			std::cerr << "DUP FILE" << std::endl;
+			fd = open(req.tmpName.c_str(),O_RDONLY,644);
+			unlink(req.tmpName.c_str());
+			if (fd == -1)
+			{
+				std::cerr << "FAIL TO OPEN FILE" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			if (dup2(fd,STDIN_FILENO) == -1)
+			{
+				std::cerr << "FAIL TO DUP FILE" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+		}
+		close(fd);
 
 		if (dup2(pipeOut[1], STDOUT_FILENO) == -1)
 			exit(EXIT_FAILURE);
@@ -229,9 +248,15 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 	req.cgi_pid = pid;
 	// if (!(req.method & METHOD_GET))
 	// {
-		req.pipeIn[1] = pipeIn[1];
-		req.pipeIn[0] = pipeIn[0];
-		fcntl(req.pipeIn[1], F_SETFL, O_NONBLOCK);
+		// req.pipeIn[1] = pipeIn[1];
+		// req.pipeIn[0] = pipeIn[0];
+		// fcntl(req.pipeIn[1], F_SETFL, O_NONBLOCK);
+	if (req.method & METHOD_GET)
+	{
+	}
+	else
+	{
+	}
 	// }
 	req.pipeOut[0] = pipeOut[0];
 	req.pipeOut[1] = pipeOut[1];
@@ -244,7 +269,7 @@ int httpResponse::isCgi(HttpRequest &req, std::string path){
 	struct stat s;
 	// || req.raw_path.find(".bla") != std::string::npos
 	int status = stat(path.c_str(), &s);
-	if (status != 0 && req.path.find(".bla") != std::string::npos)
+	if (req.chunked_size == 0 && status != 0 && req.path.find(".bla") != std::string::npos)
 	{
 		int fd = open(req.path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
 		if (fd != -1)
@@ -313,28 +338,8 @@ int httpResponse::isCgi(HttpRequest &req, std::string path){
 // }
 
 std::string httpResponse::handleResponse(HttpRequest &req, int code){
-
-	// if (req.body.size() != 0)
-	// {
-	// 	std::string s(req.body.begin(), req.body.end());
-	// 	std::cout << RED BOLD "BODY>>>" << s << RESET << std::endl;
-	// }
-	std::cerr << "HANDLE RESPONSE code>" << code << std::endl;
+	// std::cout << "HANDLE RESPONSE code>" << code << std::endl;
 	_version = req.version;
-	// if (code == 2)
-	// {
-	// 	// code = 0;
-	// 	_statusCode = 201;
-	// 	if (req.isCgi && req.method & METHOD_POST)
-	// 	{
-	// 		_statusCode = 201;
-	// 		handleError(req);
-	// 		_headers.erase("Connection");
-	// 		_headers["Content-Type"] = "text/plain";
-	// 		_headers["Content-Length"] = "0";
-	// 		return convertFinalResponse();
-	// 	}
-	// }
 	if (req.loc)
 	{
 		if (req.loc->get_is_set_return())
@@ -343,6 +348,11 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 	else
 	{
 		code = 404;
+	}
+	if (code == 1)
+	{
+		code = 0;
+		_statusCode = 0;
 	}
 	if (code != 0)
 	{

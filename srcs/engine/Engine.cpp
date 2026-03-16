@@ -251,7 +251,7 @@ void Engine::handle_client_read(const int client_fd)
             std::string user = extractCookie(client.req.mult["Cookie"].front(), "user_id");
     
 //  std::cout << "Header : \n" << YELLOW << header << RESET << std::endl;
-		if (client.req.chunked != 0 || (client.req.mult.find("Transfer-Encoding") != client.req.mult.end() && client.req.mult["Transfer-Encoding"].size() != 0 && client.req.mult["Transfer-Encoding"].front() == "chunked"))
+		if (client.req.chunked > 0 || (client.req.mult.find("Transfer-Encoding") != client.req.mult.end() && client.req.mult["Transfer-Encoding"].size() != 0 && client.req.mult["Transfer-Encoding"].front() == "chunked"))
 		{
 			handle_chunked(vect, client, client_fd);
 			// std::cout << BLUE BOLD << client.get_read().size() << RESET << std::endl;
@@ -288,11 +288,40 @@ void Engine::handle_client_read(const int client_fd)
 			else
 			{
 				client.req.body = client.get_read();
+				client.req.chunked_size = -1;
 				std::string resp = client.res.handleResponse(client.req, client.req.ErrorCode);
                 if (resp == "START_CGI")
                 {
 					// start cgi
-                    return ;
+					size_t i = 0;
+					std::stringstream ss;
+					ss << i;
+					client.req.tmpName = "/tmp/" + ss.str() + ".tmp" ;
+					struct stat st;
+					while (stat(client.req.tmpName.c_str(), &st) != -1)
+					{
+						i++;
+						ss.str("");
+						ss.clear();
+						ss << i;
+						client.req.tmpName = "/tmp/" + ss.str() + ".tmp" ;
+					}
+					client.req.fd = open(client.req.tmpName.c_str(), O_CREAT | O_WRONLY, 6044);
+					std::cerr << LIME BOLD "CREATE FILE > " << client.req.fd << RESET << std::endl;
+					write(client.req.fd, &client.req.body[0], client.req.body.size());
+					close(client.req.fd);
+					client.req.chunked_size = 0;
+					client.res.handleResponse(client.req, 1);
+
+					int pipefd = client.req.pipeOut[0];
+					_fd_types[pipefd] = FD_CGI_PIPE;
+					_map_cgi_pid[pipefd] = client.req.cgi_pid;
+					_cgi_to_client[pipefd] = client_fd;
+					std::cout << BROWN "ADD FD BEFORE" RESET << std::endl;
+					add_to_epoll(pipefd, EPOLLIN);
+					std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
+					close(client.req.pipeOut[1]);
+					return;
                 }
                 client._write_buffer = resp;
 				client.get_read().clear();
@@ -302,48 +331,40 @@ void Engine::handle_client_read(const int client_fd)
 		else
 		{
 			client.req.body = client.get_read();
+			client.req.chunked_size = -1;
 			std::string resp = client.res.handleResponse(client.req, client.req.ErrorCode);
 			if (resp == "START_CGI")
 			{
 				// start cgi
-
-				std::cerr << "START CGI" << std::endl;
+				size_t i = 0;
+				std::stringstream ss;
+				ss << i;
+				client.req.tmpName = "/tmp/" + ss.str() + ".tmp" ;
+				struct stat st;
+				while (stat(client.req.tmpName.c_str(), &st) != -1)
 				{
-					int pipefd = client.req.pipeOut[0];
-					_fd_types[pipefd] = FD_CGI_PIPE;
-					_map_cgi_pid[pipefd] = client.req.cgi_pid;
-					_cgi_to_client[pipefd] = client_fd;
-					std::cout << BROWN "ADD FD BEFORE" RESET << std::endl;
-					add_to_epoll(pipefd, EPOLLIN);
-					std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
+					i++;
+					ss.str("");
+					ss.clear();
+					ss << i;
+					client.req.tmpName = "/tmp/" + ss.str() + ".tmp" ;
 				}
-				{
-					int pipefd = client.req.pipeIn[1];
-					_fd_types[pipefd] = FD_CGI_PIPE_IN;
-					// _map_cgi_pid[pipefd] = client.req.cgi_pid;
-					_cgi_to_client[pipefd] = client_fd;
-					std::cout << BROWN "ADD FD BEFORE" RESET << std::endl;
-					add_to_epoll(pipefd, EPOLLOUT);
-					std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
-					client.req.fd = open(client.req.path.c_str(),O_RDONLY,644);
-					std::cout << "FD >" << client.req.fd << std::endl;
-					// dup2(fd,client.req.pipeIn[1]);
-					// close(fd);
-				}
+				client.req.fd = open(client.req.tmpName.c_str(), O_CREAT | O_WRONLY, 6044);
+				std::cerr << LIME BOLD "CREATE FILE > " << client.req.fd << RESET << std::endl;
+				// ssize_t bytes_write = write(client.req.fd, &client.req.body[0], client.req.body.size());
+				close(client.req.fd);
+				client.req.chunked_size = 0;
+				client.res.handleResponse(client.req, 1);
 
-				// std::ifstream file(client.req.path.c_str());
-				// std::string content;
-
-				// if (file) {
-				// 	std::stringstream ss;
-				// 	ss << file.rdbuf();
-				// 	content = ss.str();
-				// }
-				// write(client.req.pipeIn[1],&content[0],content.size());
-				// close(client.req.pipeIn[1]);
-				close(client.req.pipeIn[0]);
+				int pipefd = client.req.pipeOut[0];
+				_fd_types[pipefd] = FD_CGI_PIPE;
+				_map_cgi_pid[pipefd] = client.req.cgi_pid;
+				_cgi_to_client[pipefd] = client_fd;
+				std::cout << BROWN "ADD FD BEFORE" RESET << std::endl;
+				add_to_epoll(pipefd, EPOLLIN);
+				std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
 				close(client.req.pipeOut[1]);
-				return ;
+				return;
 			}
             client._write_buffer = resp;
 			client.get_read().clear();
@@ -466,6 +487,32 @@ Server* Engine::match_server(const std::string& host_header)
     return NULL;
 }
 
+void send_data(int fd, unsigned char *str, ssize_t size)
+{
+	std::cout << "START SEND >> " << size << "  ";
+	ssize_t total_send = 0;
+	while (total_send != size)
+	{
+		ssize_t bytes_send = send(fd, &str[total_send], size - total_send, 0);
+		if (bytes_send != -1)
+			total_send += bytes_send;
+	}
+	std::cout << total_send  << "Total Send >"<< std::endl;
+}
+
+void send_data(int fd, std::string str, ssize_t size)
+{
+	std::cout << "START SEND >>       " << size << "   ";
+	ssize_t total_send = 0;
+	while (total_send != size)
+	{
+		ssize_t bytes_send = send(fd, &str[total_send], size - total_send, 0);
+		if (bytes_send != -1)
+			total_send += bytes_send;
+	}
+	std::cout << total_send  << "    Total Send >"<< std::endl;
+}
+
 void Engine::run()
 {
     if (_epoll_fd < 0)
@@ -495,7 +542,7 @@ void Engine::run()
 
 			if (_fd_types[fd] == FD_CGI_PIPE_WRITE)
 			{
-				// std::cerr << "ADD WRITE IN CGI" << std::endl;
+				std::cerr << RED BOLD "ADD WRITE IN CGI" RESET << std::endl;
 				int client_fd = _cgi_to_client[fd];
 				const std::map<int, Client>::iterator it = _clients.find(client_fd);
 				if (it == _clients.end())
@@ -616,7 +663,8 @@ void Engine::run()
 							std::string header;
 							header = client.res.handleResponse(client.req, 200);
 							std::cout << ORANGE BOLD "header>" << header << RESET << std::endl;
-                    		send(client_fd, &header[0], header.size(), 0);
+                    		// send(client_fd, &header[0], header.size(), 0);
+							send_data(client_fd, &header[0], header.size());
 							// PATH_INFO incorrect
 							// send(client_fd,"PATH_INFO incorrect",19,0);
                     		// send(client_fd, "\r\n\r\n", header.size(), 0);
@@ -633,10 +681,14 @@ void Engine::run()
 
 					if (client.req.dataCgi.size() >= 0x8000)
 					{
-						std::cout << RED BOLD "_________________________________HERE SEND DATA dataCgi size> 0x8000" RESET << std::endl;
-						send(client_fd,"8000\r\n",6,0);
-                    	send(client_fd, &client.req.dataCgi[0], 0x8000, 0);
-						send(client_fd,"\r\n",2,0);
+						// std::cout << RED BOLD "_________________________________HERE SEND DATA dataCgi size> 0x8000" RESET << std::endl;
+						send_data(client_fd, "8000\r\n", 6);
+						send_data(client_fd, &client.req.dataCgi[0], 0x8000);
+						send_data(client_fd, "\r\n", 2);
+						
+						// send(client_fd,"8000\r\n",6,0);
+                    	// send(client_fd, &client.req.dataCgi[0], 0x8000, 0);
+						// send(client_fd,"\r\n",2,0);
 						client.req.dataCgi.erase(client.req.dataCgi.begin(),client.req.dataCgi.begin() + 0x8000);
 					}
 				}
@@ -715,7 +767,7 @@ void Engine::run()
                 }
                 else if (events[i].events & EPOLLOUT)
                 {
-		 std::cout << BROWN << "Handle client write !" << RESET << std::endl;
+		//  std::cout << BROWN << "Handle client write !" << RESET << std::endl;
                     handle_client_write(fd);
                 }
             }
