@@ -595,14 +595,11 @@ void Engine::run()
                         }
 						if (pos != std::string::npos)
 						{
-							std::cout << LIME BOLD "Found HEADER>" << client_fd << RESET << std::endl;
 							client.req.foundHeader = 1;
 							std::string header;
 							header = client.res.handleResponse(client.req, 200);
-							std::cout << ORANGE BOLD "header>" << header << RESET << std::endl;
 							send_data(client_fd, &header[0], header.size());
 							client.req.dataCgi.insert(client.req.dataCgi.end(), client.req.str.begin() + pos + sep_size, client.req.str.end());
-							std::cerr << GREEN BOLD "SIZE DATA CGI>" << client.req.dataCgi.size() << RESET << std::endl;
 						}
 					}
 					else
