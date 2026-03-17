@@ -232,13 +232,14 @@ std::string httpResponse::handleResponse(HttpRequest &req, int code){
 	if (code != 0)
 	{
 		_statusCode = code;
-		handleError(req);
 		if (code == 200)
 		{
 			_headers["Transfer-Encoding"] = "chunked";
-			_headers["Content-Type"] = "text/plain";
+			_headers["Content-Type"] =  "text/html; charset=utf-8";
 			_headers.erase("Content-Length");
 		}
+		else
+			handleError(req);
 		return convertFinalResponse();
 	}
 	if (_statusCode != 0)
