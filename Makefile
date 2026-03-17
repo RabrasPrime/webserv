@@ -51,6 +51,12 @@ CLIENT_FILES =								\
 
 FILES	+=	$(addprefix srcs/client/,$(CLIENT_FILES))
 
+# PARSE REQUETS
+PARSE_REQUEST =								\
+				parse_request.cpp			\
+
+FILES	+=	$(addprefix srcs/request/,$(PARSE_REQUEST))
+
 # path to lib folder to exec norm
 NORM_LIB = \
 lib/

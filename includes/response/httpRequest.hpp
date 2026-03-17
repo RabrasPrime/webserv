@@ -1,6 +1,7 @@
 #ifndef HTTPREQUEST_HPP
 # define HTTPREQUEST_HPP
 
+// #include "Client.hpp"
 #include "Location.hpp"
 #include <fstream>
 
@@ -56,5 +57,9 @@ struct HttpRequest
 	// , pipefdOut(-1)
 	// {}
 };
+
+int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
+int is_end_line(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
+int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> servers);
 
 #endif

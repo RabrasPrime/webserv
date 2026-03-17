@@ -159,9 +159,9 @@ void Engine::handle_new_connection(int listener_fd)
     add_to_epoll(client_fd, EPOLLIN | EPOLLET);
 }
 
-int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> server);
-int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
-int is_end_line(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
+// int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> server);
+// int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
+// int is_end_line(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
 
 std::string extractCookie(const std::string &cookie, const std::string &key)
 {
@@ -307,7 +307,7 @@ void Engine::handle_client_read(const int client_fd)
 						client.req.tmpName = "/tmp/" + ss.str() + ".tmp" ;
 					}
 					client.req.fd = open(client.req.tmpName.c_str(), O_CREAT | O_WRONLY, 6044);
-					std::cerr << LIME BOLD "CREATE FILE > " << client.req.fd << RESET << std::endl;
+					std::cerr << LIME BOLD "content length CREATE FILE > " << client.req.fd << RESET << std::endl;
 					write(client.req.fd, &client.req.body[0], client.req.body.size());
 					close(client.req.fd);
 					client.req.chunked_size = 0;
@@ -349,10 +349,10 @@ void Engine::handle_client_read(const int client_fd)
 					ss << i;
 					client.req.tmpName = "/tmp/" + ss.str() + ".tmp" ;
 				}
-				client.req.fd = open(client.req.tmpName.c_str(), O_CREAT | O_WRONLY, 6044);
-				std::cerr << LIME BOLD "CREATE FILE > " << client.req.fd << RESET << std::endl;
+				// client.req.fd = open(client.req.tmpName.c_str(), O_CREAT | O_WRONLY, 6044);
+				// std::cerr << LIME BOLD "no content length CREATE FILE > " << client.req.fd << RESET << std::endl;
 				// ssize_t bytes_write = write(client.req.fd, &client.req.body[0], client.req.body.size());
-				close(client.req.fd);
+				// close(client.req.fd);
 				client.req.chunked_size = 0;
 				client.res.handleResponse(client.req, 1);
 
@@ -489,7 +489,7 @@ Server* Engine::match_server(const std::string& host_header)
 
 void send_data(int fd, unsigned char *str, ssize_t size)
 {
-	std::cout << "START SEND >> " << size << "  ";
+	// std::cout << "START SEND >> " << size << "  ";
 	ssize_t total_send = 0;
 	while (total_send != size)
 	{
@@ -497,12 +497,12 @@ void send_data(int fd, unsigned char *str, ssize_t size)
 		if (bytes_send != -1)
 			total_send += bytes_send;
 	}
-	std::cout << total_send  << "Total Send >"<< std::endl;
+	// std::cout << total_send  << "Total Send >"<< std::endl;
 }
 
 void send_data(int fd, std::string str, ssize_t size)
 {
-	std::cout << "START SEND >>       " << size << "   ";
+	// std::cout << "START SEND >>       " << size << "   ";
 	ssize_t total_send = 0;
 	while (total_send != size)
 	{
@@ -510,7 +510,7 @@ void send_data(int fd, std::string str, ssize_t size)
 		if (bytes_send != -1)
 			total_send += bytes_send;
 	}
-	std::cout << total_send  << "    Total Send >"<< std::endl;
+	// std::cout << total_send  << "    Total Send >"<< std::endl;
 }
 
 void Engine::run()
@@ -799,7 +799,14 @@ void Engine::stop()
     _is_running = false;
 
     for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->second.req.tmpName.size() != 0)
+		{
+			// std::cerr << "TRY CLOSE >" << it->second.req.tmpName << std::endl;
+			unlink(it->second.req.tmpName.c_str());			
+		}
         it->second.close();
+	}
     _clients.clear();
     for (std::map<int, Listener>::iterator it = _listeners.begin(); it != _listeners.end(); ++it)
         it->second.close_socket();
