@@ -38,9 +38,6 @@ User& Server::getUser(std::string &username)
 
 bool Server::userExist(const std::string &username)
 {
-	 //std::cout << "DEBUG: Cherche l'user [" << username << "]" << std::endl;
-	// if (_userData.find(username) != _userData.end())
-	 //std::cout << YELLOW BOLD "USER FOUND_________________________________________________________{" << _userData[username].UserName << "}" RESET << std::endl;
 	return _userData.find(username) != _userData.end();
 }
 
@@ -58,10 +55,8 @@ void print_ipv6(const struct sockaddr_in6* addr)
 std::cout << std::hex << std::setw(1)
                   << ((p[i] << 8) | p[i+1]);
         if (i < 14) {
- //std::cout << ":";
         }
     }
- //std::cout << std::dec;
 }
 
 std::ostream& operator<<(std::ostream& out, const Server& serv)
@@ -79,16 +74,11 @@ std::ostream& operator<<(std::ostream& out, const Server& serv)
 		}
 		else if (it->ss_family == AF_INET6) {
 			const struct sockaddr_in6* addr6 = (const struct sockaddr_in6*)&(*it);
-			// inet_ntop(AF_INET6, &(addr6->sin6_addr), ip_str, INET6_ADDRSTRLEN);
 			port = ntohs(addr6->sin6_port);
- //std::cout << "\tIPv6: [";
 			print_ipv6(addr6);
- //std::cout << "]:" << port << std::endl;
 		}
 	}
-	out << BLUE << "Server Name : ";// << PURPLE << serv._server_name << std::endl;
 	for (std::vector<std::string>::const_iterator it = serv._server_name.begin(); it != serv._server_name.end();it++)
- //std::cout << "\t" << *it << std::endl;
 	out << static_cast<Config>(serv);
 
 	for (std::map<std::string, Location>::const_iterator it = serv._locations.begin();it != serv._locations.end();it++)
@@ -112,7 +102,6 @@ int		Server::set_listen(const std::string& value)
 
 	if (value.find('.') != std::string::npos)
 	{
-		//ipv4
 		size_t pos = value.find(':');
 		if (pos != std::string::npos)
 		{
@@ -151,7 +140,6 @@ int		Server::set_listen(const std::string& value)
 	}
 	else if (value.find(':') != std::string::npos)
 	{
-		//ipv6
 		size_t pos = value.find(']');
 		if (pos != std::string::npos)
 		{
@@ -193,7 +181,6 @@ int		Server::set_listen(const std::string& value)
 	}
 	else
 	{
-		//port
 		std::string port;
 		std::stringstream ss(value);
 		if (!(ss >> port))
