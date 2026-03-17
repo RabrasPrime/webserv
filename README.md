@@ -340,7 +340,7 @@ To launch the server, provide a configuration file as an argument:
 
 <details id="demo">
     <summary>
-        <h2>🌟 Bonus: Interactive Web Demo 🌟</h2>
+        <h2>🌟 𝔹onus: Interactive Web Demo 🌟</h2>
     </summary>
 
 > As a proof of concept, we developed a frontend to test the server's limits. Although the game logic is still a work in progress, it perfectly demonstrates our CGI implementation and Request handling.
