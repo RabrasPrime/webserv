@@ -1,7 +1,6 @@
 #ifndef HTTPREQUEST_HPP
 # define HTTPREQUEST_HPP
 
-// #include "Client.hpp"
 #include "Location.hpp"
 #include <fstream>
 
@@ -23,10 +22,8 @@ struct HttpRequest
 	std::vector<std::string> env;
 	std::map<std::string, std::string> headers;
 	std::map<std::string, std::vector<std::string> > mult;
-	// std::string body;
 	std::vector<unsigned char> body;
 	Server *tartgetServ; 
-	// dans Location
 	std::map<int, std::string>			error_pages;
 	int									methods;
 	int									ErrorCode;
@@ -38,8 +35,6 @@ struct HttpRequest
 
 	std::string 						queryString;
 	std::ofstream*	outFile;
-	// int pipefdIn;
-	// int pipefdOut;
 	int pipeOut[2];
 	int pipeIn[2];
 	pid_t cgi_pid;
@@ -51,11 +46,6 @@ struct HttpRequest
 	std::string tmpName;
 
 	size_t total_send;
-
-	// HttpRequest()
-	// : pipefdIn(-1)
-	// , pipefdOut(-1)
-	// {}
 };
 
 int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);

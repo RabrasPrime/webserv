@@ -11,7 +11,6 @@
 
 int main(int ac, char **av)
 {
-	// signal(SIGPIPE, SIG_IGN);
 	std::vector<Server> servers;
 	std::string path;
 	if (ac > 1)
@@ -20,7 +19,6 @@ int main(int ac, char **av)
 		path = "config_file/config_file";
 	if (parse(servers, path))
 		return (1);
-	// std::cout << servers.front() << std::endl;
 	Engine engine;
 	for (std::vector<Server>::iterator it = servers.begin(); it != servers.end();it++)
 		engine.add_server(*it);

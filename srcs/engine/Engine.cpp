@@ -39,9 +39,7 @@ void Engine::signal_handler(int sig)
 {
 	(void)sig;
 	if (_instance)
- //std::cout << "\nSHUTTING DOWN" << std::endl;
-	 if (_instance)
-	 	_instance->_is_running = false;
+		_instance->_is_running = false;
 }
 
 static std::string make_listener_key(const int host, const int port)
@@ -153,15 +151,11 @@ void Engine::handle_new_connection(int listener_fd)
 	}
 
 	std::vector<Server *> ListServer = listener.get_servers();
-    // Server* server = listener.get_servers().empty() ? NULL : listener.get_servers()[0];
     _clients[client_fd] = Client(client_fd, ListServer);
     _fd_types[client_fd] = FD_CLIENT;
     add_to_epoll(client_fd, EPOLLIN | EPOLLET);
 }
 
-// int	parse_header(const std::string& str, HttpRequest& req, std::vector<Server*> server);
-// int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
-// int is_end_line(std::vector<unsigned char>::iterator it, std::vector<unsigned char>& vect);
 
 std::string extractCookie(const std::string &cookie, const std::string &key)
 {
@@ -185,24 +179,11 @@ void Engine::handle_client_read(const int client_fd)
 
     Client& client = it->second;
     const ssize_t ret = client.read_from_socket();
-    // std::vector<unsigned char>& buf = client.get_read();
-    // if (!buf.empty())
-    // {
-    //     std::string s(buf.begin(), buf.end());
-    //     std::cout << ORANGE BOLD "READ>>>" << s << RESET << std::endl;
-    // }
-	
-
     if (ret == 0)
     {
         handle_client_disconnect(client_fd);
         return;
     }
-    // if (ret < 0)
-    // {
-    //     handle_client_disconnect(client_fd);
-    //     return;
-    // }
 	if (client.req.ErrorCode == 413)
 	{
 		std::vector<unsigned char>::iterator it;
@@ -220,11 +201,9 @@ void Engine::handle_client_read(const int client_fd)
 		std::cerr << BLUE BOLD "READ ALL DATA BUT NO END FOUND" RESET << std::endl;
 		std::string tmp(vect.begin(),vect.end());
 		std::cerr << "DATA>" << tmp << std::endl;
-		// vect.clear();
 		return;
 	}
 
- //std::cout << "Client end head > " << client.req.end_head << std::endl;
 	if (!client.req.end_head)
 	{
 		std::string header;
@@ -235,11 +214,8 @@ void Engine::handle_client_read(const int client_fd)
 			if (is_end_head(it, vect))
 			{
 				client.req.end_head = 1;
-	 //std::cout << RED << "Found Header -> Parse Header " << RESET << std::endl;
 				parse_header(header, client.req, client.get_server());
-				// if (it + 4 != vect.end())
 				vect.erase(vect.begin(), it + 4);
-				// std::cout << LIME BOLD "Size >>> " << vect.size() << std::endl;
 				break;
 			}
 			else
@@ -250,11 +226,9 @@ void Engine::handle_client_read(const int client_fd)
         if (client.req.mult.count("Cookie") > 0 && !client.req.mult["Cookie"].empty())
             std::string user = extractCookie(client.req.mult["Cookie"].front(), "user_id");
     
-//  std::cout << "Header : \n" << YELLOW << header << RESET << std::endl;
 		if (client.req.chunked > 0 || (client.req.mult.find("Transfer-Encoding") != client.req.mult.end() && client.req.mult["Transfer-Encoding"].size() != 0 && client.req.mult["Transfer-Encoding"].front() == "chunked"))
 		{
 			handle_chunked(vect, client, client_fd);
-			// std::cout << BLUE BOLD << client.get_read().size() << RESET << std::endl;
 			return;
 		}
 		else if (client.req.mult.find("Content-Length") != client.req.mult.end())
@@ -281,10 +255,7 @@ void Engine::handle_client_read(const int client_fd)
 			client.req.ContentLength = ContentLength;
 
 			if (client.get_read().size() != client.req.ContentLength)
-			{
-	 //std::cout << PURPLE BOLD "Need to read more" RESET << std::endl;
 				return ;
-			}
 			else
 			{
 				client.req.body = client.get_read();
@@ -292,7 +263,6 @@ void Engine::handle_client_read(const int client_fd)
 				std::string resp = client.res.handleResponse(client.req, client.req.ErrorCode);
                 if (resp == "START_CGI")
                 {
-					// start cgi
 					size_t i = 0;
 					std::stringstream ss;
 					ss << i;
@@ -335,7 +305,6 @@ void Engine::handle_client_read(const int client_fd)
 			std::string resp = client.res.handleResponse(client.req, client.req.ErrorCode);
 			if (resp == "START_CGI")
 			{
-				// start cgi
 				size_t i = 0;
 				std::stringstream ss;
 				ss << i;
@@ -349,10 +318,6 @@ void Engine::handle_client_read(const int client_fd)
 					ss << i;
 					client.req.tmpName = "/tmp/" + ss.str() + ".tmp" ;
 				}
-				// client.req.fd = open(client.req.tmpName.c_str(), O_CREAT | O_WRONLY, 6044);
-				// std::cerr << LIME BOLD "no content length CREATE FILE > " << client.req.fd << RESET << std::endl;
-				// ssize_t bytes_write = write(client.req.fd, &client.req.body[0], client.req.body.size());
-				// close(client.req.fd);
 				client.req.chunked_size = 0;
 				client.res.handleResponse(client.req, 1);
 
@@ -379,18 +344,12 @@ void Engine::handle_client_read(const int client_fd)
 			return;
 		}
 		if (client.get_read().size() != client.req.ContentLength)
-		{
- //std::cout << PURPLE BOLD "Need to read more" RESET << std::endl;
 			return ;
-		}
 		client.req.body = client.get_read();
 		client.get_read().clear();
 		std::string resp = client.res.handleResponse(client.req, client.req.ErrorCode);
 		if (resp == "START_CGI")
-		{
-			// start cgi
 			return ;
-		}
         client._write_buffer = resp;
         modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 	}
@@ -425,7 +384,6 @@ void Engine::handle_client_write(const int client_fd)
 
 void Engine::handle_client_disconnect(const int client_fd)
 {
- //std::cout << RED << "Disconnect Client !" << RESET << std::endl;
     remove_from_epoll(client_fd);
     _fd_types.erase(client_fd);
 
@@ -489,7 +447,6 @@ Server* Engine::match_server(const std::string& host_header)
 
 void send_data(int fd, unsigned char *str, ssize_t size)
 {
-	// std::cout << "START SEND >> " << size << "  ";
 	ssize_t total_send = 0;
 	while (total_send != size)
 	{
@@ -497,12 +454,10 @@ void send_data(int fd, unsigned char *str, ssize_t size)
 		if (bytes_send != -1)
 			total_send += bytes_send;
 	}
-	// std::cout << total_send  << "Total Send >"<< std::endl;
 }
 
 void send_data(int fd, std::string str, ssize_t size)
 {
-	// std::cout << "START SEND >>       " << size << "   ";
 	ssize_t total_send = 0;
 	while (total_send != size)
 	{
@@ -510,7 +465,6 @@ void send_data(int fd, std::string str, ssize_t size)
 		if (bytes_send != -1)
 			total_send += bytes_send;
 	}
-	// std::cout << total_send  << "    Total Send >"<< std::endl;
 }
 
 void Engine::run()
@@ -525,7 +479,6 @@ void Engine::run()
     while (_is_running)
     {
         const int n = epoll_wait(_epoll_fd, events, MAX_EVENTS, 1000);
-		// std::cerr << "EPOLL WAIT UNLOCK" << std::endl;
         if (n < 0)
         {
             if (errno == EINTR)
@@ -537,7 +490,6 @@ void Engine::run()
 
         for (int i = 0; i < n; i++)
         {
-//  std::cout << BLUE << "New data collected !" << RESET << std::endl;
 			int fd = events[i].data.fd;
 
 			if (_fd_types[fd] == FD_CGI_PIPE_WRITE)
@@ -581,16 +533,6 @@ void Engine::run()
 					close(client.req.pipeIn[1]);
 					close(client.req.pipeIn[0]);
 					close(client.req.pipeOut[1]);
-					// client.req.pipeIn[1] = -1;
-					// std::cerr << ORANGE BOLD "NOTHING LEFT TO WRITE" RESET << std::endl;
-					// add_to_epoll(_cgi_to_client[fd], EPOLLIN | EPOLLET);
-
-					// modify_epoll(_cgi_to_client[fd], EPOLLIN | EPOLLET);
-					// modify_epoll(fd,0);
-
-					// remove_from_epoll(fd);
-					// _fd_types.erase(fd);
-					// _cgi_to_client.erase(fd);
 				}
 				continue;
 			}
@@ -633,8 +575,6 @@ void Engine::run()
                 char buffer[4096] = {0};
                 int client_fd = _cgi_to_client[fd];
                 size_t bytes_read = read(fd, buffer, sizeof(buffer));
-				// std::cout << "bytes_read> " << bytes_read << std::endl;
-				// std::cout << "buffer >" << buffer << std::endl;
 				const std::map<int, Client>::iterator it = _clients.find(client_fd);
 				if (it == _clients.end())
 					return;
@@ -643,8 +583,6 @@ void Engine::run()
                 if (bytes_read > 0)
 				{
 					std::string tmp(buffer,bytes_read);
-					// std::cout << "SEND DATA CGI data>"<< tmp << std::endl;
-					// std::cout << "read bytes > 0" << std::endl;
 					if (!client.req.foundHeader)
 					{
 						client.req.str += std::string(buffer, bytes_read);
@@ -659,18 +597,12 @@ void Engine::run()
 						{
 							std::cout << LIME BOLD "Found HEADER>" << client_fd << RESET << std::endl;
 							client.req.foundHeader = 1;
-							// std::cout << "Header cgi>" << client.req.str.substr(0,pos) << std::endl;
 							std::string header;
 							header = client.res.handleResponse(client.req, 200);
 							std::cout << ORANGE BOLD "header>" << header << RESET << std::endl;
-                    		// send(client_fd, &header[0], header.size(), 0);
 							send_data(client_fd, &header[0], header.size());
-							// PATH_INFO incorrect
-							// send(client_fd,"PATH_INFO incorrect",19,0);
-                    		// send(client_fd, "\r\n\r\n", header.size(), 0);
 							client.req.dataCgi.insert(client.req.dataCgi.end(), client.req.str.begin() + pos + sep_size, client.req.str.end());
 							std::cerr << GREEN BOLD "SIZE DATA CGI>" << client.req.dataCgi.size() << RESET << std::endl;
-							// std::cerr << GREEN BOLD "RESTE DES DATAS>>" << tmp << RESET << std::endl;
 						}
 					}
 					else
@@ -681,14 +613,9 @@ void Engine::run()
 
 					if (client.req.dataCgi.size() >= 0x8000)
 					{
-						// std::cout << RED BOLD "_________________________________HERE SEND DATA dataCgi size> 0x8000" RESET << std::endl;
 						send_data(client_fd, "8000\r\n", 6);
 						send_data(client_fd, &client.req.dataCgi[0], 0x8000);
 						send_data(client_fd, "\r\n", 2);
-						
-						// send(client_fd,"8000\r\n",6,0);
-                    	// send(client_fd, &client.req.dataCgi[0], 0x8000, 0);
-						// send(client_fd,"\r\n",2,0);
 						client.req.dataCgi.erase(client.req.dataCgi.begin(),client.req.dataCgi.begin() + 0x8000);
 					}
 				}
@@ -697,11 +624,8 @@ void Engine::run()
 					std::cout << BLUE BOLD "END CHUNK HERE" << RESET << std::endl;
 					if (bytes_read == 0)
 					{
-						// send(client_fd,"8000\r\n",6,0);
-						// size_t valeur;
 						std::stringstream ss;
 						ss << std::hex << client.req.dataCgi.size();
-						// ss >> valeur;
 						if (!client.req.foundHeader)
 						{
 							std::cerr << RED BOLD "NO HEADER>" << client_fd << RESET << std::endl;
@@ -714,11 +638,9 @@ void Engine::run()
 							if (client.req.dataCgi.size() != 0)
 							{
 								std::string hexa = ss.str();
-								// std::cout << "hexa>" << hexa << std::endl;
 								hexa += "\r\n";
 								std::cout << "hexa>" << hexa << std::endl;
 								send(client_fd,&hexa[0],hexa.size(),0);
-								// std::string str(client.req.dataCgi.begin(),client.req.dataCgi.end());
 								std::cout << "dataCgi size>" << hexa << std::endl;
 								send(client_fd, &client.req.dataCgi[0], client.req.dataCgi.size(), 0);
 								send(client_fd,"\r\n",2,0);
@@ -750,26 +672,15 @@ void Engine::run()
                 continue;
             }
             if (_fd_types[fd] == FD_LISTENER)
-            {
-	 //std::cout << ORANGE << "Handle new connection !" << RESET << std::endl;
                 handle_new_connection(fd);
-            }
             else if (_fd_types[fd] == FD_CLIENT)
             {
                 if (events[i].events & (EPOLLHUP | EPOLLERR))
-                {
                     handle_client_disconnect(fd);
-                }
                 else if (events[i].events & EPOLLIN)
-                {
-		//  std::cout << PURPLE << "Handle client read !" << RESET << std::endl;
                     handle_client_read(fd);
-                }
                 else if (events[i].events & EPOLLOUT)
-                {
-		//  std::cout << BROWN << "Handle client write !" << RESET << std::endl;
                     handle_client_write(fd);
-                }
             }
         }
         for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); )
@@ -801,10 +712,7 @@ void Engine::stop()
     for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		if (it->second.req.tmpName.size() != 0)
-		{
-			// std::cerr << "TRY CLOSE >" << it->second.req.tmpName << std::endl;
 			unlink(it->second.req.tmpName.c_str());			
-		}
         it->second.close();
 	}
     _clients.clear();

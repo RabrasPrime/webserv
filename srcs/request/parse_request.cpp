@@ -12,7 +12,6 @@ std::vector<std::string> ft_split(std::string& str, std::string split)
 		if (pos == std::string::npos)
 			pos = str.size();
 		std::string ligne(str.substr(index, pos - index));
-		 //std::cout << ligne << "    " << index << " " << pos << std::endl;
 		vect.push_back(ligne);
 		index = pos + 2;
 	} while (pos != str.size());
@@ -35,7 +34,6 @@ void	fill_headers(std::vector<std::string>& ligne, HttpRequest& req)
 			value = it->substr(i, it->size());
 			req.mult[key];
 			req.mult[key].push_back(value);
-			// req.mult.insert(std::make_pair(key, value));
 		}
 	}
 }
@@ -61,16 +59,11 @@ int is_end_head(std::vector<unsigned char>::iterator it, std::vector<unsigned ch
 
 void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, const int client_fd)
 {
-	// std::cout << BLUE BOLD "HANDLE CHUNCK" RESET << std::endl;
 	do
 	{
-		// std::cout << ORANGE BOLD "HANDLE CHUNCK" RESET << std::endl;
 		client.req.chunked_size = -1;
 		if (client.req.chunked <= 1)
 		{
-			// std::string s(vect.begin(), vect.end());
-			// std::cout << ORANGE BOLD "BODY CHUCK>>>" << s << "END" << RESET << std::endl;
-			//size
 			client.req.chunked = 1;
 			std::vector<unsigned char>::iterator it;
 			std::string hexa;
@@ -82,15 +75,10 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						client.req.chunked = 5;
 					else
 						client.req.chunked = 3;
-		//  std::cout << ORANGE BOLD "HEXA >>>" << hexa << RESET <<std::endl;
-					// std::string hexa = "FF";
 					size_t valeur;
 					std::stringstream ss;
 					ss << std::hex << hexa;
 					ss >> valeur;
-					// std::cerr << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
-					// if (!client.req.isCgi)
-					// 	std::cerr << ORANGE BOLD "INT >>>" << valeur << RESET <<std::endl;
 					client.req.chunked_size = valeur;
 					client.req.total_size += valeur;
 					if (client.req.total_size > client.req.maxSize && !client.req.ErrorCode)
@@ -100,25 +88,14 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						vect.clear();
 						if (client.req.isCgi)
 						{
-							// close(client.req.pipeIn[1]);
-							// close(client.req.pipeIn[0]);
 							close(client.req.pipeOut[1]);
 							client.req.pipeIn[1] = -1;
-							// int pipefd = client.req.pipeOut[0];
-							// _fd_types[pipefd] = FD_CGI_PIPE;
-							// _map_cgi_pid[pipefd] = client.req.cgi_pid;
-							// _cgi_to_client[pipefd] = client_fd;
-							// std::cerr << "ADD FD BEFORE" << std::endl;
-							// add_to_epoll(pipefd, EPOLLIN);
-							// std::cerr << "ADD FD AFTER" << std::endl;
 							return;
 						}
 						client.req.ErrorCode = 413;
 						client._write_buffer = client.res.handleResponse(client.req, 413);
-						// modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 						return;
 					}
-					// std::cerr << "SIZE VECT>" << vect.size() << std::endl;
 
 					vect.erase(vect.begin(),it + 2);
 					client.req.chunked--;
@@ -140,15 +117,6 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 			vect.clear();
 			if (client.req.isCgi)
 			{
-				// if (client.req.body.size() > 0)
-				// {
-				// 	ssize_t bytes_write = write(client.req.fd, &client.req.body[0], client.req.body.size());
-				// 	if (bytes_write != (ssize_t)client.req.body.size())
-				// 		std::cerr << RED BOLD "ERROR WRITE IN FILE > " << bytes_write << RESET << std::endl;
-				// 	// else
-				// 		// std::cout << "WRITE IN TMP FILE>" << bytes_write << std::endl;
-				// 	client.req.body.clear();
-				// }
 				close(client.req.fd);
 				client.res.handleResponse(client.req, 1);
 
@@ -163,33 +131,24 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 				return;
 			}
 			client.req.body = client.get_read();
-			// if (!client.req.ErrorCode)
 			client._write_buffer = client.res.handleResponse(client.req, 0);
 			client.get_read().clear();
-			// std::cout << PURPLE BOLD << client.get_read().size() << RESET << std::endl;
 			modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 			return ;
 		}
 		if (client.req.chunked > 1)
 		{
-			//content
-
 			std::vector<unsigned char>::iterator it;
 			for (it = vect.begin();it != vect.end();it++)
 			{
 				if (is_end_line(it, vect))
 				{
-					// client.req.body.clear();
 					client.req.body.insert(client.req.body.end(), vect.begin(), it);
-
-					// std::string s(client.req.body.begin(), client.req.body.end());
-					//  std::cout << LIME BOLD "BODY>>>" << s << RESET << std::endl;
 
 					vect.erase(vect.begin(),it + 2);
 					if (client.req.outFile)
 					{
 						client.req.outFile->write(reinterpret_cast<char*>(&client.req.body[0]),client.req.body.size());
-						// il nous manquait un clear je crois 
 						client.req.body.clear();
 					}
 					else if (client.req.isCgi)
@@ -197,8 +156,6 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 						ssize_t bytes_write = write(client.req.fd, &client.req.body[0], client.req.body.size());
 						if (bytes_write != (ssize_t)client.req.body.size())
 							std::cerr << RED BOLD "ERROR WRITE IN FILE > " << bytes_write << RESET << std::endl;
-						// else
-							// std::cout << "WRITE IN TMP FILE>" << bytes_write << std::endl;
 						client.req.body.clear();
 					}
 					else
@@ -240,13 +197,11 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 	for (i = 0;(tmp[i] == '\n' || tmp[i] == '\r') && i < tmp.size();i++)
 		;
 	std::string str(&tmp[i]);
-//  std::cout << YELLOW BOLD "\n\nSTR >> " << str << RESET << std::endl;
 	std::string first_line;
 	if (str.find("\r\n") != std::string::npos)
 		first_line = str.substr(0,str.find("\r\n"));
 	else
 		first_line = str;
- //std::cout << "first line >> " << first_line << std::endl;
 	std::stringstream ss(first_line);
 	std::string method;
 	std::string path;
@@ -259,7 +214,6 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 	}
 	if (!method.size() || !path.size() || !version.size())
 		return (400);
- //std::cout << "Method : " << method << std::endl;
 	size_t index = path.find('?');
 	if (index != std::string::npos)
 	{
@@ -277,10 +231,7 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 			index = pos + 1;
 		} while (pos != path.size());
 	}
- //std::cout << "Path : " << path << std::endl;
 	req.raw_path = path;
- //std::cout << "Version : " << version << std::endl;
- //std::cout << "___________Query String >" << req.queryString << std::endl;
 
 	path = path.substr(0, path.find('?'));
 
@@ -293,23 +244,9 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 	req.path = path;
 	req.version = version;
 	std::string header(str.substr(str.find("\r\n") + 2, str.size()));
-	// std::cout << header << std::endl;
 	std::vector<std::string> ligne = ft_split(header, "\r\n");
-	// for (std::vector<std::string>::iterator it = ligne.begin();it != ligne.end();it++)
-	// {
-	//  //std::cout << *it << std::endl;
-	// }
 	fill_headers(ligne, req);
-	for (std::map<std::string,std::vector<std::string> >::iterator it = req.mult.begin();it != req.mult.end();it++)
-	{
- //std::cout << it->first << " : " <<  std::endl;
-		for (std::vector<std::string>::iterator itt = it->second.begin();itt != it->second.end();itt++)
-		{
- //std::cout << "\t" << *itt;
-		}
- //std::cout << std::endl;
-	}
-	//HERE identifier le bon server
+
 	Server* server = NULL;
 	for (std::vector<Server *>::iterator it = servers.begin();server == NULL && it != servers.end();it++)
 	{
@@ -317,14 +254,11 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 		for (std::vector<std::string>::iterator itt = list_name.begin();server == NULL && itt != list_name.end();itt++)
 		{
 			if (req.mult["Host"].size() != 0 && *itt == req.mult["Host"].front())
-			{
 				server = *it;
-			}
 		}
 	}
 	if (server == NULL)
 	{
- //std::cout << RED BOLD "NULL" RESET << std::endl;
 		for (std::vector<Server *>::iterator it = servers.begin();server == NULL && it != servers.end();it++)
 		{
 			std::vector<std::string> list_name = (*it)->get_server_name();
@@ -335,7 +269,6 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 	if (server == NULL && servers.size() != 0)
 		server = servers.front();
 	req.tartgetServ = server;
- //std::cout << RED BOLD "HERE" RESET << std::endl;
 	const std::map<std::string, Location>& locations = server->get_locations();
 	Location* best = NULL;
 	size_t size_match = 0;
@@ -351,7 +284,6 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
             }
         }
     }
- //std::cout << "Path >> " << path << std::endl;
 	if (!best)
 	{
 		req.location_match = 0;
@@ -368,7 +300,6 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 	}
 	else
 	{
- //std::cout << "Found Best ____________" << std::endl;
 
 		req.location_match = 1;
 		req.error_pages = best->get_error_pages();
@@ -380,31 +311,12 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 		
 		req.loc = best;
 
- //std::cout << *best << std::endl;
-
 		if (best->get_use_alias())
 		{
- //std::cout << RED BOLD "USE ALIAS" RESET << std::endl;
 			req.path = best->get_alias() + &path[best->get_path().size()];
 		}
 		else
 			req.path = best->get_root() + &path[1];
 	}
- //std::cout << "__________________Path>" << req.path << std::endl;
-	// for (std::multimap<std::string, std::string>::iterator it = req.mult.begin();it != req.mult.end();it++)
-	// {
-	//  //std::cout << it->first << ":" << it->second << std::endl;
-	// }
-
-	// std::pair<std::map<std::string, std::string>::iterator,std::map<std::string, std::string>::iterator> range;
-	// for (std::map<std::string, std::string>::iterator it = range.first;it != range.second;it++)
-	// {
-	//  //std::cout << it->first << " : " << it->second << std::endl;
-	// }
-	// Server server;
-	// for (std::vector<Server>::iterator it = servers.begin();it != servers.end();it++)
-	// {
-	// 	it->get_server_name();
-	// }
 	return (0);
 }
