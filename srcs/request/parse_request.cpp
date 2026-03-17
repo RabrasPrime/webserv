@@ -83,7 +83,6 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 					client.req.total_size += valeur;
 					if (client.req.total_size > client.req.maxSize && !client.req.ErrorCode)
 					{
-						std::cerr << ORANGE BOLD "REQ BODY TOO BIG" RESET << std::endl;
 						client.get_read().clear();
 						vect.clear();
 						if (client.req.isCgi)
@@ -111,7 +110,6 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 		{
 			if (client.req.ErrorCode != 0)
 				modify_epoll(client_fd, EPOLLOUT | EPOLLET);
-			std::cerr << "SIZE VECT>" << vect.size() << std::endl;
 			std::string str(vect.begin(),vect.end());
 			client.get_read().clear();
 			vect.clear();
@@ -124,9 +122,7 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 				_fd_types[pipefd] = FD_CGI_PIPE;
 				_map_cgi_pid[pipefd] = client.req.cgi_pid;
 				_cgi_to_client[pipefd] = client_fd;
-				std::cout << BROWN "ADD FD BEFORE" RESET << std::endl;
 				add_to_epoll(pipefd, EPOLLIN);
-				std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
 				close(client.req.pipeOut[1]);
 				return;
 			}
@@ -153,14 +149,11 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 					}
 					else if (client.req.isCgi)
 					{
-						ssize_t bytes_write = write(client.req.fd, &client.req.body[0], client.req.body.size());
-						if (bytes_write != (ssize_t)client.req.body.size())
-							std::cerr << RED BOLD "ERROR WRITE IN FILE > " << bytes_write << RESET << std::endl;
+						write(client.req.fd, &client.req.body[0], client.req.body.size());
 						client.req.body.clear();
 					}
 					else
 					{
-						std::cerr << ORANGE BOLD "CALL REPONSE HERE" RESET << std::endl;
 						client.res.handleResponse(client.req, client.req.ErrorCode);
 						if (client.req.isCgi)
 						{
@@ -178,7 +171,6 @@ void Engine::handle_chunked(std::vector<unsigned char>& vect, Client& client, co
 								client.req.tmpName = "/tmp/" + ss.str() + ".tmp" ;
 							}
 							client.req.fd = open(client.req.tmpName.c_str(), O_CREAT | O_WRONLY, 6044);
-							std::cerr << LIME BOLD "chuncked CREATE FILE > " << client.req.fd << RESET << std::endl;
 						}
 					}
 					client.req.chunked = 1;

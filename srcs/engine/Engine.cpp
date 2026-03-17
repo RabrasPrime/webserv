@@ -193,14 +193,11 @@ void Engine::handle_client_read(const int client_fd)
 			if (is_end_head(it, vect))
 			{
 				vect.erase(vect.begin(),it + 4);
-				std::cerr << LIME BOLD "ERASE DATA AFTER 413" RESET << std::endl;
 				modify_epoll(client_fd, EPOLLOUT | EPOLLET);
 				return;
 			}
 		}
-		std::cerr << BLUE BOLD "READ ALL DATA BUT NO END FOUND" RESET << std::endl;
 		std::string tmp(vect.begin(),vect.end());
-		std::cerr << "DATA>" << tmp << std::endl;
 		return;
 	}
 
@@ -277,7 +274,6 @@ void Engine::handle_client_read(const int client_fd)
 						client.req.tmpName = "/tmp/" + ss.str() + ".tmp" ;
 					}
 					client.req.fd = open(client.req.tmpName.c_str(), O_CREAT | O_WRONLY, 6044);
-					std::cerr << LIME BOLD "content length CREATE FILE > " << client.req.fd << RESET << std::endl;
 					write(client.req.fd, &client.req.body[0], client.req.body.size());
 					close(client.req.fd);
 					client.req.chunked_size = 0;
@@ -287,9 +283,7 @@ void Engine::handle_client_read(const int client_fd)
 					_fd_types[pipefd] = FD_CGI_PIPE;
 					_map_cgi_pid[pipefd] = client.req.cgi_pid;
 					_cgi_to_client[pipefd] = client_fd;
-					std::cout << BROWN "ADD FD BEFORE" RESET << std::endl;
 					add_to_epoll(pipefd, EPOLLIN);
-					std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
 					close(client.req.pipeOut[1]);
 					return;
                 }
@@ -325,9 +319,7 @@ void Engine::handle_client_read(const int client_fd)
 				_fd_types[pipefd] = FD_CGI_PIPE;
 				_map_cgi_pid[pipefd] = client.req.cgi_pid;
 				_cgi_to_client[pipefd] = client_fd;
-				std::cout << BROWN "ADD FD BEFORE" RESET << std::endl;
 				add_to_epoll(pipefd, EPOLLIN);
-				std::cout << BROWN "ADD FD AFTER" RESET << std::endl;
 				close(client.req.pipeOut[1]);
 				return;
 			}
@@ -492,51 +484,6 @@ void Engine::run()
         {
 			int fd = events[i].data.fd;
 
-			if (_fd_types[fd] == FD_CGI_PIPE_WRITE)
-			{
-				std::cerr << RED BOLD "ADD WRITE IN CGI" RESET << std::endl;
-				int client_fd = _cgi_to_client[fd];
-				const std::map<int, Client>::iterator it = _clients.find(client_fd);
-				if (it == _clients.end())
-				{
-					std::cerr << RED BOLD "Client Not Found" RESET << std::endl;
-					return;
-				}
-
-				Client& client = it->second;
-				while (client.req.body.size() > 0)
-				{
-					ssize_t bytes_write = write(client.req.pipeIn[1], reinterpret_cast<char*>(&client.req.body[0]), client.req.body.size());
-					if (bytes_write > 0)
-					{
-						std::cout << "WRITE IN CGI>" << bytes_write << std::endl;
-						client.req.total_send += bytes_write;
-						client.req.body.erase(client.req.body.begin(),client.req.body.begin() + bytes_write);
-					}
-					else if (errno == EAGAIN || errno == EWOULDBLOCK)
-					{
-						break;
-					}
-					else
-					{
-						std::cerr << RED BOLD "AIE RUN" RESET << std::endl;
-					}
-				}
-				if (client.req.body.size() == 0 && client.req.chunked_size == 0)
-				{
-					std::cerr << RED BOLD "BYTES WRITE TOTAL>>>>" << client.req.total_send << RESET << std::endl;
-					
-					remove_from_epoll(client.req.pipeIn[1]);
-					_fd_types.erase(client.req.pipeIn[1]);
-					_cgi_to_client.erase(client.req.pipeIn[1]);
-
-					close(client.req.pipeIn[1]);
-					close(client.req.pipeIn[0]);
-					close(client.req.pipeOut[1]);
-				}
-				continue;
-			}
-
 			if (_fd_types[fd] == FD_CGI_PIPE_IN)
 			{
 				int client_fd = _cgi_to_client[fd];
@@ -550,16 +497,12 @@ void Engine::run()
 				if (bytes_read > 0)
 				{
 					std::string str(buffer,bytes_read);
-					std::cout << "fd>" << fd << "    GET DATA FILE IN>" << str << std::endl;
-					if (write(fd, &str[0], str.size()) == -1)
-						std::cerr << RED BOLD "ERROR WRITE" RESET << std::endl;
+					write(fd, &str[0], str.size());
 				}
 				else
 				{
 					if (bytes_read == 0)
 					{
-						std::cout << YELLOW BOLD "CLOSE PIPE" RESET << std::endl;
-	
 						remove_from_epoll(fd);
 						close(fd);
 						close(client.req.fd);
@@ -618,14 +561,12 @@ void Engine::run()
 				}
                 else
                 {
-					std::cout << BLUE BOLD "END CHUNK HERE" << RESET << std::endl;
 					if (bytes_read == 0)
 					{
 						std::stringstream ss;
 						ss << std::hex << client.req.dataCgi.size();
 						if (!client.req.foundHeader)
 						{
-							std::cerr << RED BOLD "NO HEADER>" << client_fd << RESET << std::endl;
 							std::string header;
 							header = client.res.handleResponse(client.req, 500);
 							send(client_fd,&header[0],header.size(),0);
@@ -636,9 +577,7 @@ void Engine::run()
 							{
 								std::string hexa = ss.str();
 								hexa += "\r\n";
-								std::cout << "hexa>" << hexa << std::endl;
 								send(client_fd,&hexa[0],hexa.size(),0);
-								std::cout << "dataCgi size>" << hexa << std::endl;
 								send(client_fd, &client.req.dataCgi[0], client.req.dataCgi.size(), 0);
 								send(client_fd,"\r\n",2,0);
 							}
@@ -646,15 +585,12 @@ void Engine::run()
 							send(client_fd,"\r\n",2,0);
 							send(client_fd,"\r\n",2,0);
 						}
-						std::cout << BROWN BOLD "CLOSE PIPE" RESET << std::endl;
 						remove_from_epoll(fd);
 						close(fd);
 						_fd_types.erase(fd);
 						int pid = _map_cgi_pid[fd];
 						int status;
-						std::cout << LIME BOLD "BEFORE WAITPID" RESET << std::endl;
 						waitpid(pid, &status, 0);
-						std::cout << GREEN BOLD "AFTER WAITPID" RESET << std::endl;
 						_map_cgi_pid.erase(fd);
 						_cgi_to_client.erase(fd);
 						modify_epoll(client_fd, EPOLLOUT | EPOLLET);

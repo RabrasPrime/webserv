@@ -57,10 +57,7 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 	if (req.chunked == 0)
 	{
 		if (!(req.method & METHOD_GET))
-		{
 			envList.push_back("CONTENT_LENGTH=" + ss.str());
-			std::cerr << GOLD BOLD "CONTENT_LENGTH=" << ss.str() << RESET << std::endl;
-		}
 		else
 			envList.push_back("PATH_TRANSLATED=" + req.path);
 	}
@@ -73,14 +70,11 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 			tmp += *it;
 	}
 	envList.push_back("CONTENT_TYPE=" + tmp);
-	std::cerr << GOLD BOLD "CONTENT_TYPE=" << tmp << RESET << std::endl;
 	std::string scriptName = req.raw_path;
 	size_t pos = scriptName.find(".bla");
 	if (pos != std::string::npos)
 		scriptName = scriptName.substr(0, pos + 4);
 	envList.push_back("SCRIPT_NAME=" + scriptName);
-	std::cerr << "Raw path>" << req.raw_path << std::endl;
-	std::cerr << "Raw Path>" << req.path << std::endl;
 	envList.push_back("PATH_INFO=" + req.raw_path);
 	envList.push_back("REQUEST_URI=" + req.raw_path);
 	envList.push_back("SCRIPT_FILENAME=" + path);
@@ -105,9 +99,6 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 		envList.push_back("HTTP_" + ident + "=" + content);
 	}
 
-	std::cerr << BLUE BOLD "Scriptfilename {" << path << "}" RESET << std::endl;
-	std::cerr << BLUE BOLD "scriptname {" << scriptName << "}" RESET << std::endl;
-
 	char **env = new char*[envList.size() + 1];
 	for (size_t i = 0; i < envList.size(); ++i)
 	{
@@ -121,7 +112,6 @@ char** httpResponse::createEnv(HttpRequest &req, std::string path){
 }
 
 int httpResponse::exeCgi(std::string path, HttpRequest &req){
-	std::cerr << "START EXE CGI" << std::endl;
 	if (req.cgi_pid > 0)
 		return 0;
 	int pipeOut[2];
@@ -142,7 +132,6 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		int fd;
 		if (req.method & METHOD_GET)
 		{
-			std::cerr << "IS A GET" << std::endl;
 			fd = open(req.path.c_str(),O_RDONLY,0644);
 			if (fd == -1)
 				exit(EXIT_FAILURE);
@@ -151,7 +140,6 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 		}
 		else
 		{
-			std::cerr << "DUP FILE" << std::endl;
 			fd = open(req.tmpName.c_str(),O_RDONLY,644);
 			unlink(req.tmpName.c_str());
 			if (fd == -1)
@@ -174,7 +162,6 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 
 		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(req.path.c_str()), NULL};
 		char **env = createEnv(req, path);
-		std::cerr << "RETURN ENV AFTER" << std::endl;
 		execve(_binary.c_str(), arg, env);
 		std::cerr << RED BOLD "FAIL EXECVE" RESET << std::endl;
 		delete []env;
