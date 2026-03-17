@@ -803,6 +803,7 @@ void Engine::stop()
 		if (it->second.req.tmpName.size() != 0)
 		{
 			// std::cerr << "TRY CLOSE >" << it->second.req.tmpName << std::endl;
+			close(it->second.req.fd);
 			unlink(it->second.req.tmpName.c_str());			
 		}
         it->second.close();
