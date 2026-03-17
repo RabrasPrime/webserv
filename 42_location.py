@@ -42,9 +42,9 @@ def get_all_user_locations(login, token):
     
     while True:
         params = {
-            "page[size]": 100,
-            "page[number]": page,
-            "sort": "-begin_at"
+            # "page[size]": 100,
+            # "page[number]": page,
+            # "sort": "-begin_at"
         }
         
         try:
@@ -178,28 +178,28 @@ def print_stats_by_row(login, stats):
             postes_inconnus.append((host, heures))
     
     # Affichage par zone et rangée
-    print(f"\n{'='*80}")
-    print(f"🗺️  TEMPS PAR POSTE - ORGANISÉ PAR RANGÉE")
-    print(f"{'='*80}")
+    # print(f"\n{'='*80}")
+    # print(f"🗺️  TEMPS PAR POSTE - ORGANISÉ PAR RANGÉE")
+    # print(f"{'='*80}")
     
     for zone in sorted(postes_par_zone_row.keys()):
-        print(f"\n{'─'*80}")
-        print(f"📍 ZONE {zone}")
-        print(f"{'─'*80}")
+        # print(f"\n{'─'*80}")
+        # print(f"📍 ZONE {zone}")
+        # print(f"{'─'*80}")
         
         for row in sorted(postes_par_zone_row[zone].keys()):
             postes = sorted(postes_par_zone_row[zone][row], key=lambda x: x[0])
             total_row = sum(h for _, h in postes)
             
-            print(f"\n  ┌─ Row {row} (Total: {total_row:.1f}h)")
-            print(f"  │")
+            # print(f"\n  ┌─ Row {row} (Total: {total_row:.1f}h)")
+            # print(f"  │")
             
             for host, heures in postes:
                 jours = heures / 24
                 pct = (heures / stats['total_heures'] * 100) if stats['total_heures'] > 0 else 0
-                print(f"  │  {host:<15} │ {heures:>8.1f}h │ {jours:>7.1f}j │ {pct:>5.1f}%")
+                # print(f"  │  {host:<15} │ {heures:>8.1f}h │ {jours:>7.1f}j │ {pct:>5.1f}%")
             
-            print(f"  └─")
+            # print(f"  └─")
     
     # Postes non identifiés
     if postes_inconnus:
