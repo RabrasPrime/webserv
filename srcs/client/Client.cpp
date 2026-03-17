@@ -15,6 +15,7 @@
 Client::Client() : _fd(-1), _status(READING)
 {
 	req = HttpRequest();
+	req.engine = this->engine;
 	res = httpResponse();
 	std::memset(&_last_active_time, 0, sizeof(_last_active_time));
 	gettimeofday(&_last_active_time, NULL);
@@ -23,6 +24,7 @@ Client::Client() : _fd(-1), _status(READING)
 Client::Client(int fd, std::vector<Server *> server) : _fd(fd), _server(server), _status(READING)
 {
 	req = HttpRequest();
+	req.engine = this->engine;
 	res = httpResponse();
 	std::memset(&_last_active_time, 0, sizeof(_last_active_time));
 	gettimeofday(&_last_active_time, NULL);

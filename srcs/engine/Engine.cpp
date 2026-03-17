@@ -152,6 +152,7 @@ void Engine::handle_new_connection(int listener_fd)
 
 	std::vector<Server *> ListServer = listener.get_servers();
     _clients[client_fd] = Client(client_fd, ListServer);
+	_clients[client_fd].engine = this;
     _fd_types[client_fd] = FD_CLIENT;
     add_to_epoll(client_fd, EPOLLIN | EPOLLET);
 }
@@ -360,6 +361,7 @@ void Engine::handle_client_write(const int client_fd)
 	client._write_buffer.clear();
 	client.req.end_head = 0;
 	client.req = HttpRequest();
+	client.req.engine = this;
 	client.res = httpResponse();
 
     if (ret < 0)
@@ -636,6 +638,22 @@ void Engine::run()
 
     }
     stop();
+}
+
+void Engine::stopFork()
+{
+    _is_running = false;
+
+    for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->second.req.tmpName.size() != 0)
+		{
+			close(it->second.req.fd);
+		}		
+        it->second.close();
+	}
+    for (std::map<int, Listener>::iterator it = _listeners.begin(); it != _listeners.end(); ++it)
+        it->second.close_socket();
 }
 
 void Engine::stop()

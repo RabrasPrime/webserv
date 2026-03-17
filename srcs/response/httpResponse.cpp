@@ -1,6 +1,7 @@
 #include "httpResponse.hpp"
 #include "Server.hpp"
 #include <algorithm>
+#include "Engine.hpp"
 
 httpResponse::httpResponse()
 : _statusCode(0){
@@ -162,6 +163,8 @@ int httpResponse::exeCgi(std::string path, HttpRequest &req){
 
 		char *arg[] = {const_cast<char *>(_binary.c_str()), const_cast<char *>(req.path.c_str()), NULL};
 		char **env = createEnv(req, path);
+		// close(req.fd);
+		req.engine->stopFork();
 		execve(_binary.c_str(), arg, env);
 		std::cerr << RED BOLD "FAIL EXECVE" RESET << std::endl;
 		delete []env;

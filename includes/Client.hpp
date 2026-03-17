@@ -44,6 +44,7 @@ class Client
 		std::string	_write_buffer;
 		HttpRequest req;
 		httpResponse res;
+		Engine *engine;
 		Client();
 		Client(int fd, std::vector<Server *>server);
 		~Client();

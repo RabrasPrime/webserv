@@ -48,6 +48,7 @@ class Engine
 
 
 		void handle_chunked(std::vector<unsigned char>& vect, Client& client,const int client_fd);
+		void stopFork();
 
 
 		/**

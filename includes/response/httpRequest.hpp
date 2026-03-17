@@ -4,8 +4,11 @@
 #include "Location.hpp"
 #include <fstream>
 
+class Engine;
+
 struct HttpRequest
 {
+	Engine*		engine;
 	size_t		total_size;
 	size_t		chunked_size;
 	int			chunked;
