@@ -3,7 +3,7 @@ DBG ?= 1
 FULL_NAME ?= 1
 
 CXX = c++
-CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -g3 -MMD -DDEBUG_VALUE=${DEBUG_VALUE}
+CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -g3 -MMD -DDEBUG_VALUE=${DEBUG_VALUE} #-fsanitize=address
 SHELL = /bin/bash
 
 EXECFLAGS = 
@@ -149,7 +149,7 @@ all: change_name_full clear_console reset_debug $(STATIC_LIB) $(EXTERN_LIB) star
 ${NAME}: CURRENT_HEADERS = $(ALL_I_DIR_HEADER)
 ${NAME}:  $(STATIC_LIB) $(EXTERN_LIB) $(OBJS)
 	@echo -e "    ${_BOLD}${_GREEN}💿  ◀◀◀ ${_LIME}Creating Executable 📑🗂️   ${_YELLOW}$(NAME)${_END}"
-	@$(CXX) $(OBJS) $(STATIC_LIB) $(EXTERN_LIB) -o $(NAME) $(EXECFLAGS)
+	@$(CXX) $(CXXFLAGS) $(OBJS) $(STATIC_LIB) $(EXTERN_LIB) -o $(NAME) $(EXECFLAGS)
 
 
 .obj/%.o: %.cpp
