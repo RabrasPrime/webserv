@@ -15,9 +15,15 @@ std::string httpResponse::convertFinalResponse(){
 
 	std::stringstream ss;
 	ss << _statusCode;
+	if (_statusCode == 200)
+		_statusMsg = "OK";
 	std::string resp = _version + " " + ss.str() + " " + _statusMsg + "\r\n";
+	std::cout << BLUE << _version << "  " << ss.str() << "	" << _statusMsg << RESET << std::endl; // LOG
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
+	{
+		std::cout << BLUE << "\t" << it->first << " : " << RESET << it->second << std::endl; // LOG
 		resp += it->first + ": " + it->second + "\r\n";
+	}
 	resp += "\r\n";
 	resp += _body;
 	_statusCode = 0;
