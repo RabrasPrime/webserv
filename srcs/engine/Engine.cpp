@@ -153,7 +153,6 @@ void Engine::handle_new_connection(int listener_fd)
 	std::vector<Server *> ListServer = listener.get_servers();
     _clients[client_fd] = Client(client_fd, ListServer);
 	_clients[client_fd].engine = this;
-	_clients[client_fd].req.engine = this;
     _fd_types[client_fd] = FD_CLIENT;
     add_to_epoll(client_fd, EPOLLIN | EPOLLET);
 }
@@ -224,7 +223,7 @@ void Engine::handle_client_read(const int client_fd)
 			return;
         if (client.req.mult.count("Cookie") > 0 && !client.req.mult["Cookie"].empty())
             std::string user = extractCookie(client.req.mult["Cookie"].front(), "user_id");
-    
+
 		if (client.req.chunked > 0 || (client.req.mult.find("Transfer-Encoding") != client.req.mult.end() && client.req.mult["Transfer-Encoding"].size() != 0 && client.req.mult["Transfer-Encoding"].front() == "chunked"))
 		{
 			handle_chunked(vect, client, client_fd);
@@ -352,7 +351,7 @@ void Engine::handle_client_read(const int client_fd)
 void Engine::handle_client_write(const int client_fd)
 {
     const std::map<int, Client>::iterator it = _clients.find(client_fd);
-	
+
     if (it == _clients.end())
         return;
 
@@ -382,11 +381,33 @@ void Engine::handle_client_disconnect(const int client_fd)
     remove_from_epoll(client_fd);
     _fd_types.erase(client_fd);
 
-    const std::map<int, Client>::iterator it = _clients.find(client_fd);
-    if (it != _clients.end())
+    std::map<int, int>::iterator it = _cgi_to_client.begin();
+    while (it != _cgi_to_client.end())
     {
-        it->second.close();
-        _clients.erase(it);
+        if (it->second == client_fd)
+        {
+            int pipe_fd = it->first;
+            remove_from_epoll(pipe_fd);
+            close(pipe_fd);
+            _fd_types.erase(pipe_fd);
+
+            int pid = _map_cgi_pid[pipe_fd];
+            kill(pid, SIGTERM);
+            int status;
+            waitpid(pid, &status, 0);
+            _map_cgi_pid.erase(pipe_fd);
+
+            _cgi_to_client.erase(it++);
+        }
+        else
+            ++it;
+    }
+
+    const std::map<int, Client>::iterator cit = _clients.find(client_fd);
+    if (cit != _clients.end())
+    {
+        cit->second.close();
+        _clients.erase(cit);
     }
 }
 
@@ -532,7 +553,6 @@ void Engine::run()
 					if (!client.req.foundHeader)
 					{
 						client.req.str += std::string(buffer, bytes_read);
-						// std::cout << "DATA > " << client.req.str << std::endl;
 						size_t pos = client.req.str.find("\r\n\r\n");
                         size_t sep_size = 4;
                         if (pos == std::string::npos)
@@ -544,7 +564,6 @@ void Engine::run()
 						{
 							client.req.foundHeader = 1;
 							std::string header;
-							// std::cerr << RED BOLD "OK READ HEADER" RESET << std::endl;
 							header = client.res.handleResponse(client.req, 200);
 							send_data(client_fd, &header[0], header.size());
 							client.req.dataCgi.insert(client.req.dataCgi.end(), client.req.str.begin() + pos + sep_size, client.req.str.end());
@@ -573,7 +592,6 @@ void Engine::run()
 						if (!client.req.foundHeader)
 						{
 							std::string header;
-							// std::cerr << RED BOLD "HEADER NOT FOUD" RESET << std::endl;
 							header = client.res.handleResponse(client.req, 500);
 							send(client_fd,&header[0],header.size(),0);
 						}
@@ -604,7 +622,7 @@ void Engine::run()
                 }
                 continue;
             }
-    
+
             if (_fd_types.find(fd) == _fd_types.end())
             {
                 std::cerr << "Unknown fd type for fd " << fd << std::endl;
@@ -650,10 +668,10 @@ void Engine::stopFork()
 
     for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
-		if (it->second.req.tmpName.size() != 0 && it->second.req.fd != 0)
+		if (it->second.req.tmpName.size() != 0)
 		{
 			close(it->second.req.fd);
-		}		
+		}
         it->second.close();
 	}
     for (std::map<int, Listener>::iterator it = _listeners.begin(); it != _listeners.end(); ++it)
@@ -667,19 +685,31 @@ void Engine::stop()
 {
     _is_running = false;
 
+    for (std::map<int, int>::iterator it = _cgi_to_client.begin(); it != _cgi_to_client.end(); ++it)
+    {
+        int pipe_fd = it->first;
+        remove_from_epoll(pipe_fd);
+        close(pipe_fd);
+        int pid = _map_cgi_pid[pipe_fd];
+        kill(pid, SIGTERM);
+        int status;
+        waitpid(pid, &status, 0);
+    }
+    _cgi_to_client.clear();
+    _map_cgi_pid.clear();
+
     for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-	{
-		if (it->second.req.tmpName.size() != 0)
-		{
-			close(it->second.req.fd);
-			unlink(it->second.req.tmpName.c_str());
-		}		
+    {
+        if (it->second.req.tmpName.size() != 0)
+        {
+            close(it->second.req.fd);
+            unlink(it->second.req.tmpName.c_str());
+        }
         it->second.close();
-	}
+    }
     _clients.clear();
     for (std::map<int, Listener>::iterator it = _listeners.begin(); it != _listeners.end(); ++it)
         it->second.close_socket();
     _listeners.clear();
     _fd_types.clear();
 }
-
