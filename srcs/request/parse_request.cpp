@@ -310,18 +310,18 @@ int	parse_header(const std::string& tmp, HttpRequest& req, std::vector<Server*> 
 		else
 			req.path = best->get_root() + &path[1];
 	}
-	std::cout << PURPLE << method << "	" << req.version << "   " << req.raw_path << RESET << std::endl; // LOG
-	std::map<std::string, std::vector<std::string> >::iterator it;
-	for (it = req.mult.begin(); it != req.mult.end(); it++)
-	{
-		std::cout << "\t" << PURPLE << it->first << " : " << RESET; // LOG
-		for (std::vector<std::string>::iterator itt = it->second.begin(); itt != it->second.end(); itt++)
-		{
-			if (itt != it->second.begin())
-				std::cout << ", "; // LOG
-			std::cout <<  *itt; // LOG
-		}
-		std::cout << std::endl; // LOG
-	}
+	// std::cout << PURPLE << method << "	" << req.version << "   " << req.raw_path << RESET << std::endl; // LOG
+	// std::map<std::string, std::vector<std::string> >::iterator it;
+	// for (it = req.mult.begin(); it != req.mult.end(); it++)
+	// {
+	// 	std::cout << "\t" << PURPLE << it->first << " : " << RESET; // LOG
+	// 	for (std::vector<std::string>::iterator itt = it->second.begin(); itt != it->second.end(); itt++)
+	// 	{
+	// 		if (itt != it->second.begin())
+	// 			std::cout << ", "; // LOG
+	// 		std::cout <<  *itt; // LOG
+	// 	}
+	// 	std::cout << std::endl; // LOG
+	// }
 	return (0);
 }

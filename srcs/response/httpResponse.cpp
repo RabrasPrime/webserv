@@ -21,7 +21,7 @@ std::string httpResponse::convertFinalResponse(){
 	std::cout << BLUE << _version << "  " << ss.str() << "	" << _statusMsg << RESET << std::endl; // LOG
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
 	{
-		std::cout << BLUE << "\t" << it->first << " : " << RESET << it->second << std::endl; // LOG
+		// std::cout << BLUE << "\t" << it->first << " : " << RESET << it->second << std::endl; // LOG
 		resp += it->first + ": " + it->second + "\r\n";
 	}
 	resp += "\r\n";

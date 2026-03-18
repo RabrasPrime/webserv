@@ -531,6 +531,7 @@ void Engine::run()
 					if (!client.req.foundHeader)
 					{
 						client.req.str += std::string(buffer, bytes_read);
+						std::cout << "DATA > " << client.req.str << std::endl;
 						size_t pos = client.req.str.find("\r\n\r\n");
                         size_t sep_size = 4;
                         if (pos == std::string::npos)
@@ -542,6 +543,7 @@ void Engine::run()
 						{
 							client.req.foundHeader = 1;
 							std::string header;
+							std::cerr << RED BOLD "OK READ HEADER" RESET << std::endl;
 							header = client.res.handleResponse(client.req, 200);
 							send_data(client_fd, &header[0], header.size());
 							client.req.dataCgi.insert(client.req.dataCgi.end(), client.req.str.begin() + pos + sep_size, client.req.str.end());
@@ -570,6 +572,7 @@ void Engine::run()
 						if (!client.req.foundHeader)
 						{
 							std::string header;
+							std::cerr << RED BOLD "HEADER NOT FOUD" RESET << std::endl;
 							header = client.res.handleResponse(client.req, 500);
 							send(client_fd,&header[0],header.size(),0);
 						}
