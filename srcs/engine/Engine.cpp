@@ -121,7 +121,6 @@ void Engine::init_listeners()
 void Engine::setup_epoll()
 {
     _epoll_fd = epoll_create1(0);
-	std::cerr << "FD > " << _epoll_fd << std::endl;
     if (_epoll_fd < 0)
     {
         std::cerr << "Error creating epoll fd: " << strerror(errno) << std::endl;

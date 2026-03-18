@@ -31,7 +31,7 @@ server
 		methods GET POST
 		alias ./www/html/Connected.html
 	locations /logout
-		methods GET
+		methods GET POST
 		alias ./www/html/Account.html
 	
 	locations /img/
