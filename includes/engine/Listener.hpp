@@ -21,7 +21,7 @@ private:
 	struct sockaddr_storage addr;
 	std::vector<Server*> _servers;
 
-	static const int BACKLOG = 128;
+	static const int BACKLOG = SOMAXCONN;
 
 public:
 	Listener();

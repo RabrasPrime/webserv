@@ -194,8 +194,8 @@ Server* Listener::match_server(const std::string& host_header) const
 
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		std::vector<std::string> tmp = _servers[i]->get_server_name();
-		if (_servers[i]->get_server_name().end() != std::find(tmp.begin(),tmp.end(),host_header))
+	const std::vector<std::string>& names = _servers[i]->get_server_name();
+	if (std::find(names.begin(), names.end(), host_header) != names.end())
 		{
 			return _servers[i];
 		}

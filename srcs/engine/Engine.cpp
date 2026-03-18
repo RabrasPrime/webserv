@@ -155,7 +155,8 @@ void Engine::handle_new_connection(int listener_fd)
 	_clients[client_fd].engine = this;
 	_clients[client_fd].req.engine = this;
     _fd_types[client_fd] = FD_CLIENT;
-    add_to_epoll(client_fd, EPOLLIN | EPOLLET);
+    add_to_epoll(client_fd, EPOLLIN);
+    //modify_epoll(client_fd, EPOLLOUT);
 }
 
 
@@ -195,7 +196,7 @@ void Engine::handle_client_read(const int client_fd)
 			if (is_end_head(it, vect))
 			{
 				vect.erase(vect.begin(),it + 4);
-				modify_epoll(client_fd, EPOLLOUT | EPOLLET);
+				modify_epoll(client_fd, EPOLLOUT);
 				return;
 			}
 		}
@@ -352,18 +353,11 @@ void Engine::handle_client_read(const int client_fd)
 void Engine::handle_client_write(const int client_fd)
 {
     const std::map<int, Client>::iterator it = _clients.find(client_fd);
-
     if (it == _clients.end())
         return;
 
     Client& client = it->second;
     const ssize_t ret = client.write_to_socket();
-
-	client._write_buffer.clear();
-	client.req.end_head = 0;
-	client.req = HttpRequest();
-	client.req.engine = this;
-	client.res = httpResponse();
 
     if (ret < 0)
     {
@@ -373,7 +367,10 @@ void Engine::handle_client_write(const int client_fd)
 
     if (client.get_write_buffer().empty())
     {
-        modify_epoll(client_fd, EPOLLIN | EPOLLET);
+        client.req = HttpRequest();
+        client.req.engine = this;
+        client.res = httpResponse();
+        modify_epoll(client_fd, EPOLLIN);
     }
 }
 
@@ -643,7 +640,7 @@ void Engine::run()
         }
         for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); )
         {
-            if (it->second.is_timed_out() || it->second.get_status())
+            if (it->second.is_timed_out() || it->second.get_status() == Client::CLOSED)
             {
  std::cout << "Client " << it->first << " timed out or closed, disconnecting" << std::endl;
                 const int fd = it->first;
