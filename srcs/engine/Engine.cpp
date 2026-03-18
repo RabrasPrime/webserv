@@ -153,6 +153,7 @@ void Engine::handle_new_connection(int listener_fd)
 	std::vector<Server *> ListServer = listener.get_servers();
     _clients[client_fd] = Client(client_fd, ListServer);
 	_clients[client_fd].engine = this;
+	_clients[client_fd].req.engine = this;
     _fd_types[client_fd] = FD_CLIENT;
     add_to_epoll(client_fd, EPOLLIN | EPOLLET);
 }
